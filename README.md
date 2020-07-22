@@ -1,6 +1,2 @@
 # Bapad
-My first repository on GitHub.
-
-Implementation of a Win32 Text Editor.
-
-Learn from [Neatpad](https://www.catch22.net/tuts/neatpad#).
+试着搞一个Win32文本编辑器，练练手
