@@ -3,12 +3,8 @@
 
 class TextDocument
 {
-
+    friend class text;
 public:
-
-    TextDocument();
-    ~TextDocument();
-
     bool init(wchar_t* filename);
     bool init(HANDLE hFile);
     bool clear();
@@ -19,7 +15,7 @@ public:
 private:
     bool init_linebuffer();
 
-    wchar_t* buffer;
+    char* buffer;
     DWORD DocumentLength;
 
     size_t* linebuffer;
@@ -27,6 +23,14 @@ private:
 
 };
 
+class text
+{
+public:
+    char* getbuffer(TextDocument t)
+    {
+        return t.buffer;
+    }
+};
 bool TextDocument::init(wchar_t* filename)
 {
     HANDLE hFile;
@@ -46,11 +50,15 @@ bool TextDocument::init(HANDLE hFile)
         return false;
 
     // allocate new file-buffer
-    if ((buffer = new wchar_t[DocumentLength]) == 0)
+    if ((buffer = new char[DocumentLength]) == 0)
         return false;
 
     // read entire file into memory
-    ReadFile(hFile, buffer, DocumentLength, &numread, 0);
+    if (ReadFile(hFile, buffer, DocumentLength, &numread, 0) == FALSE)
+    {
+        //
+
+    }
 
     // work out where each line of text starts
     init_linebuffer();
@@ -91,7 +99,7 @@ bool TextDocument::init_linebuffer()
 
 size_t TextDocument::getline(size_t lineno, wchar_t* buf, size_t len)
 {
-    wchar_t* lineptr;
+    char* lineptr;
     size_t linelen;
 
     // find the start of the specified line
