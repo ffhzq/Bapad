@@ -24,6 +24,7 @@
     <ProjectGuid>{f379d749-0210-40cf-b890-f6a2d538aa14}</ProjectGuid>
     <RootNamespace>Bapad</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Bapad</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

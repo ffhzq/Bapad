@@ -4,7 +4,7 @@
 #include "framework.h"
 #include "Bapad.h"
 
-const wchar_t g_szClassName[] = L"myWindowClass";
+const wchar_t g_szClassName[] = L"Bapad";
 
 #define MAX_LOADSTRING 100
 
@@ -28,8 +28,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     // TODO: Place code here.
-    MessageBox(NULL, L"Goodbye, cruel world!", L"Note", MB_OK);
+    //MessageBox(NULL, L"Goodbye, cruel world!", L"Note", MB_OK);
+
+
+
+
     // Initialize global strings
+    /*LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDC_BAPAD, szWindowClass, MAX_LOADSTRING);*/
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_BAPAD, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
@@ -69,7 +75,6 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     WNDCLASSEXW wcex;
 
     wcex.cbSize = sizeof(WNDCLASSEX);
-
     wcex.style          = CS_HREDRAW | CS_VREDRAW;
     wcex.lpfnWndProc    = WndProc;
     wcex.cbClsExtra     = 0;

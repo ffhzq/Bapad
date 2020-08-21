@@ -139,11 +139,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\Bapad\TextView.h" />
+    <ClInclude Include="lib.h" />
     <ClInclude Include="TextDocument.h" />
+    <ClInclude Include="TextView.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source.cpp" />
+    <ClCompile Include="test.cpp" />
+    <ClCompile Include="TextDocument.cpp" />
+    <ClCompile Include="TextView.cpp" />
+    <ClCompile Include="TextViewFile.cpp" />
+    <ClCompile Include="TextViewPaint.cpp" />
+    <ClCompile Include="TextViewScoll.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
