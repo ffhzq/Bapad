@@ -28,7 +28,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     UNREFERENCED_PARAMETER(lpCmdLine);
 
     // TODO: Place code here.
-    //MessageBox(NULL, L"Goodbye, cruel world!", L"Note", MB_OK);
+    MessageBox(NULL, L"Goodbye, cruel world!", L"Note", MB_OK);
 
 
 

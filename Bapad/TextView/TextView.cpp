@@ -8,14 +8,14 @@ TextView::TextView(HWND hwnd) : m_pTextDoc(new TextDocument())
 	OnSetFont((HFONT)GetStockObject(ANSI_FIXED_FONT));
 
 	// Scrollbar related data
-	m_nVScrollPos = 0;
-	m_nHScrollPos = 0;
-	m_nVScrollMax = 0;
-	m_nHScrollMax = 0;
+	vScrollPos = 0;
+	hScrollPos = 0;
+	vScrollMax = 0;
+	hScrollMax = 0;
 
 	// File-related data
-	m_nLineCount = 0;
-	m_nLongestLine = 0;
+	lineCount = 0;
+	longestLine = 0;
 
 
 	SetupScrollbars();
@@ -48,15 +48,15 @@ LONG TextView::OnSetFont(HFONT hFont)
 	TEXTMETRIC tm;
 	HANDLE hOld;
 
-	m_hFont = hFont;
+	font = hFont;
 
 	hdc = GetDC(m_hWnd);
 	hOld = SelectObject(hdc, hFont);
 
 	GetTextMetricsW(hdc, &tm);
 
-	m_nFontHeight = tm.tmHeight;
-	m_nFontWidth = tm.tmAveCharWidth;
+	fontHeight = tm.tmHeight;
+	fontWidth = tm.tmAveCharWidth;
 
 	// Restoring the original object 
 	SelectObject(hdc, hOld);

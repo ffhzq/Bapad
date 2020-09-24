@@ -40,22 +40,22 @@ private:
 	HWND	m_hWnd;
 
 	// Font-related data	
-	HFONT	m_hFont;
-	int		m_nFontWidth;
-	int		m_nFontHeight;
+	HFONT	font;
+	int		fontWidth;
+	int		fontHeight;
 
 	// Scrollbar related data
-	ULONG	m_nVScrollPos;
-	ULONG   m_nVScrollMax;
-	int		m_nHScrollPos;
-	int		m_nHScrollMax;
+	ULONG	vScrollPos;
+	ULONG   vScrollMax;
+	int		hScrollPos;
+	int		hScrollMax;
 
-	int		m_nLongestLine;
-	int		m_nWindowLines;
-	int		m_nWindowColumns;
+	int		longestLine;
+	int		windowLines;
+	int		windowColumns;
 
 	// File-related data
-	ULONG	m_nLineCount;
+	ULONG	lineCount;
 
 	//should use smart pointer?
 	//TextDocument* m_pTextDoc;

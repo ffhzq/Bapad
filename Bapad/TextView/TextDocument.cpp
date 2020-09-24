@@ -28,15 +28,22 @@ bool TextDocument::init(wchar_t* filename)
 
 bool TextDocument::init(HANDLE hFile)
 {
-    ULONG numread;
-    std::unique_ptr<LARGE_INTEGER> TmpDocumentLength(new LARGE_INTEGER());
-    //PLARGE_INTEGER TmpDocumentLength = new LARGE_INTEGER(); delete TmpDocumentLength;
     
+
+    //PLARGE_INTEGER Represents a 64-bit signed integer value; and
+    std::unique_ptr<LARGE_INTEGER> TmpDocumentLength(new LARGE_INTEGER());
     TmpDocumentLength->QuadPart = 0;
 
+
+    //PLARGE_INTEGER TmpDocumentLength = new LARGE_INTEGER(); delete TmpDocumentLength;
+    
+    
+
+    //Retrieves the size of the specified file.
     if (GetFileSizeEx(hFile, TmpDocumentLength.get()) == 0)
     {
         DocumentLength = 0;
+        //DWORD dwError = GetLastError();
         return false;
     }
     DocumentLength = TmpDocumentLength->QuadPart;
@@ -47,10 +54,21 @@ bool TextDocument::init(HANDLE hFile)
         return false;
     }
 
+    //NumberOfBytesRead
+    ULONG numread;
+
+    DWORD DWError = 0;
+
     // read entire file into memory
-    if (ReadFile(hFile, buffer, DocumentLength, &numread, 0) == FALSE)
+    if ((DWError = ReadFile(hFile, buffer, DocumentLength, &numread, 0)) != TRUE)
     {
-        
+        if(DWError == ERROR_INVALID_USER_BUFFER || DWError == ERROR_NOT_ENOUGH_MEMORY)
+        {/*too many outstanding asynchronous I/O requests*/ }
+        else if (DWError == ERROR_IO_PENDING)
+        {/*
+         is not a failure; it designates the read operation is pending completion asynchronously
+         */
+        }
     }
 
     // work out where each line of text starts

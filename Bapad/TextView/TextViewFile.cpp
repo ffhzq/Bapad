@@ -9,11 +9,11 @@ LONG TextView::OpenFile(TCHAR *szFileName)
 
 	if(m_pTextDoc->init(szFileName))
 	{
-		m_nLineCount   = m_pTextDoc->linecount();
-		m_nLongestLine = m_pTextDoc->longestline(4);
+		lineCount   = m_pTextDoc->linecount();
+		longestLine = m_pTextDoc->longestline(4);
 
-		m_nVScrollPos  = 0;
-		m_nHScrollPos  = 0;
+		vScrollPos  = 0;
+		hScrollPos  = 0;
 
 		UpdateMetrics();
 		return TRUE;
@@ -30,11 +30,11 @@ LONG TextView::ClearFile()
 	if(m_pTextDoc)
 		m_pTextDoc->clear();
 
-	m_nLineCount   = m_pTextDoc->linecount();
-	m_nLongestLine = m_pTextDoc->longestline(4);
+	lineCount   = m_pTextDoc->linecount();
+	longestLine = m_pTextDoc->longestline(4);
 
-	m_nVScrollPos  = 0;
-	m_nHScrollPos  = 0;
+	vScrollPos  = 0;
+	hScrollPos  = 0;
 
 	UpdateMetrics();
 

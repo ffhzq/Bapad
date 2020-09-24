@@ -20,11 +20,11 @@ LONG TextView::OnPaint()
 	BeginPaint(m_hWnd, &ps);
 
 	// select which font we will be using
-	SelectObject(ps.hdc, m_hFont);
+	SelectObject(ps.hdc, font);
 
 	// figure out which lines to redraw
-	first = m_nVScrollPos + ps.rcPaint.top / m_nFontHeight;
-	last = m_nVScrollPos + ps.rcPaint.bottom / m_nFontHeight;
+	first = vScrollPos + ps.rcPaint.top / fontHeight;
+	last = vScrollPos + ps.rcPaint.bottom / fontHeight;
 
 	// make sure we never wrap around the 4gb boundary
 	if (last < first) last = -1;
@@ -54,13 +54,13 @@ void TextView::PaintLine(HDC hdc, ULONG nLineNo)
 	GetClientRect(m_hWnd, &rect);
 
 	// calculate rectangle for entire length of line in window
-	rect.left = (long)(-m_nHScrollPos * m_nFontWidth);
-	rect.top = (long)((nLineNo - m_nVScrollPos) * m_nFontHeight);
+	rect.left = (long)(-hScrollPos * fontWidth);
+	rect.top = (long)((nLineNo - vScrollPos) * fontHeight);
 	rect.right = (long)(rect.right);
-	rect.bottom = (long)(rect.top + m_nFontHeight);
+	rect.bottom = (long)(rect.top + fontHeight);
 
 	// check we have data to draw on this line
-	if (nLineNo >= m_nLineCount)
+	if (nLineNo >= lineCount)
 	{
 		SetBkColor(hdc, GetColour(TXC_BACKGROUND));
 		ExtTextOut(hdc, 0, 0, ETO_OPAQUE, &rect, 0, 0, 0);
@@ -83,7 +83,7 @@ void TextView::PaintLine(HDC hdc, ULONG nLineNo)
 //
 void TextView::TabbedExtTextOut(HDC hdc, RECT* rect, TCHAR* buf, int len)
 {
-	int  tab = 4 * m_nFontWidth;
+	int  tab = 4 * fontWidth;
 	int  width;
 	RECT fill = *rect;
 
