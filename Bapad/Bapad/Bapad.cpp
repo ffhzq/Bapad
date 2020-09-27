@@ -3,6 +3,7 @@
 
 #include "framework.h"
 #include "Bapad.h"
+#include "..\TextView\TextView.h"
 
 const wchar_t g_szClassName[] = L"Bapad";
 
@@ -18,6 +19,9 @@ ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
+BOOL                RegisterTextView(HINSTANCE, int);
+LRESULT CALLBACK    TextViewWndProc(HWND, UINT, WPARAM, LPARAM);
+
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -34,8 +38,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
 
     // Initialize global strings
-    /*LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_BAPAD, szWindowClass, MAX_LOADSTRING);*/
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_BAPAD, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
@@ -103,7 +105,6 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance; // Store instance handle in our global variable
-
    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
@@ -158,7 +159,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_DESTROY:
-        PostQuitMessage(0);
+                 (0);
         break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
@@ -184,4 +185,41 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     return (INT_PTR)FALSE;
+}
+
+BOOL    RegisterTextView(HINSTANCE hInstance, int nCmdShow)
+{
+    WNDCLASSEXW wcex;
+
+    wcex.cbSize = sizeof(WNDCLASSEX);
+    wcex.style = 0;
+    wcex.lpfnWndProc = TextViewWndProc;
+    wcex.cbClsExtra = 0;
+    wcex.cbWndExtra = sizeof(TextView *);
+    wcex.hInstance = hInstance;
+    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_BAPAD));
+    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wcex.hbrBackground = (HBRUSH)(0);
+    wcex.lpszMenuName = 0;
+    wcex.lpszClassName = TEXTVIEW_CLASS;
+    wcex.hIconSm = 0;
+
+    return RegisterClassExW(&wcex);
+}
+
+LRESULT CALLBACK TextViewWndProc(HWND, UINT, WPARAM, LPARAM)
+{
+
+}
+
+HWND CreateTextView(HWND hwndParent)
+{
+    return CreateWindowEx(WS_EX_CLIENTEDGE,
+        TEXTVIEW_CLASS, _T(""),
+        WS_VSCROLL | WS_HSCROLL | WS_CHILD | WS_VISIBLE,
+        0, 0, 0, 0,
+        hwndParent,
+        0,
+        GetModuleHandle(0),
+        0);
 }

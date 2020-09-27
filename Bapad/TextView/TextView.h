@@ -27,7 +27,7 @@ public:
 private:
 
 	void PaintLine(HDC hdc, ULONG line);
-	void TabbedExtTextOut(HDC hdc, RECT* rect, TCHAR* buf, int len);
+	void TabbedExtTextOut(HDC hdc, RECT* rect, TCHAR* buf, size_t len);
 	void RefreshWindow();
 
 	COLORREF GetColour(UINT idx);
@@ -50,12 +50,12 @@ private:
 	int		hScrollPos;
 	int		hScrollMax;
 
-	int		longestLine;
+	size_t		longestLine;
 	int		windowLines;
 	int		windowColumns;
 
 	// File-related data
-	ULONG	lineCount;
+	size_t	lineCount;
 
 	//should use smart pointer?
 	//TextDocument* m_pTextDoc;

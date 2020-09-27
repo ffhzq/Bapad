@@ -16,9 +16,9 @@ public:
 
     size_t getline(size_t lineno, wchar_t* buf, size_t len);
 
-    size_t linecount();
+    size_t getLinecount();
 
-    size_t longestline(int tabwidth);
+    size_t getLongestline(int tabwidth);
 
 private:
     bool init_linebuffer();
@@ -27,11 +27,9 @@ private:
     char* buffer;
 
     size_t DocumentLength;
-
-
     //point to an array which record the sequence's num of newline char
     size_t* linebuffer;
-
+    //num of lines
     size_t  numlines;
 
 };

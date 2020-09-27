@@ -48,7 +48,7 @@ void TextView::PaintLine(HDC hdc, ULONG nLineNo)
 	RECT  rect;
 
 	TCHAR buf[LONGEST_LINE];
-	int   len;
+	size_t   len;
 
 	// Get the area we want to update
 	GetClientRect(m_hWnd, &rect);
@@ -81,14 +81,14 @@ void TextView::PaintLine(HDC hdc, ULONG nLineNo)
 //
 //	Emulates ExtTextOut, but draws text using tabs using TabbedTextOut
 //
-void TextView::TabbedExtTextOut(HDC hdc, RECT* rect, TCHAR* buf, int len)
+void TextView::TabbedExtTextOut(HDC hdc, RECT* rect, TCHAR* buf, size_t len)
 {
 	int  tab = 4 * fontWidth;
 	int  width;
 	RECT fill = *rect;
 
 	// Draw line and expand tabs
-	width = TabbedTextOut(hdc, rect->left, rect->top, buf, len, 1, &tab, rect->left);
+	width = TabbedTextOutW(hdc, rect->left, rect->top, buf, static_cast<int>(len), 1, &tab, rect->left);
 
 	// Erase the rest of the line with the background colour
 	fill.left += LOWORD(width);

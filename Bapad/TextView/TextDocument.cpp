@@ -1,5 +1,6 @@
 #include "TextDocument.h"
 
+//initial all var
 TextDocument::TextDocument()
 {
     buffer = nullptr;
@@ -48,6 +49,7 @@ bool TextDocument::init(HANDLE hFile)
     }
     DocumentLength = TmpDocumentLength->QuadPart;
 
+    //1 wchar_t is 2 bytes long 
     // allocate new file-buffer
     if ((buffer = new char[DocumentLength]) == 0)
     {
@@ -60,7 +62,7 @@ bool TextDocument::init(HANDLE hFile)
     DWORD DWError = 0;
 
     // read entire file into memory
-    if ((DWError = ReadFile(hFile, buffer, DocumentLength, &numread, 0)) != TRUE)
+    if ((DWError = ReadFile(hFile, buffer, static_cast<DWORD>(DocumentLength), &numread, 0)) != TRUE)
     {
         if(DWError == ERROR_INVALID_USER_BUFFER || DWError == ERROR_NOT_ENOUGH_MEMORY)
         {/*too many outstanding asynchronous I/O requests*/ }
@@ -113,8 +115,8 @@ bool TextDocument::init_linebuffer()
 
 size_t TextDocument::getline(size_t lineno, wchar_t* buf, size_t len)
 {
-    char* lineptr;
-    size_t linelen;
+    char* lineptr=nullptr;
+    size_t linelen=0;
 
     // find the start of the specified line
     lineptr = buffer + linebuffer[lineno];
@@ -124,24 +126,22 @@ size_t TextDocument::getline(size_t lineno, wchar_t* buf, size_t len)
 
     // make sure we don't overflow caller's buffer
     linelen = min(len, linelen);
-
-    memcpy(buf, lineptr, linelen);
+    //memcpy_s(buf, len, lineptr, linelen);
 
     return linelen;
 }
 
-size_t TextDocument::linecount()
+size_t TextDocument::getLinecount()
 {
     return numlines;
 }
 
-size_t TextDocument::longestline(int tabwidth)
+size_t TextDocument::getLongestline(int tabwidth = 4)
 {
-    ULONG i;
-    ULONG longest = 0;
-    ULONG xpos = 0;
+    size_t longest = 0;
+    size_t xpos = 0;
 
-    for (i = 0; i < DocumentLength; i++)
+    for (size_t i = 0; i < DocumentLength; i++)
     {
         if (buffer[i] == '\r')
         {
