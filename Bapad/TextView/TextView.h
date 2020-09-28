@@ -14,20 +14,20 @@ public:
 
 	LONG OnPaint();
 	LONG OnSetFont(HFONT hFont);
-	LONG OnSize(int width, int height);
+	LONG OnSize(UINT nFlags, int width, int height);
 	//LONG OnSize(unsigned __int64 nFlags, int width, int height);
 
 	LONG OnVScroll(UINT nSBCode, UINT nPos);
 	LONG OnHScroll(UINT nSBCode, UINT nPos);
 	LONG OnMouseWheel(int nDelta);
 
-	LONG OpenFile(TCHAR* szFileName);
+	LONG OpenFile(WCHAR* szFileName);
 	LONG ClearFile();
 
 private:
 
 	void PaintLine(HDC hdc, ULONG line);
-	void TabbedExtTextOut(HDC hdc, RECT* rect, TCHAR* buf, size_t len);
+	void TabbedExtTextOut(HDC hdc, RECT* rect, WCHAR* buf, size_t len);
 	void RefreshWindow();
 
 	COLORREF GetColour(UINT idx);
@@ -50,12 +50,12 @@ private:
 	int		hScrollPos;
 	int		hScrollMax;
 
-	size_t		longestLine;
+	int		longestLine;
 	int		windowLines;
 	int		windowColumns;
 
 	// File-related data
-	size_t	lineCount;
+	ULONG	lineCount;
 
 	//should use smart pointer?
 	//TextDocument* m_pTextDoc;
@@ -63,11 +63,6 @@ private:
 };
 
 
-//
-//	TextView API declared here
-//
-BOOL InitTextView();
-HWND CreateTextView(HWND hwndParent);
 
 //
 //	TextView Window Messages defined here

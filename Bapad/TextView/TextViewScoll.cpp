@@ -43,13 +43,13 @@ bool TextView::PinToBottomCorner()
 {
 	bool repos = false;
 
-	if (hScrollPos + windowColumns > longestLine)
+	if (hScrollPos > longestLine - windowColumns)//(hScrollPos + windowColumns > longestLine)
 	{
 		hScrollPos = longestLine - windowColumns;
 		repos = true;
 	}
 
-	if (vScrollPos + windowLines > lineCount)
+	if (vScrollPos > lineCount - windowLines)//(vScrollPos + windowLines > lineCount)
 	{
 		vScrollPos = lineCount - windowLines;
 		repos = true;
@@ -61,7 +61,7 @@ bool TextView::PinToBottomCorner()
 //
 //	The window has changed size - update the scrollbars
 //
-LONG TextView::OnSize(int width, int height)
+LONG TextView::OnSize(UINT nFlags, int width, int height)
 {
 	windowLines = min((unsigned)height / fontHeight, lineCount);
 	windowColumns = min(width / fontWidth, longestLine);

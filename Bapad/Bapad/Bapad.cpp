@@ -19,9 +19,8 @@ ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
-BOOL                RegisterTextView(HINSTANCE, int);
-LRESULT CALLBACK    TextViewWndProc(HWND, UINT, WPARAM, LPARAM);
-
+BOOL                RegisterTextView(HINSTANCE hInstance, int nCmdShow);
+LRESULT CALLBACK    TextViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -187,7 +186,7 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return (INT_PTR)FALSE;
 }
 
-BOOL    RegisterTextView(HINSTANCE hInstance, int nCmdShow)
+BOOL RegisterTextView(HINSTANCE hInstance, int nCmdShow)
 {
     WNDCLASSEXW wcex;
 
@@ -207,19 +206,69 @@ BOOL    RegisterTextView(HINSTANCE hInstance, int nCmdShow)
     return RegisterClassExW(&wcex);
 }
 
-LRESULT CALLBACK TextViewWndProc(HWND, UINT, WPARAM, LPARAM)
-{
+LRESULT CALLBACK TextViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{  
+    /*TextView* ptv = (TextView*)GetWindowLongPtrW(hWnd, 0);
 
+    switch (message)
+    {
+        // First message received by any window - make a new TextView object
+        // and store pointer to it in our extra-window-bytes
+        case WM_NCCREATE:
+
+            if ((ptv = new TextView(hWnd)) == 0)
+                return FALSE;
+            SetWindowLongPtrW(hWnd, 0, reinterpret_cast<LONG_PTR>(ptv));
+            return TRUE;
+
+            // Last message received by any window - delete the TextView object
+        case WM_NCDESTROY:
+
+            delete ptv;
+            return 0;
+
+            // Draw contents of TextView whenever window needs updating
+        case WM_PAINT:
+            return ptv->OnPaint();
+
+            // Set a new font 
+        case WM_SETFONT:
+            return ptv->OnSetFont((HFONT)wParam);
+
+        case WM_SIZE:
+            return ptv->OnSize(static_cast<UINT>(wParam), LOWORD(lParam), HIWORD(lParam));
+
+        case WM_VSCROLL:
+            return ptv->OnVScroll(LOWORD(wParam), HIWORD(wParam));
+
+        case WM_HSCROLL:
+            return ptv->OnHScroll(LOWORD(wParam), HIWORD(wParam));
+
+        case WM_MOUSEWHEEL:
+            return ptv->OnMouseWheel((short)HIWORD(wParam));
+
+            //
+        case TXM_OPENFILE:
+            return ptv->OpenFile((TCHAR*)lParam);
+
+        case TXM_CLEAR:
+            return ptv->ClearFile();
+
+        default:
+            break;
+    }*/
+
+    return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
 HWND CreateTextView(HWND hwndParent)
 {
-    return CreateWindowEx(WS_EX_CLIENTEDGE,
+    return CreateWindowExW(WS_EX_CLIENTEDGE,
         TEXTVIEW_CLASS, _T(""),
         WS_VSCROLL | WS_HSCROLL | WS_CHILD | WS_VISIBLE,
         0, 0, 0, 0,
         hwndParent,
         0,
-        GetModuleHandle(0),
+        hInst,//GetModuleHandleW(0),
         0);
 }

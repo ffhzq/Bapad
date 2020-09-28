@@ -14,22 +14,20 @@ public:
 
     bool clear();
 
-    size_t getline(size_t lineno, wchar_t* buf, size_t len);
+    ULONG getline(ULONG lineno, WCHAR* buf, size_t len);
 
-    size_t getLinecount();
-
-    size_t getLongestline(int tabwidth);
+    ULONG getLinecount();
+    ULONG getLongestline(int tabwidth);
 
 private:
     bool init_linebuffer();
 
     //std::unique_ptr<char*> buffer;
-    char* buffer;
-
-    size_t DocumentLength;
+    WCHAR* buffer;
+    ULONG DocumentLength;
     //point to an array which record the sequence's num of newline char
-    size_t* linebuffer;
+    ULONG* linebuffer;
     //num of lines
-    size_t  numlines;
+    ULONG  numlines;
 
 };

@@ -47,7 +47,7 @@ void TextView::PaintLine(HDC hdc, ULONG nLineNo)
 {
 	RECT  rect;
 
-	TCHAR buf[LONGEST_LINE];
+	WCHAR buf[LONGEST_LINE];
 	size_t   len;
 
 	// Get the area we want to update
@@ -81,7 +81,7 @@ void TextView::PaintLine(HDC hdc, ULONG nLineNo)
 //
 //	Emulates ExtTextOut, but draws text using tabs using TabbedTextOut
 //
-void TextView::TabbedExtTextOut(HDC hdc, RECT* rect, TCHAR* buf, size_t len)
+void TextView::TabbedExtTextOut(HDC hdc, RECT* rect, WCHAR* buf, size_t len)
 {
 	int  tab = 4 * fontWidth;
 	int  width;

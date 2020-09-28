@@ -1,16 +1,2 @@
-﻿  TextDocument.cpp
-  TextView.cpp
-  TextViewFile.cpp
-  TextViewPaint.cpp
-  TextViewScoll.cpp
-C:\Users\90314\Documents\GitHub\Bapad\Bapad\TextView\TextViewScoll.cpp(18,25): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\90314\Documents\GitHub\Bapad\Bapad\TextView\TextViewScoll.cpp(28,27): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\90314\Documents\GitHub\Bapad\Bapad\TextView\TextViewScoll.cpp(35,38): warning C4267: '=': conversion from 'size_t' to 'ULONG', possible loss of data
-C:\Users\90314\Documents\GitHub\Bapad\Bapad\TextView\TextViewScoll.cpp(36,42): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\90314\Documents\GitHub\Bapad\Bapad\TextView\TextViewScoll.cpp(48,43): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\90314\Documents\GitHub\Bapad\Bapad\TextView\TextViewScoll.cpp(54,39): warning C4267: '=': conversion from 'size_t' to 'ULONG', possible loss of data
-C:\Users\90314\Documents\GitHub\Bapad\Bapad\TextView\TextViewScoll.cpp(66,61): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-C:\Users\90314\Documents\GitHub\Bapad\Bapad\TextView\TextViewScoll.cpp(67,53): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-  test.cpp
-  Generating Code...
+﻿  test.cpp
   TextView.vcxproj -> C:\Users\90314\Documents\GitHub\Bapad\Bapad\x64\Debug\TextView.exe
