@@ -31,47 +31,36 @@ bool TextDocument::init(HANDLE hFile)
 {
     
 
-    //PLARGE_INTEGER Represents a 64-bit signed integer value; and
-    std::unique_ptr<LARGE_INTEGER> TmpDocumentLength(new LARGE_INTEGER());
-    TmpDocumentLength->QuadPart = 0;
-
-
-    //PLARGE_INTEGER TmpDocumentLength = new LARGE_INTEGER(); delete TmpDocumentLength;
-    
-    
+    //PLARGE_INTEGER Represents a 64-bit signed integer value
+    LARGE_INTEGER TmpDocumentLength = {0};
 
     //Retrieves the size of the specified file.
-    if (GetFileSizeEx(hFile, TmpDocumentLength.get()) == 0)
+    if (GetFileSizeEx(hFile, &TmpDocumentLength) == 0)
     {
         DocumentLength = 0;
         //DWORD dwError = GetLastError();
         return false;
     }
-    DocumentLength = TmpDocumentLength->QuadPart;
+    DocumentLength = TmpDocumentLength.QuadPart;
 
     //1 wchar_t is 2 bytes long 
     // allocate new file-buffer
-    if ((buffer = new WCHAR[DocumentLength]) == 0)
+    //std::unique_ptr<char[]> readBuffer(new char[DocumentLength]);
+    //memset(readBuffer.get(), 0, DocumentLength);
+    if ((buffer = new wchar_t[DocumentLength+1]) == 0)
     {
         return false;
     }
+    memset(buffer, 0, sizeof(wchar_t) * (DocumentLength + 1));
 
-    //NumberOfBytesRead
     ULONG numread = 0;
-
-    DWORD DWError = 0;
-
     // read entire file into memory
-    if ((DWError = ReadFile(hFile, buffer, DocumentLength, &numread, 0)) != TRUE)
+    if (ReadFile(hFile, buffer, DocumentLength, &numread, 0))
     {
-        if(DWError == ERROR_INVALID_USER_BUFFER || DWError == ERROR_NOT_ENOUGH_MEMORY)
-        {/*too many outstanding asynchronous I/O requests*/ }
-        else if (DWError == ERROR_IO_PENDING)
-        {/*
-         is not a failure; it designates the read operation is pending completion asynchronously
-         */
-        }
+        ;
     }
+    
+
 
     // work out where each line of text starts
     if (!init_linebuffer())
@@ -108,21 +97,27 @@ bool TextDocument::init_linebuffer()
             linestart = i;
         }
     }
-
+    if (numlines == 0)linebuffer[numlines++] = linestart;
     linebuffer[numlines] = DocumentLength;
+
     return true;
 }
 
-ULONG TextDocument::getline(ULONG lineno, WCHAR* buf, size_t len)
+ULONG TextDocument::getline(ULONG lineno, wchar_t* buf, size_t len)
 {
-    WCHAR* lineptr=nullptr;
-    ULONG linelen=0;
+    /*
+    // find the start of the specified line
+    wchar_t* lineptr = buffer + (lineno == 0 ? 0 : linebuffer[lineno]);
+    // work out how long it is, by looking at the next line's starting point
+    ULONG linelen = (lineno == 0 ? linebuffer[lineno] - 0 : (linebuffer[lineno] - linebuffer[lineno - 1]));
+    */
 
     // find the start of the specified line
-    lineptr = buffer + linebuffer[lineno];
-
+    wchar_t* lineptr = buffer + linebuffer[lineno];
     // work out how long it is, by looking at the next line's starting point
-    linelen = linebuffer[lineno + 1] - linebuffer[lineno];
+    ULONG linelen = linebuffer[lineno + 1] - linebuffer[lineno];
+
+
 
     // make sure we don't overflow caller's buffer
     linelen = min(len, linelen);

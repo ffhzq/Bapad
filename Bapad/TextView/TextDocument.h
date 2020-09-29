@@ -13,21 +13,22 @@ public:
     bool init(HANDLE hFile);
 
     bool clear();
-
-    ULONG getline(ULONG lineno, WCHAR* buf, size_t len);
+  
+    ULONG getline(ULONG lineno, wchar_t* buf, size_t len);
 
     ULONG getLinecount();
     ULONG getLongestline(int tabwidth);
-
+    
 private:
     bool init_linebuffer();
 
     //std::unique_ptr<char*> buffer;
-    WCHAR* buffer;
+    //wchar_t* buffer;
+    wchar_t* buffer;
     ULONG DocumentLength;
     //point to an array which record the sequence's num of newline char
     ULONG* linebuffer;
     //num of lines
     ULONG  numlines;
-
+    
 };

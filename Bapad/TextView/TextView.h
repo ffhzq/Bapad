@@ -15,7 +15,6 @@ public:
 	LONG OnPaint();
 	LONG OnSetFont(HFONT hFont);
 	LONG OnSize(UINT nFlags, int width, int height);
-	//LONG OnSize(unsigned __int64 nFlags, int width, int height);
 
 	LONG OnVScroll(UINT nSBCode, UINT nPos);
 	LONG OnHScroll(UINT nSBCode, UINT nPos);
