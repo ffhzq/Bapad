@@ -1,0 +1,2 @@
+C:\Users\90314\Documents\GitHub\Bapad\Bapad\x64\Debug\TextView.pdb
+C:\Users\90314\Documents\GitHub\Bapad\Bapad\TextView\x64\Debug\TextView.pdb

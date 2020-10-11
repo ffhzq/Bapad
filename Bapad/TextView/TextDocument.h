@@ -1,5 +1,5 @@
 #pragma once
-#include "lib.h"
+#include "pch.h"
 
 class TextDocument
 {
@@ -14,10 +14,10 @@ public:
 
     bool clear();
   
-    ULONG getline(ULONG lineno, wchar_t* buf, size_t len);
+    size_t getline(size_t lineno, wchar_t* buf, size_t len);
 
-    ULONG getLinecount();
-    ULONG getLongestline(int tabwidth);
+    size_t getLinecount();
+    size_t getLongestline(int tabwidth);
     
 private:
     bool init_linebuffer();
@@ -25,10 +25,10 @@ private:
     //std::unique_ptr<char*> buffer;
     //wchar_t* buffer;
     wchar_t* buffer;
-    ULONG DocumentLength;
+    size_t DocumentLength;
     //point to an array which record the sequence's num of newline char
-    ULONG* linebuffer;
+    size_t* linebuffer;
     //num of lines
-    ULONG  numlines;
+    size_t  numlines;
     
 };

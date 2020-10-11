@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "TextView.h"
 
 //
@@ -17,7 +18,7 @@ VOID TextView::SetupScrollbars()
 	si.nMin = 0;
 	si.nMax = lineCount - 1;	// total number of lines in file
 
-	SetScrollInfo(m_hWnd, SB_VERT, &si, TRUE);
+	SetScrollInfo(hWnd, SB_VERT, &si, TRUE);
 
 	//
 	//	Horizontal scrollbar
@@ -27,7 +28,7 @@ VOID TextView::SetupScrollbars()
 	si.nMin = 0;
 	si.nMax = longestLine - 1;	// total number of lines in file
 
-	SetScrollInfo(m_hWnd, SB_HORZ, &si, TRUE);
+	SetScrollInfo(hWnd, SB_HORZ, &si, TRUE);
 
 	// adjust our interpretation of the max scrollbar range to make
 	// range-checking easier. The scrollbars don't use these values, they
@@ -116,7 +117,7 @@ VOID TextView::Scroll(int dx, int dy)
 	if (dx != 0 || dy != 0)
 	{
 		ScrollWindowEx(
-			m_hWnd,
+			hWnd,
 			-dx * fontWidth,
 			-dy * fontHeight,
 			NULL,
@@ -173,7 +174,7 @@ LONG TextView::OnVScroll(UINT nSBCode, UINT nPos)
 		case SB_THUMBPOSITION:
 		case SB_THUMBTRACK:
 
-			vScrollPos = GetTrackPos32(m_hWnd, SB_VERT);
+			vScrollPos = GetTrackPos32(hWnd, SB_VERT);
 			RefreshWindow();
 
 			break;
@@ -226,7 +227,7 @@ LONG TextView::OnHScroll(UINT nSBCode, UINT nPos)
 		case SB_THUMBPOSITION:
 		case SB_THUMBTRACK:
 
-			hScrollPos = GetTrackPos32(m_hWnd, SB_HORZ);
+			hScrollPos = GetTrackPos32(hWnd, SB_HORZ);
 			RefreshWindow();
 			break;
 	}

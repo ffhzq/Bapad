@@ -1,5 +1,4 @@
 #pragma once
-#include "lib.h"
 #include "TextDocument.h"
 
 #define LONGEST_LINE 0x100
@@ -36,7 +35,7 @@ private:
 	bool    PinToBottomCorner();
 	void	Scroll(int dx, int dy);
 
-	HWND	m_hWnd;
+	HWND	hWnd;
 
 	// Font-related data	
 	HFONT	font;
@@ -58,10 +57,13 @@ private:
 
 	//should use smart pointer?
 	//TextDocument* m_pTextDoc;
-	std::unique_ptr<TextDocument> m_pTextDoc;
+	std::unique_ptr<TextDocument> textDoc;
 };
 
-
+//	TextView API declared here
+//
+ATOM RegisterTextView(HINSTANCE hInstance);
+HWND CreateTextView(HWND hwndParent);
 
 //
 //	TextView Window Messages defined here

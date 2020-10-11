@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "TextDocument.h"
 
 //initial all var
@@ -74,11 +75,11 @@ bool TextDocument::init(HANDLE hFile)
 
 bool TextDocument::init_linebuffer()
 {
-    ULONG i = 0;
-    ULONG linestart = 0;
+    size_t i = 0;
+    size_t linestart = 0;
 
     // allocate the line-buffer
-    if ((linebuffer = new ULONG[static_cast<LONGLONG>(DocumentLength)+1]) == 0)
+    if ((linebuffer = new size_t[DocumentLength + 1]) == 0)
         return false;
 
     numlines = 0;
@@ -103,7 +104,7 @@ bool TextDocument::init_linebuffer()
     return true;
 }
 
-ULONG TextDocument::getline(ULONG lineno, wchar_t* buf, size_t len)
+size_t TextDocument::getline(size_t lineno, wchar_t* buf, size_t len)
 {
     /*
     // find the start of the specified line
@@ -115,7 +116,7 @@ ULONG TextDocument::getline(ULONG lineno, wchar_t* buf, size_t len)
     // find the start of the specified line
     wchar_t* lineptr = buffer + linebuffer[lineno];
     // work out how long it is, by looking at the next line's starting point
-    ULONG linelen = linebuffer[lineno + 1] - linebuffer[lineno];
+    size_t linelen = linebuffer[lineno + 1] - linebuffer[lineno];
 
 
 
@@ -126,15 +127,15 @@ ULONG TextDocument::getline(ULONG lineno, wchar_t* buf, size_t len)
     return linelen;
 }
 
-ULONG TextDocument::getLinecount()
+size_t TextDocument::getLinecount()
 {
     return numlines;
 }
 
-ULONG TextDocument::getLongestline(int tabwidth = 4)
+size_t TextDocument::getLongestline(int tabwidth = 4)
 {
-    ULONG longest = 0;
-    ULONG xpos = 0;
+    size_t longest = 0;
+    size_t xpos = 0;
 
     for (ULONG i = 0; i < DocumentLength; i++)
     {

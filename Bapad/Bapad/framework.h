@@ -14,3 +14,6 @@
 #include <memory.h>
 #include <tchar.h>
 
+#include <Shellapi.h>
+#include <Commdlg.h>//#include <Shobjidl_core.h>
+

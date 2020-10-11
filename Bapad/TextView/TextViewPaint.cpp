@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "TextView.h"
 
 //
@@ -5,7 +6,7 @@
 //
 VOID TextView::RefreshWindow()
 {
-	InvalidateRect(m_hWnd, NULL, FALSE);
+	InvalidateRect(hWnd, NULL, FALSE);
 }
 
 //
@@ -17,7 +18,7 @@ LONG TextView::OnPaint()
 
 	ULONG i, first, last;
 
-	BeginPaint(m_hWnd, &ps);
+	BeginPaint(hWnd, &ps);
 
 	// select which font we will be using
 	SelectObject(ps.hdc, font);
@@ -35,7 +36,7 @@ LONG TextView::OnPaint()
 		PaintLine(ps.hdc, i);
 	}
 
-	EndPaint(m_hWnd, &ps);
+	EndPaint(hWnd, &ps);
 
 	return 0;
 }
@@ -51,7 +52,7 @@ void TextView::PaintLine(HDC hdc, ULONG nLineNo)
 	size_t   len;
 
 	// Get the area we want to update
-	GetClientRect(m_hWnd, &rect);
+	GetClientRect(hWnd, &rect);
 
 	// calculate rectangle for entire length of line in window
 	rect.left = (long)(-hScrollPos * fontWidth);
@@ -68,7 +69,7 @@ void TextView::PaintLine(HDC hdc, ULONG nLineNo)
 	}
 
 	// get the data for this single line of text
-	len = m_pTextDoc->getline(nLineNo, buf, LONGEST_LINE);
+	len = textDoc->getline(nLineNo, buf, LONGEST_LINE);
 
 	// set the colours
 	SetTextColor(hdc, GetColour(TXC_FOREGROUND));
@@ -88,7 +89,7 @@ void TextView::TabbedExtTextOut(HDC hdc, RECT* rect, WCHAR* buf, size_t len)
 	RECT fill = *rect;
 
 	// Draw line and expand tabs
-	width = TabbedTextOutW(hdc, rect->left, rect->top, buf, static_cast<int>(len), 1, &tab, rect->left);
+	width = TabbedTextOutW(hdc, rect->left, rect->top, buf, len, 1, &tab, rect->left);
 
 	// Erase the rest of the line with the background colour
 	fill.left += LOWORD(width);

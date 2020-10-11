@@ -3,24 +3,41 @@
 
 #include "framework.h"
 #include "Bapad.h"
-#include "..\TextView\TextView.h"
+#include "FileOperation.h"
 
-const wchar_t g_szClassName[] = L"Bapad";
+
 
 #define MAX_LOADSTRING 100
 
 // Global Variables:
-HINSTANCE hInst;                                // current instance
+
+const wchar_t ClassName[] = L"Bapad";
+
+HINSTANCE hInst;// current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
+
+
+HWND		hwndMain;
+HWND		hwndTextView;
+
+TCHAR szFileName[MAX_PATH];
+TCHAR szFileTitle[MAX_PATH];
+
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
-BOOL                RegisterTextView(HINSTANCE hInstance, int nCmdShow);
-LRESULT CALLBACK    TextViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+
+BOOL ShowOpenFileDlg(HWND hwnd, wchar_t* pstrFileName, wchar_t* pstrTitleName);
+void ShowAboutDlg(HWND hwndParent);
+void SetWindowFileName(HWND hwnd, wchar_t* szFileName);
+BOOL DoOpenFile(HWND hwnd, TCHAR* szFileName, TCHAR* szFileTitle);
+void HandleDropFiles(HWND hwnd, HDROP hDrop);
+
+
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
                      _In_opt_ HINSTANCE hPrevInstance,
@@ -33,19 +50,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // TODO: Place code here.
     MessageBox(NULL, L"Goodbye, cruel world!", L"Note", MB_OK);
 
-
-
-
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_BAPAD, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
+    RegisterTextView(hInstance);
 
     // Perform application initialization:
     if (!InitInstance (hInstance, nCmdShow))
     {
         return FALSE;
     }
+    
 
     HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_BAPAD));
 
@@ -63,7 +79,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     return (int) msg.wParam;
 }
-
 
 
 //
@@ -104,16 +119,16 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
    hInst = hInstance; // Store instance handle in our global variable
-   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+   hwndMain = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
-   if (!hWnd)
+   if (!hwndMain)
    {
       return FALSE;
    }
 
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
+   ShowWindow(hwndMain, nCmdShow);
+   UpdateWindow(hwndMain);
 
    return TRUE;
 }
@@ -130,16 +145,56 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    static int width = 0, height = 0;
+    HFONT hFont;
+
     switch (message)
     {
+    case WM_CREATE:
+        hwndTextView = CreateTextView(hWnd);
+
+        hFont = CreateFontW(-13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, L"Courier New");
+
+        // change the font
+        SendMessageW(hwndTextView, WM_SETFONT, (WPARAM)hFont, 0);
+
+        // automatically create new document when we start
+        PostMessage(hWnd, WM_COMMAND, IDM_FILE_NEW, 0);
+
+        // tell windows that we can handle drag+drop'd files
+        DragAcceptFiles(hwndMain, TRUE);
+
+        break;
+    case WM_DROPFILES:
+        HandleDropFiles(hwndMain, (HDROP)wParam);
+        break;
+
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
             // Parse the menu selections:
             switch (wmId)
             {
+                case IDM_FILE_NEW:
+                {
+                    wchar_t a[] = L"Untitled";
+                    SetWindowFileName(hWnd, a);
+                    TextView_Clear(hwndTextView);
+
+                    break;
+                }
+                case IDM_FILE_OPEN:
+
+                    // get a filename to open
+                    if (ShowOpenFileDlg(hWnd, szFileName, szFileTitle))
+                    {
+                        DoOpenFile(hWnd, szFileName, szFileTitle);
+                    }
+
+                    break;
+
             case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+                DialogBoxW(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;
             case IDM_EXIT:
                 DestroyWindow(hWnd);
@@ -158,7 +213,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_DESTROY:
-                 (0);
+        PostQuitMessage(0);
         break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
@@ -186,89 +241,82 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return (INT_PTR)FALSE;
 }
 
-BOOL RegisterTextView(HINSTANCE hInstance, int nCmdShow)
+
+BOOL ShowOpenFileDlg(HWND hwnd, wchar_t* pstrFileName, wchar_t* pstrTitleName)
 {
-    WNDCLASSEXW wcex;
+    const wchar_t* szFilter = L"Text Files (*.txt)\0*.txt\0All Files (*.*)\0*.*\0\0";
 
-    wcex.cbSize = sizeof(WNDCLASSEX);
-    wcex.style = 0;
-    wcex.lpfnWndProc = TextViewWndProc;
-    wcex.cbClsExtra = 0;
-    wcex.cbWndExtra = sizeof(TextView *);
-    wcex.hInstance = hInstance;
-    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_BAPAD));
-    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground = (HBRUSH)(0);
-    wcex.lpszMenuName = 0;
-    wcex.lpszClassName = TEXTVIEW_CLASS;
-    wcex.hIconSm = 0;
+    //IFileOpenDialog
 
-    return RegisterClassExW(&wcex);
+    OPENFILENAMEW ofn = { sizeof(ofn) };
+
+    ofn.hwndOwner = hwnd;
+    ofn.hInstance = GetModuleHandle(0);
+    ofn.lpstrFilter = szFilter;
+    ofn.lpstrFile = pstrFileName;
+    ofn.lpstrFileTitle = pstrTitleName;
+
+    ofn.nFilterIndex = 1;
+    ofn.nMaxFile = _MAX_PATH;
+    ofn.nMaxFileTitle = _MAX_FNAME + _MAX_EXT;
+
+    // flags to control appearance of open-file dialog
+    ofn.Flags = OFN_EXPLORER |
+        OFN_ENABLESIZING |
+        OFN_ALLOWMULTISELECT |
+        OFN_FILEMUSTEXIST;
+
+    return GetOpenFileName(&ofn);
 }
 
-LRESULT CALLBACK TextViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{  
-    /*TextView* ptv = (TextView*)GetWindowLongPtrW(hWnd, 0);
+void ShowAboutDlg(HWND hwndParent)
+{
+    MessageBox(hwndParent,
+        ClassName,//+ L"\r\n\r\n",
+        ClassName,
+        MB_OK | MB_ICONINFORMATION
+    );
+}
 
-    switch (message)
+void SetWindowFileName(HWND hwnd, wchar_t* szFileName)
+{
+    wchar_t ach[MAX_PATH + sizeof(ClassName) + 4];
+
+    wsprintf(ach, _T("%s - %s"), szFileName, ClassName);
+    SetWindowText(hwnd, ach);
+}
+
+BOOL DoOpenFile(HWND hwnd, TCHAR* szFileName, TCHAR* szFileTitle)
+{
+    if (TextView_OpenFile(hwndTextView, szFileName))
     {
-        // First message received by any window - make a new TextView object
-        // and store pointer to it in our extra-window-bytes
-        case WM_NCCREATE:
-
-            if ((ptv = new TextView(hWnd)) == 0)
-                return FALSE;
-            SetWindowLongPtrW(hWnd, 0, reinterpret_cast<LONG_PTR>(ptv));
-            return TRUE;
-
-            // Last message received by any window - delete the TextView object
-        case WM_NCDESTROY:
-
-            delete ptv;
-            return 0;
-
-            // Draw contents of TextView whenever window needs updating
-        case WM_PAINT:
-            return ptv->OnPaint();
-
-            // Set a new font 
-        case WM_SETFONT:
-            return ptv->OnSetFont((HFONT)wParam);
-
-        case WM_SIZE:
-            return ptv->OnSize(static_cast<UINT>(wParam), LOWORD(lParam), HIWORD(lParam));
-
-        case WM_VSCROLL:
-            return ptv->OnVScroll(LOWORD(wParam), HIWORD(wParam));
-
-        case WM_HSCROLL:
-            return ptv->OnHScroll(LOWORD(wParam), HIWORD(wParam));
-
-        case WM_MOUSEWHEEL:
-            return ptv->OnMouseWheel((short)HIWORD(wParam));
-
-            //
-        case TXM_OPENFILE:
-            return ptv->OpenFile((TCHAR*)lParam);
-
-        case TXM_CLEAR:
-            return ptv->ClearFile();
-
-        default:
-            break;
-    }*/
-
-    return DefWindowProc(hWnd, message, wParam, lParam);
+        SetWindowFileName(hwnd, szFileTitle);
+        return TRUE;
+    }
+    else
+    {
+        MessageBox(hwnd, _T("Error opening file"), ClassName, MB_ICONEXCLAMATION);
+        return FALSE;
+    }
 }
 
-HWND CreateTextView(HWND hwndParent)
+//
+//	How to process WM_DROPFILES
+//
+void HandleDropFiles(HWND hwnd, HDROP hDrop)
 {
-    return CreateWindowExW(WS_EX_CLIENTEDGE,
-        TEXTVIEW_CLASS, _T(""),
-        WS_VSCROLL | WS_HSCROLL | WS_CHILD | WS_VISIBLE,
-        0, 0, 0, 0,
-        hwndParent,
-        0,
-        hInst,//GetModuleHandleW(0),
-        0);
+    wchar_t buf[MAX_PATH];
+    wchar_t* name;
+
+    if (DragQueryFile(hDrop, 0, buf, MAX_PATH))
+    {
+        wcscpy_s(szFileName, buf);
+
+        name = wcsrchr(szFileName, '\\');
+        wcscpy_s(szFileTitle, name ? name + 1 : buf);
+
+        DoOpenFile(hwnd, szFileName, szFileTitle);
+    }
+
+    DragFinish(hDrop);
 }

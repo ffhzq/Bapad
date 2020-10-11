@@ -13,6 +13,11 @@
 #define IDI_SMALL				108
 #define IDC_BAPAD				109
 
+#define IDM_FILE_NEW                    40001
+#define IDM_FILE_OPEN                   40002
+#define IDM_FILE_EXIT                   40003
+
+
 #define IDC_MYICON				2
 #ifndef IDC_STATIC
 #define IDC_STATIC				-1
