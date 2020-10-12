@@ -31,7 +31,6 @@ bool TextDocument::init(wchar_t* filename)
 bool TextDocument::init(HANDLE hFile)
 {
     
-
     //PLARGE_INTEGER Represents a 64-bit signed integer value
     LARGE_INTEGER TmpDocumentLength = {0};
 
@@ -48,11 +47,12 @@ bool TextDocument::init(HANDLE hFile)
     // allocate new file-buffer
     //std::unique_ptr<char[]> readBuffer(new char[DocumentLength]);
     //memset(readBuffer.get(), 0, DocumentLength);
-    if ((buffer = new wchar_t[DocumentLength+1]) == 0)
+    const size_t bufferSize = DocumentLength + 1;
+    if ((buffer = new wchar_t[bufferSize]) == 0)
     {
         return false;
     }
-    memset(buffer, 0, sizeof(wchar_t) * (DocumentLength + 1));
+    wmemset(buffer, 0, bufferSize);
 
     ULONG numread = 0;
     // read entire file into memory
@@ -78,9 +78,12 @@ bool TextDocument::init_linebuffer()
     size_t i = 0;
     size_t linestart = 0;
 
+    const size_t linebufferSize = DocumentLength + 1;
+
     // allocate the line-buffer
-    if ((linebuffer = new size_t[DocumentLength + 1]) == 0)
+    if ((linebuffer = new size_t[linebufferSize]) == 0)
         return false;
+
 
     numlines = 0;
 
@@ -120,9 +123,9 @@ size_t TextDocument::getline(size_t lineno, wchar_t* buf, size_t len)
 
 
 
-    // make sure we don't overflow caller's buffer
+    // make sure we don't overflow caller's buffer OR use wmemcpy_s
     linelen = min(len, linelen);
-    memcpy(buf, lineptr, linelen);
+    wmemcpy(buf, lineptr, linelen);
 
     return linelen;
 }
@@ -137,7 +140,7 @@ size_t TextDocument::getLongestline(int tabwidth = 4)
     size_t longest = 0;
     size_t xpos = 0;
 
-    for (ULONG i = 0; i < DocumentLength; i++)
+    for (size_t i = 0; i < DocumentLength; i++)
     {
         if (buffer[i] == '\r')
         {

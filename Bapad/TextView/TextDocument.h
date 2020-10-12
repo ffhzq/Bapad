@@ -17,6 +17,7 @@ public:
     size_t getline(size_t lineno, wchar_t* buf, size_t len);
 
     size_t getLinecount();
+
     size_t getLongestline(int tabwidth);
     
 private:

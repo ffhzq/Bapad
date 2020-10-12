@@ -97,7 +97,7 @@ LRESULT CALLBACK TextViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
         case WM_NCDESTROY:
             delete ptv;
             break;
-            // Draw contents of TextView whenever window needs updating
+        // Draw contents of TextView whenever window needs updating
         case WM_PAINT:
             return ptv->OnPaint();
         // Set a new font 

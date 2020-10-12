@@ -7,8 +7,8 @@
 #define IDR_MAINFRAME			128
 #define IDD_BAPAD_DIALOG		102
 #define IDD_ABOUTBOX			103
-#define IDM_ABOUT				104
-#define IDM_EXIT				105
+//#define IDM_ABOUT				104
+//#define IDM_EXIT				105
 #define IDI_BAPAD				107
 #define IDI_SMALL				108
 #define IDC_BAPAD				109
@@ -16,7 +16,7 @@
 #define IDM_FILE_NEW                    40001
 #define IDM_FILE_OPEN                   40002
 #define IDM_FILE_EXIT                   40003
-
+#define IDM_HELP_ABOUT                  40004
 
 #define IDC_MYICON				2
 #ifndef IDC_STATIC

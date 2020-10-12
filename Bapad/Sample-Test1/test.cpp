@@ -24,6 +24,11 @@ TEST(TextDocumentOpenAndGetText1, TextDocumentOpenAndGetText) {
 		wchar_t outputBuffer[bufferSize] = { 0 };
 		t.getline(0, outputBuffer, bufferSize);
 		{
+			if (outputBuffer != L"")
+			{
+				EXPECT_TRUE(true);
+			}
+			
 			using namespace std;
 			wcout << outputBuffer << endl;
 		}

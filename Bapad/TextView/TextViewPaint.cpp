@@ -48,8 +48,7 @@ void TextView::PaintLine(HDC hdc, ULONG nLineNo)
 {
 	RECT  rect;
 
-	WCHAR buf[LONGEST_LINE];
-	size_t   len;
+	WCHAR buf[LONGEST_LINE] = {0};
 
 	// Get the area we want to update
 	GetClientRect(hWnd, &rect);
@@ -64,12 +63,12 @@ void TextView::PaintLine(HDC hdc, ULONG nLineNo)
 	if (nLineNo >= lineCount)
 	{
 		SetBkColor(hdc, GetColour(TXC_BACKGROUND));
-		ExtTextOut(hdc, 0, 0, ETO_OPAQUE, &rect, 0, 0, 0);
+		ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rect, 0, 0, 0);
 		return;
 	}
 
 	// get the data for this single line of text
-	len = textDoc->getline(nLineNo, buf, LONGEST_LINE);
+	size_t len = textDoc->getline(nLineNo, buf, LONGEST_LINE);
 
 	// set the colours
 	SetTextColor(hdc, GetColour(TXC_FOREGROUND));
@@ -93,7 +92,7 @@ void TextView::TabbedExtTextOut(HDC hdc, RECT* rect, WCHAR* buf, size_t len)
 
 	// Erase the rest of the line with the background colour
 	fill.left += LOWORD(width);
-	ExtTextOut(hdc, 0, 0, ETO_OPAQUE, &fill, 0, 0, 0);
+	ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &fill, 0, 0, 0);
 }
 
 //

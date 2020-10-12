@@ -27,9 +27,6 @@
     <ClInclude Include="Bapad.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FileOperation.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Bapad.cpp">
