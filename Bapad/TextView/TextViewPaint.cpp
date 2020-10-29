@@ -21,7 +21,7 @@ LONG TextView::OnPaint()
 	BeginPaint(hWnd, &ps);
 
 	// select which font we will be using
-	//SelectObject(ps.hdc, font);
+	SelectObject(ps.hdc, font);
 
 	// figure out which lines to redraw
 	first = vScrollPos + ps.rcPaint.top / fontHeight;
@@ -68,7 +68,7 @@ void TextView::PaintLine(HDC hdc, ULONG nLineNo)
 	}
 
 	// get the data for this single line of text
-	size_t len = pTextDoc->getline(nLineNo, buf, LONGEST_LINE);
+	size_t len = textDoc->getline(nLineNo, buf, LONGEST_LINE);
 
 	// set the colours
 	SetTextColor(hdc, GetColour(TXC_FOREGROUND));
