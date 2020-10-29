@@ -9,10 +9,10 @@ LONG TextView::OpenFile(WCHAR *szFileName)
 {
 	ClearFile();
 
-	if(textDoc->init(szFileName))
+	if(pTextDoc->init(szFileName))
 	{
-		lineCount   = textDoc->getLinecount();
-		longestLine = textDoc->getLongestline(4);
+		lineCount   = pTextDoc->getLinecount();
+		longestLine = pTextDoc->getLongestline(4);
 
 		vScrollPos  = 0;
 		hScrollPos  = 0;
@@ -29,11 +29,11 @@ LONG TextView::OpenFile(WCHAR *szFileName)
 //
 LONG TextView::ClearFile()
 {
-	if(textDoc)
-		textDoc->clear();
+	if(pTextDoc)
+		pTextDoc->clear();
 
-	lineCount   = textDoc->getLinecount();
-	longestLine = textDoc->getLongestline(4);
+	lineCount   = pTextDoc->getLinecount();
+	longestLine = pTextDoc->getLongestline(4);
 
 	vScrollPos  = 0;
 	hScrollPos  = 0;
@@ -41,4 +41,19 @@ LONG TextView::ClearFile()
 	UpdateMetrics();
 
 	return TRUE;
+}
+
+LONG TextView::AddFont(HFONT)
+{
+	return 0;
+}
+
+LONG TextView::SetFont(HFONT, int idx)
+{
+	return 0;
+}
+
+LONG TextView::SetLineSpacing(int nAbove, int nBelow)
+{
+	return 0;
 }
