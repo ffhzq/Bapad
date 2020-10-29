@@ -10,7 +10,7 @@ void fnTextView()
 
 
 
-TextView::TextView(HWND hwnd) : textDoc(new TextDocument())
+TextView::TextView(HWND hwnd) : pTextDoc(new TextDocument())
 {
 	hWnd = hwnd;
 
@@ -36,8 +36,8 @@ TextView::TextView(HWND hwnd) : textDoc(new TextDocument())
 //
 TextView::~TextView()
 {
-	if (textDoc)
-		textDoc.release();
+	if (pTextDoc)
+		pTextDoc.release();
 	//delete m_pTextDoc;
 }
 
@@ -48,34 +48,6 @@ VOID TextView::UpdateMetrics()
 
 	OnSize(0, rect.right, rect.bottom);
 	RefreshWindow();
-}
-//
-//	Set a new font
-//
-LONG TextView::OnSetFont(HFONT hFont)
-{
-	HDC hdc;
-	TEXTMETRIC tm;
-	HANDLE hOld;
-
-	font = hFont;
-
-	hdc = GetDC(hWnd);
-	hOld = SelectObject(hdc, hFont);
-
-	GetTextMetricsW(hdc, &tm);
-
-	fontHeight = tm.tmHeight;
-	fontWidth = tm.tmAveCharWidth;
-
-	// Restoring the original object 
-	SelectObject(hdc, hOld);
-
-	ReleaseDC(hWnd, hdc);
-
-	UpdateMetrics();
-
-	return 0;
 }
 
 
@@ -109,17 +81,31 @@ LRESULT CALLBACK TextViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
             return ptv->OnVScroll(LOWORD(wParam), HIWORD(wParam));
         case WM_HSCROLL:
             return ptv->OnHScroll(LOWORD(wParam), HIWORD(wParam));
-
+        case WM_MOUSEACTIVATE:
+            return ptv->OnMouseActivate((HWND)wParam, LOWORD(lParam), HIWORD(lParam));
         case WM_MOUSEWHEEL:
             return ptv->OnMouseWheel((short)HIWORD(wParam));
+            
+        case WM_SETFOCUS:
+            return ptv->OnSetFocus((HWND)wParam);
 
+        case WM_KILLFOCUS:
+            return ptv->OnKillFocus((HWND)wParam);
+
+        case WM_LBUTTONDOWN:
+            return ptv->OnLButtonDown(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+
+        case WM_LBUTTONUP:
+            return ptv->OnLButtonUp(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+
+        case WM_MOUSEMOVE:
+            return ptv->OnMouseMove(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
             //
         case TXM_OPENFILE:
             return ptv->OpenFile(reinterpret_cast<wchar_t*>(lParam));
 
         case TXM_CLEAR:
             return ptv->ClearFile();
-
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
     }
