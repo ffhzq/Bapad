@@ -1,1 +1,14 @@
-﻿
+﻿  pch.cpp
+  TextDocument.cpp
+C:\Users\90314\Documents\GitHub\Bapad\Bapad\TextView\TextDocument.cpp(59,8): warning C4267: 'argument': conversion from 'size_t' to 'DWORD', possible loss of data
+  TextView.cpp
+  TextViewFile.cpp
+C:\Users\90314\Documents\GitHub\Bapad\Bapad\TextView\TextViewFile.cpp(14,40): warning C4267: '=': conversion from 'size_t' to 'ULONG', possible loss of data
+C:\Users\90314\Documents\GitHub\Bapad\Bapad\TextView\TextViewFile.cpp(15,43): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\90314\Documents\GitHub\Bapad\Bapad\TextView\TextViewFile.cpp(35,39): warning C4267: '=': conversion from 'size_t' to 'ULONG', possible loss of data
+C:\Users\90314\Documents\GitHub\Bapad\Bapad\TextView\TextViewFile.cpp(36,42): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+  TextViewPaint.cpp
+C:\Users\90314\Documents\GitHub\Bapad\Bapad\TextView\TextViewPaint.cpp(91,82): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+  TextViewScoll.cpp
+  Generating Code...
+  TextView.vcxproj -> C:\Users\90314\Documents\GitHub\Bapad\Bapad\x64\Debug\TextView.lib
