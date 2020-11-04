@@ -3,12 +3,11 @@
 
 //initial all var
 TextDocument::TextDocument()
+    :   buffer(nullptr),
+        linebuffer(nullptr),
+        DocumentLength(0),
+        numlines(0)
 {
-    buffer = nullptr;
-    linebuffer = nullptr;
-    DocumentLength = 0;
-    numlines = 0;
-    
 }
 TextDocument::~TextDocument()
 {
@@ -38,15 +37,11 @@ bool TextDocument::init(HANDLE hFile)
     if (GetFileSizeEx(hFile, &TmpDocumentLength) == 0)
     {
         DocumentLength = 0;
-        //DWORD dwError = GetLastError();
         return false;
     }
     DocumentLength = TmpDocumentLength.QuadPart;
 
-    //1 wchar_t is 2 bytes long 
     // allocate new file-buffer
-    //std::unique_ptr<char[]> readBuffer(new char[DocumentLength]);
-    //memset(readBuffer.get(), 0, DocumentLength);
     const size_t bufferSize = DocumentLength + 1;
     if ((buffer = new wchar_t[bufferSize]) == 0)
     {
@@ -55,8 +50,9 @@ bool TextDocument::init(HANDLE hFile)
     wmemset(buffer, 0, bufferSize);
 
     ULONG numread = 0;
+
     // read entire file into memory
-    if (ReadFile(hFile, buffer, DocumentLength, &numread, 0))
+    if (ReadFile(hFile, buffer, DocumentLength, &numread, NULL))
     {
         ;
     }
@@ -107,7 +103,7 @@ bool TextDocument::init_linebuffer()
     return true;
 }
 
-size_t TextDocument::getline(size_t lineno, wchar_t* buf, size_t len, ULONG* fileoff = 0)
+size_t TextDocument::getline(size_t lineno, wchar_t* buf, size_t len, ULONG* fileoff)
 {
     /*
     // find the start of the specified line

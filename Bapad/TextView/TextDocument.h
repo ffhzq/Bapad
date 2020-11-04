@@ -30,13 +30,9 @@ public:
 private:
     bool init_linebuffer();
 
-    //std::unique_ptr<char*> buffer;
-    //wchar_t* buffer;
     wchar_t* buffer;
-    size_t DocumentLength;
-    //point to an array which record the sequence's num of newline char
     size_t* linebuffer;
-    //num of lines
+    size_t DocumentLength;
     size_t  numlines;
     
 };

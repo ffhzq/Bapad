@@ -44,3 +44,13 @@ LONG SetLineSpacing(int nAbove, int nBelow)
 {
 	return 0;
 }
+
+LONG TextView::InvalidateRange(ULONG nStart, ULONG nFinish)
+{
+	return 0;
+}
+
+int TextView::TabWidth()
+{
+	return tabWidthchars * fontWidth;
+}

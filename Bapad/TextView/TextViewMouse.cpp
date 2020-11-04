@@ -2,7 +2,7 @@
 #include "TextView.h"
 
 
-int ScrollDir(int counter, int dir);
+//int ScrollDir(int counter, int dir);
 
 //
 //	WM_MOUSEACTIVATE
@@ -28,9 +28,9 @@ LONG TextView::OnLButtonDown(UINT nFlags, int mx, int my)
 	int   px;
 
 	// map the mouse-coordinates to a real file-offset-coordinate
-	MouseCoordToFilePos(mx, my, &nLineNo, &nCharOff, &nFileOff, &px);
+	MouseCoordToFilePos(mx, my, nLineNo, nCharOff, nFileOff, px);
 
-	SetCaretPos(px, (nLineNo - vScrollPos) * fontHeight);
+	SetCaretPos(px, (nLineNo - vScrollPos) * lineHeight);
 
 	// reset cursor and selection offsets to the same location
 	selectionStart = nFileOff;
@@ -75,7 +75,7 @@ LONG TextView::OnMouseMove(UINT nFlags, int mx, int my)
 		int		cx;
 
 		// get new cursor offset+coordinates
-		MouseCoordToFilePos(mx, my, &nLineNo, &nCharOff, &nFileOff, &cx);
+		MouseCoordToFilePos(mx, my, nLineNo, nCharOff, nFileOff, cx);
 
 		// update the region of text that has changed selection state
 		if (selectionEnd != nFileOff)
@@ -83,7 +83,7 @@ LONG TextView::OnMouseMove(UINT nFlags, int mx, int my)
 			// redraw from old selection-pos to new position
 			InvalidateRange(selectionEnd, nFileOff);
 
-			SetCaretPos(cx, (nLineNo - vScrollPos) * fontHeight);
+			SetCaretPos(cx, (nLineNo - vScrollPos) * lineHeight);
 
 			// adjust the cursor + selection *end* to the new offset
 			selectionEnd = nFileOff;
@@ -111,12 +111,13 @@ LONG TextView::OnKillFocus(HWND hwndNew)
 //	Currently only uses the main font so will not support other
 //	fonts introduced by syntax highlighting
 //
-BOOL TextView::MouseCoordToFilePos(int		 mx,			// [in]  mouse x-coord
-	int		 my,			// [in]  mouse x-coord
-	ULONG* pnLineNo,		// [out] line number
-	ULONG* pnCharOffset,	// [out] char-offset from start of line
-	ULONG* pfnFileOffset, // [out] zero-based file-offset
-	int* px				// [out] adjusted x coord of caret
+BOOL TextView::MouseCoordToFilePos(
+	int		mx,			// [in]  mouse x-coord
+	int		my,			// [in]  mouse x-coord
+	ULONG&	pnLineNo,		// [out] line number
+	ULONG&	pnCharOffset,	// [out] char-offset from start of line
+	ULONG&	pfnFileOffset, // [out] zero-based file-offset
+	int&	px				// [out] adjusted x coord of caret
 )
 {
 	ULONG nLineNo;
@@ -124,14 +125,14 @@ BOOL TextView::MouseCoordToFilePos(int		 mx,			// [in]  mouse x-coord
 	ULONG charoff = 0;
 	ULONG fileoff = 0;
 
-	TCHAR buf[TEXTBUFSIZE];
+	WCHAR buf[TEXTBUFSIZE];
 	int   len;
 	int	  curx = 0;
 	RECT  rect;
 
 	// get scrollable area
 	GetClientRect(hWnd, &rect);
-	rect.bottom -= rect.bottom % fontHeight;
+	rect.bottom -= rect.bottom % lineHeight;
 
 	// clip mouse to edge of window
 	if (mx < 0)				mx = 0;
@@ -140,7 +141,7 @@ BOOL TextView::MouseCoordToFilePos(int		 mx,			// [in]  mouse x-coord
 	if (mx >= rect.right)	mx = rect.right - 1;
 
 	// It's easy to find the line-number: just divide 'y' by the line-height
-	nLineNo = (my / fontHeight) + vScrollPos;
+	nLineNo = (my / lineHeight) + vScrollPos;
 
 	// make sure we don't go outside of the document
 	if (nLineNo >= lineCount)
@@ -152,7 +153,7 @@ BOOL TextView::MouseCoordToFilePos(int		 mx,			// [in]  mouse x-coord
 	HDC    hdc = GetDC(hWnd);
 	HANDLE hOldFont = SelectObject(hdc, fontAttr[0].hFont);
 
-	*pnCharOffset = 0;
+	pnCharOffset = 0;
 
 	mx += hScrollPos * fontWidth;
 
@@ -218,24 +219,28 @@ BOOL TextView::MouseCoordToFilePos(int		 mx,			// [in]  mouse x-coord
 				charoff += low;
 			}
 
-			*pnCharOffset = charoff;
+			pnCharOffset = charoff;
 			break;
 		}
 
 		curx += width;
 		charoff += tlen;
-		*pnCharOffset += len;
+		pnCharOffset += len;
 	}
 
 	SelectObject(hdc, hOldFont);
 	ReleaseDC(hWnd, hdc);
 
 
-	*pnLineNo = nLineNo;
+	pnLineNo = nLineNo;
 	//*pnCharOffset=charoff;
-	*pfnFileOffset = fileoff + *pnCharOffset;
-	*px = curx - hScrollPos * fontWidth;
+	pfnFileOffset = fileoff + pnCharOffset;
+	px = curx - hScrollPos * fontWidth;
 
+	return 0;
+}
+int TextView::TextWidth(HDC hdc, TCHAR* buf, int len, int nTabOrigin)
+{
 	return 0;
 }
 /*
@@ -355,10 +360,6 @@ LONG TextView::InvalidateRange(ULONG nStart, ULONG nFinish)
 	return 0;
 }
 
-int TextView::TabWidth()
-{
-	return tabWidthchars * fontWidth;
-}
 
 //
 //	Set the caret position based on cursorOffset,

@@ -45,12 +45,17 @@ public:
 
 private:
 
+
+	void RefreshWindow();
 	void PaintLine(HDC hdc, ULONG line);
+	void PaintText(HDC hdc, ULONG nLineNo, RECT* rect);
+	
+
 
 	void TabbedExtTextOut(HDC hdc, RECT* rect, WCHAR* buf, size_t len);
 
 
-	void RefreshWindow();
+	
 	LONG InvalidateRange(ULONG nStart, ULONG nFinish);
 
 	int	 TabWidth();
@@ -63,10 +68,10 @@ private:
 	bool    PinToBottomCorner();
 	void	Scroll(int dx, int dy);
 
+	BOOL  MouseCoordToFilePos(int x, int y, ULONG& pnLineNo, ULONG& pnCharOffset, ULONG& pnFileOffset, int& px);
 
+	int  TextWidth(HDC hdc, TCHAR* buf, int len, int nTabOrigin);
 
-
-	BOOL  MouseCoordToFilePos(int x, int y, ULONG* pnLineNo, ULONG* pnCharOffset, ULONG* pnFileOffset, int* px);
 
 	HWND	hWnd;
 
@@ -74,7 +79,7 @@ private:
 	FONT	fontAttr[MAX_FONTS];
 	HFONT	font;
 	int		fontWidth;
-	int		fontHeight;
+	int		lineHeight;
 
 	// Scrollbar related data
 	ULONG	vScrollPos;

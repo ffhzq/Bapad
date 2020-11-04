@@ -9,6 +9,7 @@ VOID TextView::RefreshWindow()
 	InvalidateRect(hWnd, NULL, FALSE);
 }
 
+
 //
 //	Painting procedure for TextView objects
 //
@@ -24,8 +25,8 @@ LONG TextView::OnPaint()
 	//SelectObject(ps.hdc, font);
 
 	// figure out which lines to redraw
-	first = vScrollPos + ps.rcPaint.top / fontHeight;
-	last = vScrollPos + ps.rcPaint.bottom / fontHeight;
+	first = vScrollPos + ps.rcPaint.top / lineHeight;
+	last = vScrollPos + ps.rcPaint.bottom / lineHeight;
 
 	// make sure we never wrap around the 4gb boundary
 	if (last < first) last = -1;
@@ -55,9 +56,9 @@ void TextView::PaintLine(HDC hdc, ULONG nLineNo)
 
 	// calculate rectangle for entire length of line in window
 	rect.left = (long)(-hScrollPos * fontWidth);
-	rect.top = (long)((nLineNo - vScrollPos) * fontHeight);
+	rect.top = (long)((nLineNo - vScrollPos) * lineHeight);
 	rect.right = (long)(rect.right);
-	rect.bottom = (long)(rect.top + fontHeight);
+	rect.bottom = (long)(rect.top + lineHeight);
 
 	// check we have data to draw on this line
 	if (nLineNo >= lineCount)
@@ -78,6 +79,10 @@ void TextView::PaintLine(HDC hdc, ULONG nLineNo)
 	TabbedExtTextOut(hdc, &rect, buf, len);
 }
 
+void TextView::PaintText(HDC hdc, ULONG nLineNo, RECT* rect)
+{
+}
+
 //
 //	Emulates ExtTextOut, but draws text using tabs using TabbedTextOut
 //
@@ -94,6 +99,7 @@ void TextView::TabbedExtTextOut(HDC hdc, RECT* rect, WCHAR* buf, size_t len)
 	fill.left += LOWORD(width);
 	ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &fill, 0, 0, 0);
 }
+
 
 //
 //	Return an RGB value corresponding to the specified HVC_xxx index

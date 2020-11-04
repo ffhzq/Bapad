@@ -10,23 +10,20 @@ void fnTextView()
 
 
 
-TextView::TextView(HWND hwnd) : pTextDoc(new TextDocument())
+TextView::TextView(HWND hwnd) 
+    :   pTextDoc(new TextDocument()),
+        hWnd(hwnd),
+        // Scrollbar related data
+        vScrollPos(0),
+        hScrollPos(0),
+        vScrollMax(0),
+        hScrollMax(0),
+        // File-related data
+        lineCount(0),
+        longestLine(0)
 {
-	hWnd = hwnd;
-
 	// Set the default font
 	OnSetFont((HFONT)GetStockObject(ANSI_FIXED_FONT));
-
-	// Scrollbar related data
-	vScrollPos = 0;
-	hScrollPos = 0;
-	vScrollMax = 0;
-	hScrollMax = 0;
-
-	// File-related data
-	lineCount = 0;
-	longestLine = 0;
-
 
 	SetupScrollbars();
 }
@@ -36,9 +33,7 @@ TextView::TextView(HWND hwnd) : pTextDoc(new TextDocument())
 //
 TextView::~TextView()
 {
-	if (pTextDoc)
-		pTextDoc.release();
-	//delete m_pTextDoc;
+	//pTextDoc.release();
 }
 
 VOID TextView::UpdateMetrics()
