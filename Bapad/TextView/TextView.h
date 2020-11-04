@@ -9,6 +9,7 @@ const int	LONGEST_LINE = 0x100;
 const int	TEXTBUFSIZE	= 32;
 const int	MAX_FONTS = 32;
 
+
 class TextView
 {
 public:
@@ -41,7 +42,7 @@ public:
 	LONG AddFont(HFONT);
 	LONG SetFont(HFONT, int idx);
 	LONG SetLineSpacing(int nAbove, int nBelow);
-
+	
 
 private:
 
@@ -65,6 +66,7 @@ private:
 
 	VOID	SetupScrollbars();
 	VOID	UpdateMetrics();
+	VOID	RecalcLineHeight();
 	bool    PinToBottomCorner();
 	void	Scroll(int dx, int dy);
 
@@ -75,11 +77,14 @@ private:
 
 	HWND	hWnd;
 
-	// Font-related data	
-	FONT	fontAttr[MAX_FONTS];
+	// Font-related data
+	std::vector<FONT> fontAttr;
 	HFONT	font;
 	int		fontWidth;
 	int		lineHeight;
+	int		maxAscent;	
+	int		heightAbove;
+	int		heightBelow;
 
 	// Scrollbar related data
 	ULONG	vScrollPos;
@@ -97,6 +102,7 @@ private:
 	ULONG	selectionEnd;
 	ULONG	cursorOffset;
 
+	COLORREF rgbColourList[TXC_MAX_COLOURS];
 
 	// File-related data
 	ULONG	lineCount;
@@ -105,7 +111,6 @@ private:
 	// Runtime related data
 	bool	mouseDown;
 
-	//should use smart pointer?
-	//TextDocument* m_pTextDoc;
+	
 	std::unique_ptr<TextDocument> pTextDoc;
 };

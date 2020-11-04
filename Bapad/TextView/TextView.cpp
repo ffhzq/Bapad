@@ -13,6 +13,7 @@ void fnTextView()
 TextView::TextView(HWND hwnd) 
     :   pTextDoc(new TextDocument()),
         hWnd(hwnd),
+        fontAttr(MAX_FONTS),
         // Scrollbar related data
         vScrollPos(0),
         hScrollPos(0),
@@ -70,14 +71,19 @@ LRESULT CALLBACK TextViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
         // Set a new font 
         case WM_SETFONT:
             return ptv->OnSetFont((HFONT)wParam);
+
         case WM_SIZE:
             return ptv->OnSize(static_cast<UINT>(wParam), LOWORD(lParam), HIWORD(lParam));
+
         case WM_VSCROLL:
             return ptv->OnVScroll(LOWORD(wParam), HIWORD(wParam));
+
         case WM_HSCROLL:
             return ptv->OnHScroll(LOWORD(wParam), HIWORD(wParam));
+
         case WM_MOUSEACTIVATE:
             return ptv->OnMouseActivate((HWND)wParam, LOWORD(lParam), HIWORD(lParam));
+
         case WM_MOUSEWHEEL:
             return ptv->OnMouseWheel((short)HIWORD(wParam));
             
@@ -95,12 +101,13 @@ LRESULT CALLBACK TextViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 
         case WM_MOUSEMOVE:
             return ptv->OnMouseMove(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
-            //
+
         case TXM_OPENFILE:
             return ptv->OpenFile(reinterpret_cast<wchar_t*>(lParam));
 
         case TXM_CLEAR:
             return ptv->ClearFile();
+
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
     }

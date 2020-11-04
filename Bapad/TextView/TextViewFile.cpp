@@ -43,17 +43,3 @@ LONG TextView::ClearFile()
 	return TRUE;
 }
 
-LONG TextView::AddFont(HFONT)
-{
-	return 0;
-}
-
-LONG TextView::SetFont(HFONT, int idx)
-{
-	return 0;
-}
-
-LONG TextView::SetLineSpacing(int nAbove, int nBelow)
-{
-	return 0;
-}

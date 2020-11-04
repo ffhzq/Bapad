@@ -30,4 +30,4 @@ HWND CreateTextView(HWND hwndParent);
 #define TXC_BACKGROUND		0			// normal background colour
 #define TXC_FOREGROUND		1			// normal foreground colour
 
-#define TXC_MAX_COLOURS		2			// keep this updated!
+const size_t TXC_MAX_COLOURS = 6;			// keep this updated!
