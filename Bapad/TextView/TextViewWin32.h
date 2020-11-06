@@ -27,7 +27,20 @@ HWND CreateTextView(HWND hwndParent);
 //
 //	TextView colours
 //
-#define TXC_BACKGROUND		0			// normal background colour
-#define TXC_FOREGROUND		1			// normal foreground colour
+#define TXC_FOREGROUND			0			// normal foreground colour
+#define TXC_BACKGROUND			1			// normal background colour
+#define TXC_HIGHLIGHTTEXT		2			// normal text highlight colour
+#define TXC_HIGHLIGHT			3			// normal background highlight colour
+#define TXC_HIGHLIGHTTEXT2		4			// inactive text highlight colour
+#define TXC_HIGHLIGHT2			5			// inactive background highlight colour
 
 const size_t TXC_MAX_COLOURS = 6;			// keep this updated!
+
+#define SYSCOL(COLOR_IDX)   ( 0x80000000 | COLOR_IDX)
+#define SYSCOLIDX(COLREF)   (~0x80000000 & COLREF)
+
+
+inline COLORREF REALIZE_SYSCOL(COLORREF col)
+{
+	return (col & 0x80000000 ? GetSysColor(col & ~0x80000000) : col);
+}

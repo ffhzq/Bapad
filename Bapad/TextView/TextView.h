@@ -17,7 +17,7 @@ public:
 	TextView(HWND hwnd);
 	~TextView();
 
-	//滚动等操作后重新绘制
+	//处理消息
 	LONG OnPaint();
 	LONG OnSetFont(HFONT hFont);
 	LONG OnSize(UINT nFlags, int width, int height);
@@ -46,20 +46,26 @@ public:
 
 private:
 
-
-	void RefreshWindow();
-	void PaintLine(HDC hdc, ULONG line);
-	void PaintText(HDC hdc, ULONG nLineNo, RECT* rect);
+	void	PaintLine(HDC hdc, ULONG line);
+	void	PaintText(HDC hdc, ULONG nLineNo, RECT* rect);
 	
+	int		ApplyTextAttributes(ULONG nLineNo, ULONG offset, WCHAR* szText, int nTextLen, ATTR* attr);
+	int		BaTextOut(HDC hdc, int xpos, int ypos, WCHAR* szText, int nLen, int nTabOrigin, ATTR* attr);
 
+	int		PaintCtrlChar(HDC hdc, int xpos, int ypos, ULONG chValue, FONT* fa);
+	void	InitCtrlCharFontAttr(HDC hdc, FONT* fa);
 
-	void TabbedExtTextOut(HDC hdc, RECT* rect, WCHAR* buf, size_t len);
+	void	RefreshWindow();
+	LONG	InvalidateRange(ULONG nStart, ULONG nFinish);
 
+	int		CtrlCharWidth(HDC hdc, ULONG chValue, FONT* fa);
+	int		BaTextWidth(HDC hdc, WCHAR* buf, int len, int nTabOrigin);
+	int		TabWidth();
 
-	
-	LONG InvalidateRange(ULONG nStart, ULONG nFinish);
-
-	int	 TabWidth();
+	BOOL	MouseCoordToFilePos(int x, int y, 
+		ULONG& pnLineNo, ULONG& pnCharOffset,
+		ULONG& pnFileOffset, int& px);
+	ULONG  RepositionCaret();
 
 
 	COLORREF GetColour(UINT idx);
@@ -69,10 +75,6 @@ private:
 	VOID	RecalcLineHeight();
 	bool    PinToBottomCorner();
 	void	Scroll(int dx, int dy);
-
-	BOOL  MouseCoordToFilePos(int x, int y, ULONG& pnLineNo, ULONG& pnCharOffset, ULONG& pnFileOffset, int& px);
-
-	int  TextWidth(HDC hdc, TCHAR* buf, int len, int nTabOrigin);
 
 
 	HWND	hWnd;
@@ -97,7 +99,7 @@ private:
 	int		windowColumns;
 
 	// Display related data
-	int		tabWidthchars;
+	int		tabWidthChars;
 	ULONG	selectionStart;
 	ULONG	selectionEnd;
 	ULONG	cursorOffset;

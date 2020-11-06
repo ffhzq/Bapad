@@ -126,15 +126,6 @@ size_t TextDocument::getline(size_t lineno, wchar_t* buf, size_t len, ULONG* fil
     return linelen;
 }
 
-LONG TextDocument::getline(ULONG lineno, ULONG offset, wchar_t* buf, size_t len, ULONG* fileoff)
-{
-    return 0;
-}
-
-ULONG TextDocument::getdata(ULONG offset, wchar_t* buf, size_t len)
-{
-    return 0;
-}
 
 size_t TextDocument::getLinecount()
 {

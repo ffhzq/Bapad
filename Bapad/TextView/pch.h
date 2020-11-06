@@ -12,7 +12,7 @@
 #include <windows.h>
 #include <memory>
 #include <vector>
-
+#include <string>
 
 
 #endif //PCH_H

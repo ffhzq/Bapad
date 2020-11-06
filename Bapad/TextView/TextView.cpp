@@ -46,6 +46,27 @@ VOID TextView::UpdateMetrics()
 	RefreshWindow();
 }
 
+LONG TextView::OnSetFocus(HWND hwndOld)
+{
+    CreateCaret(hWnd, (HBITMAP)NULL, 2, lineHeight);
+    RepositionCaret();
+
+    ShowCaret(hWnd);
+    RefreshWindow();
+    return 0;
+}
+
+LONG TextView::OnKillFocus(HWND hwndNew)
+{
+    HideCaret(hWnd);
+    DestroyCaret();
+    RefreshWindow();
+    return 0;
+}
+
+
+
+
 
 //WIN32
 LRESULT CALLBACK TextViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
