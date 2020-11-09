@@ -7,7 +7,7 @@ void	DrawCheckedRect(HDC hdc, RECT* rect, COLORREF fg, COLORREF bg);
 
 int TextView::ApplyTextAttributes(ULONG nLineNo, ULONG nOffset, WCHAR* szText, int nTextLen, ATTR* attr)
 {
-	int		 font = nLineNo % fontAttr.size();
+	size_t	 font = nLineNo % fontAttr.size();
 	COLORREF fg = RGB(rand() % 200, rand() % 200, rand() % 200);
 
 	int i;

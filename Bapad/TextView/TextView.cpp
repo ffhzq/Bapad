@@ -11,20 +11,40 @@ void fnTextView()
 
 
 TextView::TextView(HWND hwnd) 
-    :   pTextDoc(new TextDocument()),
-        hWnd(hwnd),
-        fontAttr(MAX_FONTS),
-        // Scrollbar related data
-        vScrollPos(0),
-        hScrollPos(0),
-        vScrollMax(0),
-        hScrollMax(0),
-        // File-related data
-        lineCount(0),
-        longestLine(0)
+    :  
+    hWnd(hwnd),
+    // Font-related data
+    fontAttr(1),
+    heightAbove(0),
+    heightBelow(0),
+    // Scrollbar related data
+    vScrollPos(0),
+    hScrollPos(0),
+    vScrollMax(0),
+    hScrollMax(0),
+    // File-related data
+    lineCount(0),
+    longestLine(0),
+    // Display-related data
+    tabWidthChars(4),
+    // Runtime data
+    mouseDown(false),
+    selectionStart(0),
+    selectionEnd(0),
+    cursorOffset(0),
+    pTextDoc(new TextDocument())
 {
 	// Set the default font
 	OnSetFont((HFONT)GetStockObject(ANSI_FIXED_FONT));
+
+    // Default display colours
+    rgbColourList[TXC_FOREGROUND] = SYSCOL(COLOR_WINDOWTEXT);
+    rgbColourList[TXC_BACKGROUND] = SYSCOL(COLOR_WINDOW);
+    rgbColourList[TXC_HIGHLIGHTTEXT] = SYSCOL(COLOR_HIGHLIGHTTEXT);
+    rgbColourList[TXC_HIGHLIGHT] = SYSCOL(COLOR_HIGHLIGHT);
+    rgbColourList[TXC_HIGHLIGHTTEXT2] = SYSCOL(COLOR_INACTIVECAPTIONTEXT);
+    rgbColourList[TXC_HIGHLIGHT2] = SYSCOL(COLOR_INACTIVECAPTION);
+
 
 	SetupScrollbars();
 }

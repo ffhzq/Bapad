@@ -343,7 +343,7 @@ BOOL TextView::MouseCoordToFilePos(
 	pnLineNo = nLineNo;
 	//*pnCharOffset=charoff;
 	pfnFileOffset = fileoff + pnCharOffset;
-	px = curx - hScrollPos * fontWidth;
+	px = curx - static_cast<LONGLONG>(hScrollPos * fontWidth);
 
 	return 0;
 }

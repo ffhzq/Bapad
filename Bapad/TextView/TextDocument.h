@@ -7,32 +7,32 @@ class TextDocument
 public:
     TextDocument();
     ~TextDocument();
-    //Get Handle of file then invoke init(HANDLE hFile) ,if success return true,or return false 
-    bool init(wchar_t* filename);
-    //
-    bool init(HANDLE hFile);
 
-    bool clear();
+    //Initialize the TextDocument with the specified file
+    bool    init(wchar_t* filename);
+    //	Initialize using a file-handle
+    bool    init(HANDLE hFile);
+
+    bool    clear();
   
-    bool  offset_to_line(ULONG fileoffset, ULONG* lineno, ULONG* offset);
-    bool  getlineinfo(ULONG lineno, ULONG* fileoff, ULONG* length);
+    //	Perform a reverse lookup - file-offset to line number
+    bool    offset_to_line(ULONG fileoffset, ULONG* lineno, ULONG* offset);
+    bool    getlineinfo(ULONG lineno, ULONG* fileoff, ULONG* length);
 
-    size_t getline(size_t lineno, wchar_t* buf, size_t len, ULONG* fileoff = 0);
-    LONG getline(ULONG lineno, ULONG offset, wchar_t* buf, size_t len, ULONG* fileoff = 0);
-    ULONG getdata(ULONG offset, wchar_t* buf, size_t len);
+    size_t  getline(size_t lineno, wchar_t* buf, size_t len, ULONG* fileoff = 0);
+    size_t  getline(size_t lineno, size_t offset, wchar_t* buf, size_t len, ULONG* fileoff = 0);
+    size_t  getdata(size_t offset, wchar_t* buf, size_t len);
 
-    size_t getLinecount();
-
-    size_t getLongestline(int tabwidth);
-
+    const size_t getLinecount() const;
+    const size_t getLongestline(int tabwidth) const;
     const size_t getDocLength() const;
     
 private:
-    bool init_linebuffer();
+    bool    init_linebuffer();
 
-    wchar_t* buffer;
-    size_t* linebuffer;
-    size_t DocumentLength;
-    size_t  numlines;
+    wchar_t*    buffer;
+    size_t*     linebuffer;
+    size_t      DocumentLength;
+    size_t      numlines;
     
 };
