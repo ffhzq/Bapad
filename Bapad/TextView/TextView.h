@@ -40,7 +40,7 @@ public:
 	LONG ClearFile();
 
 	LONG AddFont(HFONT);
-	LONG SetFont(HFONT, int idx);
+	LONG SetFont(HFONT, size_t idx);
 	LONG SetLineSpacing(int nAbove, int nBelow);
 	
 
@@ -49,22 +49,22 @@ private:
 	void	PaintLine(HDC hdc, ULONG line);
 	void	PaintText(HDC hdc, ULONG nLineNo, RECT* rect);
 	
-	int		ApplyTextAttributes(ULONG nLineNo, ULONG offset, WCHAR* szText, int nTextLen, ATTR* attr);
+	size_t		ApplyTextAttributes(size_t nLineNo, size_t offset, WCHAR* szText, int nTextLen, ATTR* attr);
 	int		BaTextOut(HDC hdc, int xpos, int ypos, WCHAR* szText, int nLen, int nTabOrigin, ATTR* attr);
 
 	int		PaintCtrlChar(HDC hdc, int xpos, int ypos, ULONG chValue, FONT* fa);
 	void	InitCtrlCharFontAttr(HDC hdc, FONT* fa);
 
 	void	RefreshWindow();
-	LONG	InvalidateRange(ULONG nStart, ULONG nFinish);
+	LONG	InvalidateRange(size_t nStart, size_t nFinish);
 
 	int		CtrlCharWidth(HDC hdc, ULONG chValue, FONT* fa);
 	int		BaTextWidth(HDC hdc, WCHAR* buf, int len, int nTabOrigin);
 	int		TabWidth();
 
 	BOOL	MouseCoordToFilePos(int x, int y, 
-		ULONG& pnLineNo, ULONG& pnCharOffset,
-		ULONG& pnFileOffset, int& px);
+		size_t& pnLineNo, size_t& pnCharOffset,
+		size_t& pnFileOffset, int& px);
 	ULONG  RepositionCaret();
 
 
@@ -94,20 +94,20 @@ private:
 	int		hScrollPos;
 	int		hScrollMax;
 
-	int		longestLine;
+	size_t		longestLine;
 	int		windowLines;
 	int		windowColumns;
 
 	// Display related data
 	int		tabWidthChars;
-	ULONG	selectionStart;
-	ULONG	selectionEnd;
-	ULONG	cursorOffset;
+	size_t	selectionStart;
+	size_t	selectionEnd;
+	size_t	cursorOffset;
 
 	COLORREF rgbColourList[TXC_MAX_COLOURS];
 
 	// File-related data
-	ULONG	lineCount;
+	size_t	lineCount;
 
 
 	// Runtime related data

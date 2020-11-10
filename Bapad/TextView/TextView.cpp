@@ -54,7 +54,6 @@ TextView::TextView(HWND hwnd)
 //
 TextView::~TextView()
 {
-	//pTextDoc.release();
 }
 
 VOID TextView::UpdateMetrics()

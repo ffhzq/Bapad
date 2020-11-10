@@ -22,9 +22,9 @@ LONG TextView::OnMouseActivate(HWND hwndTop, UINT nHitTest, UINT nMessage)
 //
 LONG TextView::OnLButtonDown(UINT nFlags, int mx, int my)
 {
-	ULONG nLineNo;
-	ULONG nCharOff;
-	ULONG nFileOff;
+	size_t nLineNo;
+	size_t nCharOff;
+	size_t nFileOff;
 	int   px;
 
 	// map the mouse-coordinates to a real file-offset-coordinate
@@ -48,12 +48,12 @@ LONG TextView::OnLButtonDown(UINT nFlags, int mx, int my)
 //
 //	Redraw the specified range of text/data in the control
 //
-LONG TextView::InvalidateRange(ULONG nStart, ULONG nFinish)
+LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 {
-	ULONG start = min(nStart, nFinish);
-	ULONG finish = max(nStart, nFinish);
+	size_t start = min(nStart, nFinish);
+	size_t finish = max(nStart, nFinish);
 
-	ULONG lineno, charoff, linelen, lineoff;
+	size_t lineno, charoff, linelen, lineoff;
 	int   xpos1 = 0, xpos2 = 0;
 	int  ypos;
 
@@ -89,15 +89,15 @@ LONG TextView::InvalidateRange(ULONG nStart, ULONG nFinish)
 	// selection starts midline...
 	if (charoff != 0)
 	{
-		ULONG off = 0;
+		size_t off = 0;
 		TCHAR buf[TEXTBUFSIZE];
-		int   len = charoff;
+		size_t   len = charoff;
 		int   width = 0;
 
 		// loop until we get on-screen
 		while (off < charoff)
 		{
-			int tlen = min(len, TEXTBUFSIZE);
+			size_t tlen = min(len, TEXTBUFSIZE);
 			tlen = pTextDoc->getline(lineno, off, buf, tlen, 0);
 
 			len -= tlen;
@@ -132,7 +132,7 @@ LONG TextView::InvalidateRange(ULONG nStart, ULONG nFinish)
 	}
 
 	// erase up to the end of selection
-	ULONG offset = lineoff + charoff;
+	size_t offset = lineoff + charoff;
 
 	xpos2 = xpos1;
 
@@ -189,7 +189,7 @@ LONG TextView::OnMouseMove(UINT nFlags, int mx, int my)
 {
 	if (mouseDown)
 	{
-		ULONG	nLineNo, nCharOff, nFileOff;
+		size_t	nLineNo, nCharOff, nFileOff;
 		int		cx;
 
 		// get new cursor offset+coordinates
@@ -222,19 +222,19 @@ LONG TextView::OnMouseMove(UINT nFlags, int mx, int my)
 BOOL TextView::MouseCoordToFilePos(
 	int		mx,			// [in]  mouse x-coord
 	int		my,			// [in]  mouse x-coord
-	ULONG&	pnLineNo,		// [out] line number
-	ULONG&	pnCharOffset,	// [out] char-offset from start of line
-	ULONG&	pfnFileOffset, // [out] zero-based file-offset
+	size_t&	pnLineNo,		// [out] line number
+	size_t&	pnCharOffset,	// [out] char-offset from start of line
+	size_t&	pfnFileOffset, // [out] zero-based file-offset
 	int&	px				// [out] adjusted x coord of caret
 )
 {
-	ULONG nLineNo;
+	size_t nLineNo;
 
-	ULONG charoff = 0;
-	ULONG fileoff = 0;
+	size_t charoff = 0;
+	size_t fileoff = 0;
 
 	WCHAR buf[TEXTBUFSIZE];
-	LONGLONG  len;
+	size_t  len;
 	LONGLONG  curx = 0;
 	RECT  rect;
 
@@ -249,7 +249,7 @@ BOOL TextView::MouseCoordToFilePos(
 	if (mx >= rect.right)	mx = rect.right - 1;
 
 	// It's easy to find the line-number: just divide 'y' by the line-height
-	nLineNo = (my / lineHeight) + vScrollPos;
+	nLineNo = static_cast<size_t>((my / lineHeight)) + vScrollPos;
 
 	// make sure we don't go outside of the document
 	if (nLineNo >= lineCount)
@@ -273,7 +273,7 @@ BOOL TextView::MouseCoordToFilePos(
 		if ((len = pTextDoc->getline(nLineNo, charoff, buf, TEXTBUFSIZE, &fileoff)) == 0)
 			break;
 
-		int tlen = len;
+		LONGLONG tlen = len;
 
 		if (len > 1 && buf[len - 2] == '\r')
 		{
@@ -299,7 +299,7 @@ BOOL TextView::MouseCoordToFilePos(
 
 			while (low < high - 1)
 			{
-				int newlen = (high - low) / 2;
+				LONGLONG newlen = (high - low) / 2;
 				
 				width = BaTextWidth(hdc, buf + low, newlen, -lowx - curx);
 
@@ -343,7 +343,7 @@ BOOL TextView::MouseCoordToFilePos(
 	pnLineNo = nLineNo;
 	//*pnCharOffset=charoff;
 	pfnFileOffset = fileoff + pnCharOffset;
-	px = curx - static_cast<LONGLONG>(hScrollPos * fontWidth);
+	px = curx - static_cast<LONGLONG>(hScrollPos) * static_cast<LONGLONG>(fontWidth);
 
 	return 0;
 }
@@ -354,8 +354,8 @@ BOOL TextView::MouseCoordToFilePos(
 //
 ULONG TextView::RepositionCaret()
 {
-	ULONG lineno, charoff;
-	ULONG offset = 0;
+	size_t lineno, charoff;
+	size_t offset = 0;
 	int   xpos = 0;
 	int   ypos = 0;
 	TCHAR buf[TEXTBUFSIZE];
@@ -376,8 +376,8 @@ ULONG TextView::RepositionCaret()
 	// now find the x-coordinate on the specified line
 	while (offset < charoff)
 	{
-		int tlen = min((charoff - offset), TEXTBUFSIZE);
-		tlen = pTextDoc->getdata(nOffset - charoff + offset, buf, tlen);
+		size_t tlen = min((charoff - offset), TEXTBUFSIZE);
+		tlen = pTextDoc->getdata(static_cast<LONGLONG>(nOffset - charoff) + offset, buf, tlen);
 
 		offset += tlen;
 		xpos += BaTextWidth(hdc, buf, tlen, -xpos);

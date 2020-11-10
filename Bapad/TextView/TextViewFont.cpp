@@ -20,7 +20,7 @@ int TextView::CtrlCharWidth(HDC hdc, ULONG chValue, FONT* font)
 {
 	SIZE sz;
 	const wchar_t* str = CtrlStr(chValue % 32);
-	GetTextExtentPoint32(hdc, str, wcslen(str), &sz);
+	GetTextExtentPoint32W(hdc, str, wcslen(str), &sz);
 	return sz.cx + 4;
 }
 
@@ -92,7 +92,7 @@ LONG TextView::AddFont(HFONT hFont)
 	return 0;
 }
 
-LONG TextView::SetFont(HFONT hFont, int idx)
+LONG TextView::SetFont(HFONT hFont, size_t idx)
 {
 
 	FONT* font = &fontAttr[idx];

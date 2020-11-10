@@ -1,19 +1,19 @@
 #include "pch.h"
 #include "TextView.h"
 
-int		StripCRLF(WCHAR* szText, int nLength);
+size_t		StripCRLF(WCHAR* szText, size_t nLength);
 void	PaintRect(HDC hdc, int x, int y, int width, int height, COLORREF fill);
 void	DrawCheckedRect(HDC hdc, RECT* rect, COLORREF fg, COLORREF bg);
 
-int TextView::ApplyTextAttributes(ULONG nLineNo, ULONG nOffset, WCHAR* szText, int nTextLen, ATTR* attr)
+size_t TextView::ApplyTextAttributes(size_t nLineNo, size_t nOffset, WCHAR* szText, int nTextLen, ATTR* attr)
 {
 	size_t	 font = nLineNo % fontAttr.size();
 	COLORREF fg = RGB(rand() % 200, rand() % 200, rand() % 200);
 
 	int i;
 
-	ULONG selstart = min(selectionStart, selectionEnd);
-	ULONG selend = max(selectionStart, selectionEnd);
+	size_t selstart = min(selectionStart, selectionEnd);
+	size_t selend = max(selectionStart, selectionEnd);
 
 	//
 	//	TODO: 1. Apply syntax colouring first of all
@@ -65,7 +65,7 @@ int TextView::ApplyTextAttributes(ULONG nLineNo, ULONG nOffset, WCHAR* szText, i
 //	Strip CR/LF combinations from the end of a line and
 //  replace with a single space character (for drawing purposes)
 //
-int StripCRLF(WCHAR* szText, int nLength)
+size_t StripCRLF(WCHAR* szText, size_t nLength)
 {
 	if (nLength >= 2)
 	{
@@ -248,8 +248,8 @@ void TextView::PaintText(HDC hdc, ULONG nLineNo, RECT* rect)
 	TCHAR		buff[TEXTBUFSIZE];
 	ATTR		attr[TEXTBUFSIZE];
 
-	ULONG		charoff = 0;
-	int			len;
+	size_t		charoff = 0;
+	size_t			len;
 
 	int			xpos = rect->left;
 	int			ypos = rect->top;
@@ -265,7 +265,7 @@ void TextView::PaintText(HDC hdc, ULONG nLineNo, RECT* rect)
 	//
 	while (xpos < rect->right)
 	{
-		ULONG fileoff;
+		size_t fileoff;
 		int	  lasti = 0;
 		int   i;
 

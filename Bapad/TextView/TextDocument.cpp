@@ -71,8 +71,7 @@ bool TextDocument::init(HANDLE hFile)
 
 bool TextDocument::init_linebuffer()
 {
-    size_t i = 0;
-    size_t linestart = 0;
+    numlines = 0;
 
     const size_t linebufferSize = DocumentLength + 1;
 
@@ -80,11 +79,9 @@ bool TextDocument::init_linebuffer()
     if ((linebuffer = new size_t[linebufferSize]) == 0)
         return false;
 
-
-    numlines = 0;
-
+    size_t linestart = 0;
     // loop through every byte in the file
-    for (i = 0; i < DocumentLength; )
+    for (size_t i = 0; i < DocumentLength; )
     {
         if (buffer[i++] == '\r')
         {
@@ -93,19 +90,21 @@ bool TextDocument::init_linebuffer()
                 i++;
 
             // record where the line starts
-            linebuffer[numlines++] = linestart;
+            if(numlines < linebufferSize)
+                linebuffer[numlines++] = linestart;
             linestart = i;
         }
     }
-    if (numlines == 0)//(DocumentLength>0)
+    if(DocumentLength>0&&numlines < linebufferSize)
         linebuffer[numlines++] = linestart;
+    if (numlines < linebufferSize)
     linebuffer[numlines] = DocumentLength;
 
     return true;
 }
 
 
-size_t TextDocument::getline(size_t lineno, size_t offset, wchar_t* buf, size_t len, ULONG* fileoff)
+size_t TextDocument::getline(size_t lineno, size_t offset, wchar_t* buf, size_t len, size_t* fileoff)
 {
     if (lineno >= numlines || buffer == nullptr || DocumentLength == 0)
     {
@@ -137,7 +136,7 @@ size_t TextDocument::getline(size_t lineno, size_t offset, wchar_t* buf, size_t 
     return linelen;
 }
 
-size_t TextDocument::getline(size_t lineno, wchar_t* buf, size_t len, ULONG* fileoff)
+size_t TextDocument::getline(size_t lineno, wchar_t* buf, size_t len, size_t* fileoff)
 {
     return getline(lineno, 0, buf, len, fileoff);
 }
@@ -205,10 +204,10 @@ bool TextDocument::clear()
     return true;
 }
 
-bool TextDocument::offset_to_line(ULONG fileoffset, ULONG* lineno, ULONG* offset)
+bool TextDocument::offset_to_line(size_t fileoffset, size_t* lineno, size_t* offset)
 {
-    ULONG low = 0, high = numlines - 1;
-    ULONG line = 0;
+    size_t low = 0, high = numlines - 1;
+    size_t line = 0;
 
     if (numlines == 0)
     {
@@ -241,7 +240,7 @@ bool TextDocument::offset_to_line(ULONG fileoffset, ULONG* lineno, ULONG* offset
     return true;
 }
 
-bool TextDocument::getlineinfo(ULONG lineno, ULONG* fileoff, ULONG* length)
+bool TextDocument::getlineinfo(size_t lineno, size_t* fileoff, size_t* length)
 {
     if (lineno < numlines)
     {
