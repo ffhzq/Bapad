@@ -151,12 +151,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="FontStruct.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="TextDocument.h" />
     <ClInclude Include="TextView.h" />
-    <ClInclude Include="TextViewWin32.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -168,8 +166,6 @@
     <ClCompile Include="TextDocument.cpp" />
     <ClCompile Include="TextView.cpp" />
     <ClCompile Include="TextViewFile.cpp" />
-    <ClCompile Include="TextViewFont.cpp" />
-    <ClCompile Include="TextViewMouse.cpp" />
     <ClCompile Include="TextViewPaint.cpp" />
     <ClCompile Include="TextViewScoll.cpp" />
   </ItemGroup>
