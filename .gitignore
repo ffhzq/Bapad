@@ -1,1 +1,14 @@
-*.[oa]
+#*.[oa]
+*.sdf
+*.suo
+*.opensdf
+**/.vs/**
+**/Debug/**
+**/Release/**
+*.test.txt
+~$*.docx
+~*.tmp
+*.o
+**/Obj/**
+**/Bin/**
+*~
