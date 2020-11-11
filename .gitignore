@@ -1,0 +1,17 @@
+*.sdf
+*.suo
+*.opensdf
+**/.vs/**
+**/Debug/**
+**/Release/**
+*.test.txt
+~$*.docx
+~*.tmp
+*.o
+**/Obj/**
+**/Bin/**
+*~
+*.db
+x64/
+.vs/
+*.pch
