@@ -64,7 +64,7 @@ bool TextView::PinToBottomCorner()
 //
 LONG TextView::OnSize(UINT nFlags, int width, int height)
 {
-	windowLines = min((unsigned)height / fontHeight, lineCount);
+	windowLines = min((unsigned)height / lineHeight, lineCount);
 	windowColumns = min(width / fontWidth, longestLine);
 
 	if (PinToBottomCorner())
@@ -119,7 +119,7 @@ VOID TextView::Scroll(int dx, int dy)
 		ScrollWindowEx(
 			hWnd,
 			-dx * fontWidth,
-			-dy * fontHeight,
+			-dy * lineHeight,
 			NULL,
 			NULL,
 			0, 0, SW_INVALIDATE

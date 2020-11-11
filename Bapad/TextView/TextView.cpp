@@ -10,22 +10,40 @@ void fnTextView()
 
 
 
-TextView::TextView(HWND hwnd) : textDoc(new TextDocument())
+TextView::TextView(HWND hwnd) 
+    :  
+    hWnd(hwnd),
+    // Font-related data
+    fontAttr(1),
+    heightAbove(0),
+    heightBelow(0),
+    // Scrollbar related data
+    vScrollPos(0),
+    hScrollPos(0),
+    vScrollMax(0),
+    hScrollMax(0),
+    // File-related data
+    lineCount(0),
+    longestLine(0),
+    // Display-related data
+    tabWidthChars(4),
+    // Runtime data
+    mouseDown(false),
+    selectionStart(0),
+    selectionEnd(0),
+    cursorOffset(0),
+    pTextDoc(new TextDocument())
 {
-	hWnd = hwnd;
-
 	// Set the default font
 	OnSetFont((HFONT)GetStockObject(ANSI_FIXED_FONT));
 
-	// Scrollbar related data
-	vScrollPos = 0;
-	hScrollPos = 0;
-	vScrollMax = 0;
-	hScrollMax = 0;
-
-	// File-related data
-	lineCount = 0;
-	longestLine = 0;
+    // Default display colours
+    rgbColourList[TXC_FOREGROUND] = SYSCOL(COLOR_WINDOWTEXT);
+    rgbColourList[TXC_BACKGROUND] = SYSCOL(COLOR_WINDOW);
+    rgbColourList[TXC_HIGHLIGHTTEXT] = SYSCOL(COLOR_HIGHLIGHTTEXT);
+    rgbColourList[TXC_HIGHLIGHT] = SYSCOL(COLOR_HIGHLIGHT);
+    rgbColourList[TXC_HIGHLIGHTTEXT2] = SYSCOL(COLOR_INACTIVECAPTIONTEXT);
+    rgbColourList[TXC_HIGHLIGHT2] = SYSCOL(COLOR_INACTIVECAPTION);
 
 
 	SetupScrollbars();
@@ -36,9 +54,6 @@ TextView::TextView(HWND hwnd) : textDoc(new TextDocument())
 //
 TextView::~TextView()
 {
-	if (textDoc)
-		textDoc.release();
-	//delete m_pTextDoc;
 }
 
 VOID TextView::UpdateMetrics()
@@ -49,34 +64,27 @@ VOID TextView::UpdateMetrics()
 	OnSize(0, rect.right, rect.bottom);
 	RefreshWindow();
 }
-//
-//	Set a new font
-//
-LONG TextView::OnSetFont(HFONT hFont)
+
+LONG TextView::OnSetFocus(HWND hwndOld)
 {
-	HDC hdc;
-	TEXTMETRIC tm;
-	HANDLE hOld;
+    CreateCaret(hWnd, (HBITMAP)NULL, 2, lineHeight);
+    RepositionCaret();
 
-	font = hFont;
-
-	hdc = GetDC(hWnd);
-	hOld = SelectObject(hdc, hFont);
-
-	GetTextMetricsW(hdc, &tm);
-
-	fontHeight = tm.tmHeight;
-	fontWidth = tm.tmAveCharWidth;
-
-	// Restoring the original object 
-	SelectObject(hdc, hOld);
-
-	ReleaseDC(hWnd, hdc);
-
-	UpdateMetrics();
-
-	return 0;
+    ShowCaret(hWnd);
+    RefreshWindow();
+    return 0;
 }
+
+LONG TextView::OnKillFocus(HWND hwndNew)
+{
+    HideCaret(hWnd);
+    DestroyCaret();
+    RefreshWindow();
+    return 0;
+}
+
+
+
 
 
 //WIN32
@@ -103,17 +111,37 @@ LRESULT CALLBACK TextViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
         // Set a new font 
         case WM_SETFONT:
             return ptv->OnSetFont((HFONT)wParam);
+
         case WM_SIZE:
             return ptv->OnSize(static_cast<UINT>(wParam), LOWORD(lParam), HIWORD(lParam));
+
         case WM_VSCROLL:
             return ptv->OnVScroll(LOWORD(wParam), HIWORD(wParam));
+
         case WM_HSCROLL:
             return ptv->OnHScroll(LOWORD(wParam), HIWORD(wParam));
 
+        case WM_MOUSEACTIVATE:
+            return ptv->OnMouseActivate((HWND)wParam, LOWORD(lParam), HIWORD(lParam));
+
         case WM_MOUSEWHEEL:
             return ptv->OnMouseWheel((short)HIWORD(wParam));
+            
+        case WM_SETFOCUS:
+            return ptv->OnSetFocus((HWND)wParam);
 
-            //
+        case WM_KILLFOCUS:
+            return ptv->OnKillFocus((HWND)wParam);
+
+        case WM_LBUTTONDOWN:
+            return ptv->OnLButtonDown(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+
+        case WM_LBUTTONUP:
+            return ptv->OnLButtonUp(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+
+        case WM_MOUSEMOVE:
+            return ptv->OnMouseMove(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+
         case TXM_OPENFILE:
             return ptv->OpenFile(reinterpret_cast<wchar_t*>(lParam));
 
