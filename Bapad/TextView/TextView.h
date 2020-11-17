@@ -24,6 +24,7 @@ public:
 	LONG OnVScroll(UINT nSBCode, UINT nPos);
 	LONG OnHScroll(UINT nSBCode, UINT nPos);
 	LONG OnMouseWheel(int nDelta);
+	LONG OnTimer(UINT nTimer);
 
 	//鼠标
 	LONG OnMouseActivate(HWND hwndTop, UINT nHitTest, UINT nMessage);
@@ -31,10 +32,10 @@ public:
 	LONG OnLButtonUp(UINT nFlags, int x, int y);
 	LONG OnMouseMove(UINT nFlags, int x, int y);
 
-
 	LONG OnSetFocus(HWND hwndOld);
 	LONG OnKillFocus(HWND hwndNew);
 
+	//用户操作
 
 	LONG OpenFile(WCHAR* szFileName);
 	LONG ClearFile();
@@ -42,14 +43,14 @@ public:
 	LONG AddFont(HFONT);
 	LONG SetFont(HFONT, size_t idx);
 	LONG SetLineSpacing(int nAbove, int nBelow);
-	
+	COLORREF SetColour(UINT idx, COLORREF rgbColour);
 
 private:
 
 	void	PaintLine(HDC hdc, ULONG line);
 	void	PaintText(HDC hdc, ULONG nLineNo, RECT* rect);
 	
-	size_t		ApplyTextAttributes(size_t nLineNo, size_t offset, WCHAR* szText, int nTextLen, ATTR* attr);
+	size_t	ApplyTextAttributes(size_t nLineNo, size_t offset, WCHAR* szText, int nTextLen, ATTR* attr);
 	int		BaTextOut(HDC hdc, int xpos, int ypos, WCHAR* szText, int nLen, int nTabOrigin, ATTR* attr);
 
 	int		PaintCtrlChar(HDC hdc, int xpos, int ypos, ULONG chValue, FONT* fa);
@@ -58,7 +59,7 @@ private:
 	void	RefreshWindow();
 	LONG	InvalidateRange(size_t nStart, size_t nFinish);
 
-	int		CtrlCharWidth(HDC hdc, ULONG chValue, FONT* fa);
+	int		GetCtrlCharWidth(HDC hdc, ULONG chValue, FONT* fa);
 	int		BaTextWidth(HDC hdc, WCHAR* buf, int len, int nTabOrigin);
 	int		TabWidth();
 
@@ -74,8 +75,9 @@ private:
 	VOID	UpdateMetrics();
 	VOID	RecalcLineHeight();
 	bool    PinToBottomCorner();
-	void	Scroll(int dx, int dy);
 
+	void	Scroll(int dx, int dy);
+	HRGN	ScrollRgn(int dx, int dy, bool fReturnUpdateRgn);
 
 	HWND	hWnd;
 
@@ -94,7 +96,7 @@ private:
 	int		hScrollPos;
 	int		hScrollMax;
 
-	size_t		longestLine;
+	size_t	longestLine;
 	int		windowLines;
 	int		windowColumns;
 
@@ -112,7 +114,8 @@ private:
 
 	// Runtime related data
 	bool	mouseDown;
-
+	UINT	scrollTimer;
+	int		scrollCounter;
 	
 	std::unique_ptr<TextDocument> pTextDoc;
 };

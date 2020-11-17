@@ -9,15 +9,32 @@ HWND CreateTextView(HWND hwndParent);
 //
 //	TextView Window Messages defined here
 //
-#define TXM_BASE         (WM_USER)
-#define TXM_OPENFILE     (TXM_BASE + 0)
-#define TXM_CLEAR        (TXM_BASE + 1)
+#define TXM_BASE				 (WM_USER)
+#define TXM_OPENFILE			 (TXM_BASE + 0)
+#define TXM_CLEAR				 (TXM_BASE + 1)
+#define TXM_SETLINESPACING		 (TXM_BASE + 2)
+#define TXM_ADDFONT				 (TXM_BASE + 3)
+#define TXM_SETCOLOR			 (TXM_BASE + 5)
+
 
 //
 //	TextView Message Macros defined here
 //
-#define TextView_OpenFile(hwndTV, szFile)	SendMessage((hwndTV), TXM_OPENFILE, 0, (LPARAM)(szFile))
-#define TextView_Clear(hwndTV)				SendMessage((hwndTV), TXM_CLEAR, 0, 0)
+#define TextView_OpenFile(hwndTV, szFile)	\
+	SendMessage((hwndTV), TXM_OPENFILE, 0, (LPARAM)(szFile))
+
+#define TextView_Clear(hwndTV)	\
+	SendMessage((hwndTV), TXM_CLEAR, 0, 0)
+
+#define TextView_SetLineSpacing(hwndTV, nAbove, nBelow) \
+	SendMessage((hwndTV), TXM_SETLINESPACING, (int)(nAbove), (int)(nBelow))
+
+#define TextView_AddFont(hwndTV, hFont) \
+	SendMessage((hwndTV), TXM_ADDFONT, (WPARAM)(HFONT)(g_hwndTextView), 0)
+
+#define TextView_SetColor(hwndTV, nIdx, rgbColor) \
+	SendMessage((hwndTV), TXM_SETCOLOR, (WPARAM)(nIdx), (LPARAM)(rgbColor))
+
 
 //
 //	TextView Macros defined here

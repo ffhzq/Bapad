@@ -70,6 +70,7 @@ LONG TextView::OnSize(UINT nFlags, int width, int height)
 	if (PinToBottomCorner())
 	{
 		RefreshWindow();
+		RepositionCaret();
 	}
 
 	SetupScrollbars();
@@ -78,10 +79,20 @@ LONG TextView::OnSize(UINT nFlags, int width, int height)
 }
 
 //
-//	Scroll viewport in specified direction
+//	ScrollRgn
 //
-VOID TextView::Scroll(int dx, int dy)
+//	Scrolls the viewport in specified direction. If fReturnUpdateRgn is true, 
+//	then a HRGN is returned which holds the client-region that must be redrawn 
+//	manually. This region must be deleted by the caller using DeleteObject.
+//
+//  Otherwise ScrollRgn returns NULL and updates the entire window 
+//
+HRGN TextView::ScrollRgn(int dx, int dy, bool fReturnUpdateRgn)
 {
+	RECT clip;
+
+	GetClientRect(hWnd, &clip);
+
 	//
 	// make sure that dx,dy don't scroll us past the edge of the document!
 	//
@@ -90,11 +101,13 @@ VOID TextView::Scroll(int dx, int dy)
 	if (dy < 0)
 	{
 		dy = -(int)min((ULONG)-dy, vScrollPos);
+		clip.top = -dy * lineHeight;
 	}
 	// scroll down
 	else if (dy > 0)
 	{
 		dy = min((ULONG)dy, vScrollMax - vScrollPos);
+		clip.bottom = (windowLines - dy) * lineHeight;
 	}
 
 
@@ -102,11 +115,13 @@ VOID TextView::Scroll(int dx, int dy)
 	if (dx < 0)
 	{
 		dx = -(int)min(-dx, hScrollPos);
+		clip.left = -dx * fontWidth * 4;
 	}
 	// scroll right
 	else if (dx > 0)
 	{
 		dx = min((unsigned)dx, (unsigned)hScrollMax - hScrollPos);
+		clip.right = (windowColumns - dx - 4) * fontWidth;
 	}
 
 	// adjust the scrollbar thumb position
@@ -116,17 +131,52 @@ VOID TextView::Scroll(int dx, int dy)
 	// perform the scroll
 	if (dx != 0 || dy != 0)
 	{
+		// do the scroll!
 		ScrollWindowEx(
 			hWnd,
-			-dx * fontWidth,
+			-dx * fontWidth,					// scale up to pixel coords
 			-dy * lineHeight,
-			NULL,
-			NULL,
-			0, 0, SW_INVALIDATE
+			NULL,								// scroll entire window
+			fReturnUpdateRgn ? &clip : NULL,	// clip the non-scrolling part
+			0,
+			0,
+			SW_INVALIDATE
 		);
 
 		SetupScrollbars();
+
+		if (fReturnUpdateRgn)
+		{
+			RECT client;
+
+			GetClientRect(hWnd, &client);
+
+			HRGN hrgnClient = CreateRectRgnIndirect(&client);
+			HRGN hrgnUpdate = CreateRectRgnIndirect(&clip);
+
+			// create a region that represents the area outside the
+			// clipping rectangle (i.e. the part that is never scrolled)
+			CombineRgn(hrgnUpdate, hrgnClient, hrgnUpdate, RGN_XOR);
+
+			DeleteObject(hrgnClient);
+
+			return hrgnUpdate;
+		}
 	}
+
+	return NULL;
+}
+
+
+//
+//	Scroll viewport in specified direction
+//
+VOID TextView::Scroll(int dx, int dy)
+{
+
+	// do a "normal" scroll - don't worry about invalid regions,
+	// just scroll the whole window 
+	ScrollRgn(dx, dy, false);
 }
 
 LONG GetTrackPos32(HWND hwnd, int nBar)
@@ -183,6 +233,7 @@ LONG TextView::OnVScroll(UINT nSBCode, UINT nPos)
 	if (oldpos != vScrollPos)
 	{
 		SetupScrollbars();
+		RepositionCaret();
 	}
 
 
@@ -235,6 +286,7 @@ LONG TextView::OnHScroll(UINT nSBCode, UINT nPos)
 	if (oldpos != hScrollPos)
 	{
 		SetupScrollbars();
+		RepositionCaret();
 	}
 
 	return 0;
@@ -246,7 +298,7 @@ LONG TextView::OnMouseWheel(int nDelta)
 #define SPI_GETWHEELSCROLLLINES   104
 #endif
 
-	int nScrollLines;
+	int nScrollLines = 0;
 
 	SystemParametersInfo(SPI_GETWHEELSCROLLLINES, 0, &nScrollLines, 0);
 
@@ -254,6 +306,6 @@ LONG TextView::OnMouseWheel(int nDelta)
 		nScrollLines = 3;
 
 	Scroll(0, (-nDelta / 120) * nScrollLines);
-
+	RepositionCaret();
 	return 0;
 }

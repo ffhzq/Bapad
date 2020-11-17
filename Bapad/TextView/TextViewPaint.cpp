@@ -347,3 +347,52 @@ COLORREF TextView::GetColour(UINT idx)
 	default:				return 0;
 	}*/
 }
+
+COLORREF TextView::SetColour(UINT idx, COLORREF rgbColour)
+{
+	COLORREF rgbOld;
+
+	if (idx >= TXC_MAX_COLOURS)
+		return 0;
+
+	rgbOld = rgbColourList[idx];
+	rgbColourList[idx] = rgbColour;
+
+	return rgbOld;
+}
+
+//
+//	Paint a checkered rectangle, with each alternate
+//	pixel being assigned a different colour
+//
+void DrawCheckedRect(HDC hdc, RECT* rect, COLORREF fg, COLORREF bg)
+{
+	static WORD wCheckPat[8] =
+	{
+		0xaaaa, 0x5555, 0xaaaa, 0x5555, 0xaaaa, 0x5555, 0xaaaa, 0x5555
+	};
+
+	HBITMAP hbmp;
+	HBRUSH  hbr, hbrold;
+	COLORREF fgold, bgold;
+
+	hbmp = CreateBitmap(8, 8, 1, 1, wCheckPat);
+	hbr = CreatePatternBrush(hbmp);
+
+	hbrold = (HBRUSH)SelectObject(hdc, hbr);
+
+	fgold = SetTextColor(hdc, fg);
+	bgold = SetBkColor(hdc, bg);
+
+	PatBlt(hdc, rect->left, rect->top,
+		rect->right - rect->left,
+		rect->bottom - rect->top,
+		PATCOPY);
+
+	SetBkColor(hdc, bgold);
+	SetTextColor(hdc, fgold);
+
+	SelectObject(hdc, hbrold);
+	DeleteObject(hbr);
+	DeleteObject(hbmp);
+}

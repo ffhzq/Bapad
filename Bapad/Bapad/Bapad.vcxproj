@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -148,12 +148,17 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Bapad.cpp" />
+    <ClCompile Include="Options.cpp" />
+    <ClCompile Include="OptionsFont.cpp" />
+    <ClCompile Include="OptionsMisc.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Bapad.rc" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Bapad.ico" />
+    <Image Include="icon1.ico" />
+    <Image Include="icon2.ico" />
     <Image Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
