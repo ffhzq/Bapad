@@ -45,27 +45,27 @@ BOOL GetSettingStr(HKEY hkey, const wchar_t szKeyName[], wchar_t pszReturnStr[],
 {
 	ULONG len = nLength * sizeof(wchar_t);
 
-	lstrcpyn(pszReturnStr, szDefault, nLength);
+	lstrcpynW(pszReturnStr, szDefault, nLength);
 
-	return !RegQueryValueEx(hkey, szKeyName, 0, 0, (BYTE*)pszReturnStr, &len);
+	return !RegQueryValueExW(hkey, szKeyName, 0, 0, (BYTE*)pszReturnStr, &len);
 }
 
 // Write a binary value from the registry
 BOOL WriteSettingBin(HKEY hkey, const wchar_t szKeyName[], PVOID pData, ULONG nLength)
 {
-	return !RegSetValueEx(hkey, szKeyName, 0, REG_BINARY, (BYTE*)pData, nLength);
+	return !RegSetValueExW(hkey, szKeyName, 0, REG_BINARY, (BYTE*)pData, nLength);
 }
 
 // Write an integer value from the registry
 BOOL WriteSettingInt(HKEY hkey, const wchar_t szKeyName[], LONG nValue)
 {
-	return !RegSetValueEx(hkey, szKeyName, 0, REG_DWORD, (BYTE*)&nValue, sizeof(nValue));
+	return !RegSetValueExW(hkey, szKeyName, 0, REG_DWORD, (BYTE*)&nValue, sizeof(nValue));
 }
 
 // Get a string buffer from the registry
 BOOL WriteSettingStr(HKEY hkey, const wchar_t szKeyName[], wchar_t szString[])
 {
-	return !RegSetValueEx(hkey, szKeyName, 0, REG_SZ, (BYTE*)szString, (wcslen(szString) + 1) * sizeof(wchar_t));
+	return !RegSetValueExW(hkey, szKeyName, 0, REG_SZ, (BYTE*)szString, (wcslen(szString) + 1) * sizeof(wchar_t));
 }
 
 void LoadRegSettings()
@@ -117,7 +117,7 @@ void SaveRegSettings()
 	WriteSettingInt(hKey, _T("PaddingFlags"), g_fPaddingFlags);
 
 	// write the display colours
-	RegCreateKeyEx(hKey, _T("Colours"), 0, 0, 0, KEY_WRITE, 0, &hColKey, 0);
+	RegCreateKeyExW(hKey, _T("Colours"), 0, 0, 0, KEY_WRITE, 0, &hColKey, 0);
 
 	WriteSettingInt(hColKey, _T("Foreground"), g_rgbColourList[TXC_FOREGROUND]);
 	WriteSettingInt(hColKey, _T("Background"), g_rgbColourList[TXC_BACKGROUND]);
@@ -143,7 +143,7 @@ void ApplyRegSettings()
 
 	TextView_SetLineSpacing(g_hwndTextView, g_nPaddingAbove, g_nPaddingBelow);
 
-	SendMessage(g_hwndTextView, WM_SETFONT, (WPARAM)g_hFont, 0);
+	SendMessageW(g_hwndTextView, WM_SETFONT, (WPARAM)g_hFont, 0);
 
 	for (i = 0; i < TXC_MAX_COLOURS; i++)
 	{

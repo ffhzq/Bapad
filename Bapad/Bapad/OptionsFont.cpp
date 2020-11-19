@@ -88,7 +88,7 @@ DWORD GetCurrentListData(HWND hwnd, UINT uCtrl)
 
 DWORD AddComboStringWithData(HWND hwnd, UINT uCtrl,const wchar_t* szText, DWORD data)
 {
-	int idx = SendDlgItemMessageW(hwnd, uCtrl, CB_ADDSTRING, 0, (LONG)szText);
+	int idx = SendDlgItemMessageW(hwnd, uCtrl, CB_ADDSTRING, 0, (LPARAM)szText);
 	return    SendDlgItemMessageW(hwnd, uCtrl, CB_SETITEMDATA, idx, data);
 }
 
@@ -104,21 +104,21 @@ int CALLBACK EnumFontNames(ENUMLOGFONTEX* lpelfe, NEWTEXTMETRICEX* lpntme, DWORD
 	//		return 1;
 
 	// make sure font doesn't already exist in our list
-	if (SendMessage(hwndCombo, CB_FINDSTRING, 0, (LPARAM)pszName) == CB_ERR)
+	if (SendMessageW(hwndCombo, CB_FINDSTRING, 0, (LPARAM)pszName) == CB_ERR)
 	{
 		int		idx;
 		BOOL	fFixed;
 		BOOL	fTrueType;
 
 		// add the font
-		idx = SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)pszName);
+		idx = SendMessageW(hwndCombo, CB_ADDSTRING, 0, (LPARAM)pszName);
 
 		// record the font's attributes (Fixedwidth and Truetype)
 		fFixed = (lpelfe->elfLogFont.lfPitchAndFamily & FIXED_PITCH) ? TRUE : FALSE;
 		fTrueType = (lpelfe->elfLogFont.lfOutPrecision == OUT_STROKE_PRECIS) ? TRUE : FALSE;
 
 		// store this information in the list-item's userdata area
-		SendMessage(hwndCombo, CB_SETITEMDATA, idx, MAKEWPARAM(fFixed, fTrueType));
+		SendMessageW(hwndCombo, CB_SETITEMDATA, idx, MAKEWPARAM(fFixed, fTrueType));
 	}
 
 	return 1;
@@ -260,9 +260,9 @@ BOOL FontCombo_DrawItem(HWND hwnd, DRAWITEMSTRUCT* dis)
 	//	Get the item text
 	//
 	if (dis->itemID == -1)
-		SendMessage(dis->hwndItem, WM_GETTEXT, 0, (LONG)szText);
+		SendMessageW(dis->hwndItem, WM_GETTEXT, 0, (LPARAM)szText);
 	else
-		SendMessage(dis->hwndItem, CB_GETLBTEXT, dis->itemID, (LONG)szText);
+		SendMessageW(dis->hwndItem, CB_GETLBTEXT, dis->itemID, (LPARAM)szText);
 
 	//
 	//	Set text colour and background based on current state
@@ -321,9 +321,9 @@ BOOL ColourCombo_DrawItem(HWND hwnd, UINT uCtrlId, DRAWITEMSTRUCT* dis, BOOL fSe
 	//	Get the item text
 	//
 	if (dis->itemID == -1)
-		SendMessage(dis->hwndItem, WM_GETTEXT, 0, (LONG)szText);
+		SendMessageW(dis->hwndItem, WM_GETTEXT, 0, (LPARAM)szText);
 	else
-		SendMessage(dis->hwndItem, CB_GETLBTEXT, dis->itemID, (LONG)szText);
+		SendMessageW(dis->hwndItem, CB_GETLBTEXT, dis->itemID, (LPARAM)szText);
 
 	//
 	//	Set text colour and background based on current state
@@ -378,8 +378,8 @@ int CALLBACK EnumFontSizes(ENUMLOGFONTEX* lpelfe, NEWTEXTMETRICEX* lpntme, DWORD
 		for (i = 0; i < (sizeof(ttsizes) / sizeof(ttsizes[0])); i++)
 		{
 			wsprintfW(ach, L"%d", ttsizes[i]);
-			idx = SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)ach);
-			SendMessage(hwndCombo, CB_SETITEMDATA, idx, ttsizes[i]);
+			idx = SendMessageW(hwndCombo, CB_ADDSTRING, 0, (LPARAM)ach);
+			SendMessageW(hwndCombo, CB_SETITEMDATA, idx, ttsizes[i]);
 			//nFontSizes[i] = ttsizes[i];
 		}
 		//nNumFontSizes = i;
@@ -390,7 +390,7 @@ int CALLBACK EnumFontSizes(ENUMLOGFONTEX* lpelfe, NEWTEXTMETRICEX* lpntme, DWORD
 		int size = LogicalToPoints(lpntme->ntmTm.tmHeight);
 		wsprintfW(ach, L"%d", size);
 
-		count = SendMessage(hwndCombo, CB_GETCOUNT, 0, 0);
+		count = SendMessageW(hwndCombo, CB_GETCOUNT, 0, 0);
 
 		for (i = 0; i < count; i++)
 		{
@@ -400,7 +400,7 @@ int CALLBACK EnumFontSizes(ENUMLOGFONTEX* lpelfe, NEWTEXTMETRICEX* lpntme, DWORD
 
 		if (i >= count)
 		{
-			idx = SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)ach);
+			idx = SendMessageW(hwndCombo, CB_ADDSTRING, 0, (LPARAM)ach);
 			SendMessage(hwndCombo, CB_SETITEMDATA, idx, size);
 		}
 
@@ -430,7 +430,7 @@ void InitSizeList(HWND hwnd)
 	SendDlgItemMessageW(hwnd, IDC_SIZELIST, CB_RESETCONTENT, 0, 0);
 
 	// enumerate font sizes
-	EnumFontFamiliesEx(hdc, &lf, (FONTENUMPROC)EnumFontSizes, (LONG)GetDlgItem(hwnd, IDC_SIZELIST), 0);
+	EnumFontFamiliesExW(hdc, &lf, (FONTENUMPROC)EnumFontSizes, (LPARAM)GetDlgItem(hwnd, IDC_SIZELIST), 0);
 
 	// set selection to first item
 	count = SendDlgItemMessageW(hwnd, IDC_SIZELIST, CB_GETCOUNT, 0, 0);
@@ -481,22 +481,24 @@ LONG CALLBACK PreviewWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			SelectObject(ps.hdc, hold);
 			EndPaint(hwnd, &ps);
 			return 0;
+		default:
+			break;
 	}
 
-	return CallWindowProc(oldPreviewProc, hwnd, msg, wParam, lParam);
+	return CallWindowProcW(oldPreviewProc, hwnd, msg, wParam, lParam);
 }
 
 void AddColourListItem(HWND hwnd, UINT uItem, int fgIdx, int bgIdx, const char* szName)
 {
 	HWND hwndCtrl = GetDlgItem(hwnd, uItem);
-	int idx = SendMessageW(hwndCtrl, LB_ADDSTRING, 0, (LONG)szName);
-	SendMessageW(hwndCtrl, LB_SETITEMDATA, idx, MAKELONG(fgIdx, bgIdx));
+	int idx = SendMessageW(hwndCtrl, LB_ADDSTRING, 0, (LPARAM)szName);
+	SendMessageW(hwndCtrl, LB_SETITEMDATA, idx, static_cast<LPARAM>(MAKELONG(fgIdx, bgIdx)));//MAKELONG(fgIdx, bgIdx)
 }
 
 void AddColourComboItem(HWND hwnd, UINT uItem, COLORREF col, const char* szName)
 {
 	HWND hwndCtrl = GetDlgItem(hwnd, uItem);
-	int idx = SendMessageW(hwndCtrl, CB_ADDSTRING, 0, (LONG)szName);
+	int idx = SendMessageW(hwndCtrl, CB_ADDSTRING, 0, (LPARAM)szName);
 	SendMessageW(hwndCtrl, CB_SETITEMDATA, idx, col);
 }
 
@@ -507,7 +509,7 @@ void UpdatePreviewPane(HWND hwnd)
 	int size;
 	DWORD data;
 
-	SendDlgItemMessageW(hwnd, IDC_FONTLIST, CB_GETLBTEXT, idx, (LONG)szFaceName);
+	SendDlgItemMessageW(hwnd, IDC_FONTLIST, CB_GETLBTEXT, idx, (LPARAM)szFaceName);
 
 	size = GetDlgItemInt(hwnd, IDC_SIZELIST, 0, FALSE);
 
@@ -605,7 +607,7 @@ void SelectColorInList(HWND hwnd, UINT uComboIdx, short itemIdx)
 		// if we didn't match the colour, add it as a custom entry
 		if (i == NUM_DEFAULT_COLOURS)
 		{
-			i = SendMessageW(hwndCombo, CB_ADDSTRING, 0, (LONG)_T("Custom"));
+			i = SendMessageW(hwndCombo, CB_ADDSTRING, 0, (LPARAM)_T("Custom"));
 			SendMessageW(hwndCombo, CB_SETITEMDATA, i, g_rgbTempColourList[itemIdx]);
 			SendMessageW(hwndCombo, CB_SETCURSEL, i, 0);
 		}
@@ -632,12 +634,12 @@ BOOL InitFontOptionsDlg(HWND hwnd)
 	//
 	//	Create two fonts (normal+bold) based on current dialog's font settings
 	//
-	hDlgFont = (HFONT)SendMessage(hwnd, WM_GETFONT, 0, 0);
+	hDlgFont = (HFONT)SendMessageW(hwnd, WM_GETFONT, 0, 0);
 	GetObject(hDlgFont, sizeof(lf), &lf);
 
-	g_hNormalFont = CreateFontIndirect(&lf);
+	g_hNormalFont = CreateFontIndirectW(&lf);
 	lf.lfWeight = FW_BOLD;
-	g_hBoldFont = CreateFontIndirect(&lf);
+	g_hBoldFont = CreateFontIndirectW(&lf);
 
 	//
 	//	Manually set the COMBO item-heights because WM_MEASUREITEM has already
@@ -660,7 +662,7 @@ BOOL InitFontOptionsDlg(HWND hwnd)
 	//	Subclass the PREVIEW static control so we can custom-draw it
 	//
 	hwndPreview = GetDlgItem(hwnd, IDC_PREVIEW);
-	oldPreviewProc = (WNDPROC)SetWindowLongW(hwndPreview, GWLP_WNDPROC, (LONG)PreviewWndProc);//WinUser.h #define GWL_WNDPROC         (-4)
+	oldPreviewProc = (WNDPROC)SetWindowLongW(hwndPreview, GWLP_WNDPROC, (LONG)PreviewWndProc);
 
 
 	AddColourListItem(hwnd, IDC_LIST1, TXC_FOREGROUND, TXC_BACKGROUND, "Text");
@@ -687,8 +689,8 @@ BOOL InitFontOptionsDlg(HWND hwnd)
 	//
 	wsprintfW(ach, L"%d", g_nFontSize);
 
-	SendDlgItemMessageW(hwnd, IDC_SIZELIST, CB_SELECTSTRING, -1, (LONG)ach);
-	SendDlgItemMessageW(hwnd, IDC_FONTLIST, CB_SELECTSTRING, -1, (LONG)g_szFontName);
+	SendDlgItemMessageW(hwnd, IDC_SIZELIST, CB_SELECTSTRING, -1, (LPARAM)ach);
+	SendDlgItemMessageW(hwnd, IDC_FONTLIST, CB_SELECTSTRING, -1, (LPARAM)g_szFontName);
 
 	SetDlgItemInt(hwnd, IDC_PADDINGA, g_nPaddingAbove, 0);
 	SetDlgItemInt(hwnd, IDC_PADDINGB, g_nPaddingBelow, 0);

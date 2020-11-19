@@ -8,7 +8,7 @@ HWND		g_hwndMain;
 HWND		g_hwndTextView;
 HFONT		g_hFont;
 
-//void ShowProperties(HWND hwndParent);
+void ShowProperties(HWND hwndParent);
 void LoadRegSettings();
 void SaveRegSettings();
 
@@ -139,7 +139,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     }
                     break;
                 case IDM_VIEW_FONT:
-                    //ShowProperties(hWnd);
+                    ShowProperties(hWnd);
                     break;
                 case IDM_FILE_EXIT:
                     DestroyWindow(hWnd);
