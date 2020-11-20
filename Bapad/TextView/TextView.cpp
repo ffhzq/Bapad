@@ -29,13 +29,14 @@ TextView::TextView(HWND hwnd)
     tabWidthChars(4),
     // Runtime data
     mouseDown(false),
+    scrollTimer(0),
+    scrollCounter(0),
     selectionStart(0),
     selectionEnd(0),
     cursorOffset(0),
+    //
     pTextDoc(new TextDocument())
 {
-	// Set the default font
-	OnSetFont((HFONT)GetStockObject(ANSI_FIXED_FONT));
 
     // Default display colours
     rgbColourList[TXC_FOREGROUND] = SYSCOL(COLOR_WINDOWTEXT);
@@ -46,7 +47,11 @@ TextView::TextView(HWND hwnd)
     rgbColourList[TXC_HIGHLIGHT2] = SYSCOL(COLOR_INACTIVECAPTION);
 
 
-	SetupScrollbars();
+    // Set the default font
+    OnSetFont((HFONT)GetStockObject(ANSI_FIXED_FONT));
+
+    UpdateMetrics();
+	//SetupScrollbars();
 }
 
 //
@@ -142,11 +147,24 @@ LRESULT CALLBACK TextViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
         case WM_MOUSEMOVE:
             return ptv->OnMouseMove(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
 
+        case WM_TIMER:
+            return ptv->OnTimer(wParam);
+
         case TXM_OPENFILE:
             return ptv->OpenFile(reinterpret_cast<wchar_t*>(lParam));
 
         case TXM_CLEAR:
             return ptv->ClearFile();
+
+        case TXM_SETLINESPACING:
+            return ptv->SetLineSpacing(wParam, lParam);
+
+        case TXM_ADDFONT:
+            return ptv->AddFont((HFONT)wParam);
+
+        case TXM_SETCOLOR:
+            return ptv->SetColour(wParam, lParam);
+
 
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);
@@ -169,7 +187,7 @@ HWND CreateTextView(HWND hwndParent)
 
 ATOM RegisterTextView(HINSTANCE hInstance)
 {
-    WNDCLASSEXW wcex;
+    WNDCLASSEXW wcex{0};
 
     wcex.cbSize = sizeof(WNDCLASSEX);
     wcex.style = 0;
@@ -186,3 +204,5 @@ ATOM RegisterTextView(HINSTANCE hInstance)
 
     return RegisterClassExW(&wcex);
 }
+
+

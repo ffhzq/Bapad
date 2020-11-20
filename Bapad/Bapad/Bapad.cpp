@@ -4,38 +4,20 @@
 #include "framework.h"
 #include "Bapad.h"
 
+HWND		g_hwndMain;
+HWND		g_hwndTextView;
+HFONT		g_hFont;
 
-
-#define MAX_LOADSTRING 100
-
-// Global Variables:
-
-const wchar_t ClassName[] = L"Bapad";
+void ShowProperties(HWND hwndParent);
+void LoadRegSettings();
+void SaveRegSettings();
 
 HINSTANCE hInst;// current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 
-
-HWND		hwndMain;
-HWND		hwndTextView;
-
 WCHAR szFileName[MAX_PATH];
 WCHAR szFileTitle[MAX_PATH];
-
-
-// Forward declarations of functions included in this code module:
-ATOM                RegisterMainWindow(HINSTANCE hInstance);
-BOOL                InitInstance(HINSTANCE, int);
-LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
-
-BOOL ShowOpenFileDlg(HWND hWnd, wchar_t* fileName, wchar_t* titleName);
-void ShowAboutDlg(HWND hWndParent);
-void SetWindowFileName(HWND hWnd, wchar_t* fileName);
-BOOL DoOpenFile(HWND hWnd, WCHAR* fileName, WCHAR* fileTitle);
-void HandleDropFiles(HWND hWnd, HDROP hDrop);
-
 
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
@@ -78,15 +60,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     return (int)msg.wParam;
 }
 
-
-//
-//  FUNCTION: MyRegisterClass()
-//
-//  PURPOSE: Registers the window class.
-//
 ATOM RegisterMainWindow(HINSTANCE hInstance)
 {
-    WNDCLASSEXW wcex;
+    WNDCLASSEXW wcex{ 0 };
 
     wcex.cbSize = sizeof(WNDCLASSEX);
     wcex.style = CS_HREDRAW | CS_VREDRAW;
@@ -104,57 +80,31 @@ ATOM RegisterMainWindow(HINSTANCE hInstance)
     return RegisterClassExW(&wcex);
 }
 
-//
-//   FUNCTION: InitInstance(HINSTANCE, int)
-//
-//   PURPOSE: Saves instance handle and creates main window
-//
-//   COMMENTS:
-//
-//        In this function, we save the instance handle in a global variable and
-//        create and display the main program window.
-//
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     hInst = hInstance; // Store instance handle in our global variable
-    hwndMain = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+    g_hwndMain = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
-    if (!hwndMain)
+    if (!g_hwndMain)
     {
         return FALSE;
     }
 
-    ShowWindow(hwndMain, nCmdShow);
-    UpdateWindow(hwndMain);
+    ShowWindow(g_hwndMain, nCmdShow);
+    UpdateWindow(g_hwndMain);
 
     return TRUE;
 }
 
-//
-//  FUNCTION: WndProc(HWND, UINT, WPARAM, LPARAM)
-//
-//  PURPOSE: Processes messages for the main window.
-//
-//  WM_COMMAND  - process the application menu
-//  XXXXXXXXXX                     WM_PAINT    - Paint the main window
-//  WM_DESTROY  - post a quit message and return
-//
-//
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static int width = 0, height = 0;
-    HFONT hFont;
 
     switch (message)
     {
         case WM_CREATE:
-            hwndTextView = CreateTextView(hWnd);
-
-            hFont = CreateFontW(-13, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, L"Courier New");
-
-            // change the font
-            SendMessageW(hwndTextView, WM_SETFONT, (WPARAM)hFont, 0);
+            g_hwndTextView = CreateTextView(hWnd);
 
             // automatically create new document when we start
             PostMessageW(hWnd, WM_COMMAND, IDM_FILE_NEW, 0);
@@ -177,7 +127,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 {
                     wchar_t a[] = L"Untitled";
                     SetWindowFileName(hWnd, a);
-                    TextView_Clear(hwndTextView);
+                    TextView_Clear(g_hwndTextView);
 
                     break;
                 }
@@ -188,15 +138,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                         DoOpenFile(hWnd, szFileName, szFileTitle);
                     }
                     break;
-                
-
-
+                case IDM_VIEW_FONT:
+                    ShowProperties(hWnd);
+                    break;
                 case IDM_FILE_EXIT:
                     DestroyWindow(hWnd);
                     break;
 
                 case IDM_HELP_ABOUT:
-                    DialogBoxW(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);//ShowAboutDlg(hwnd);
+                    ShowAboutDlg(hWnd);
+                    //DialogBoxW(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                     break;
             }
         }
@@ -205,9 +156,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         case WM_DESTROY:
             PostQuitMessage(0);
+            DeleteObject(g_hFont);
             break;
         case WM_SETFOCUS:
-            SetFocus(hwndTextView);
+            SetFocus(g_hwndTextView);
             break;
 
         case WM_CLOSE:
@@ -218,7 +170,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             width = (short)LOWORD(lParam);
             height = (short)HIWORD(lParam);
 
-            MoveWindow(hwndTextView, 0, 0, width, height, TRUE);
+            MoveWindow(g_hwndTextView, 0, 0, width, height, TRUE);
             break;
 
         default:
@@ -226,6 +178,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     return 0;
 }
+
+
+
 
 // Message handler for about box.
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -277,7 +232,7 @@ BOOL ShowOpenFileDlg(HWND hwnd, wchar_t* pstrFileName, wchar_t* pstrTitleName)
 
 void ShowAboutDlg(HWND hwndParent)
 {
-    MessageBox(hwndParent,
+    MessageBoxW(hwndParent,
         ClassName,//+ L"\r\n\r\n",
         ClassName,
         MB_OK | MB_ICONINFORMATION
@@ -294,7 +249,7 @@ void SetWindowFileName(HWND hwnd, wchar_t* szFileName)
 
 BOOL DoOpenFile(HWND hwnd, WCHAR* szFileName, WCHAR* szFileTitle)
 {
-    if (TextView_OpenFile(hwndTextView, szFileName))
+    if (TextView_OpenFile(g_hwndTextView, szFileName))
     {
         SetWindowFileName(hwnd, szFileTitle);
         return TRUE;

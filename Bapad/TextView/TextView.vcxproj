@@ -167,6 +167,7 @@
     </ClCompile>
     <ClCompile Include="TextDocument.cpp" />
     <ClCompile Include="TextView.cpp" />
+    <ClCompile Include="TextViewCtrChars.cpp" />
     <ClCompile Include="TextViewFile.cpp" />
     <ClCompile Include="TextViewFont.cpp" />
     <ClCompile Include="TextViewMouse.cpp" />
