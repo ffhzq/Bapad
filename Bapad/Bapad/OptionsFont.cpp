@@ -732,7 +732,7 @@ INT_PTR CALLBACK AdvancedDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 			AddComboStringWithData(hwnd, IDC_COMBO1, L"None", NONANTIALIASED_QUALITY);
 			AddComboStringWithData(hwnd, IDC_COMBO1, _T("Default"), DEFAULT_QUALITY);
 			AddComboStringWithData(hwnd, IDC_COMBO1, _T("Antialiased"), ANTIALIASED_QUALITY);
-			//AddComboStringWithData(hwnd, IDC_COMBO1, _T("ClearType"), CLEARTYPE_QUALITY);
+			AddComboStringWithData(hwnd, IDC_COMBO1, _T("ClearType"), CLEARTYPE_QUALITY);
 
 			SendDlgItemMessageW(hwnd, IDC_COMBO1, CB_SETCURSEL, lookup[g_tempFontSmoothing], 0);
 
