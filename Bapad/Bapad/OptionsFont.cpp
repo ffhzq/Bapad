@@ -37,27 +37,27 @@ static COLORREF g_rgbAutoColourList[TXC_MAX_COLOURS] =
 struct _CUSTCOL
 {
 	COLORREF cr;
-	const char* szName;
+	const wchar_t* szName;
 
 } CUSTCOL[NUM_DEFAULT_COLOURS] =
 {
-	{ RGB(255,255,255),	"Automatic" },
-	{ RGB(0,0,0),		"Black" },
-	{ RGB(255,255,255),	"White" },
-	{ RGB(128, 0, 0),	"Maroon" },
-	{ RGB(0, 128,0),	"Dark Green" },
-	{ RGB(128,128,0),	"Olive" },
-	{ RGB(0,0,128),		"Dark Blue" },
-	{ RGB(128,0,128),	"Purple" },
-	{ RGB(0,128,128),	"Aquamarine" },
-	{ RGB(196,196,196),	"Light Grey" },
-	{ RGB(128,128,128),	"Dark Grey" },
-	{ RGB(255,0,0),		"Red" },
-	{ RGB(0,255,0),		"Green" },
-	{ RGB(255,255,0),	"Yellow" },
-	{ RGB(0,0,255),		"Blue" },
-	{ RGB(255,0,255),	"Magenta" },
-	{ RGB(0,255,255),	"Cyan" },
+	{ RGB(255,255,255),	L"Automatic" },
+	{ RGB(0,0,0),		L"Black" },
+	{ RGB(255,255,255),	L"White" },
+	{ RGB(128, 0, 0),	L"Maroon" },
+	{ RGB(0, 128,0),	L"Dark Green" },
+	{ RGB(128,128,0),	L"Olive" },
+	{ RGB(0,0,128),		L"Dark Blue" },
+	{ RGB(128,0,128),	L"Purple" },
+	{ RGB(0,128,128),	L"Aquamarine" },
+	{ RGB(196,196,196),	L"Light Grey" },
+	{ RGB(128,128,128),	L"Dark Grey" },
+	{ RGB(255,0,0),		L"Red" },
+	{ RGB(0,255,0),		L"Green" },
+	{ RGB(255,255,0),	L"Yellow" },
+	{ RGB(0,0,255),		L"Blue" },
+	{ RGB(255,0,255),	L"Magenta" },
+	{ RGB(0,255,255),	L"Cyan" },
 	//	{ RGB(255,255,255),	"Custom..." },
 };
 
@@ -488,14 +488,14 @@ LONG CALLBACK PreviewWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	return CallWindowProcW(oldPreviewProc, hwnd, msg, wParam, lParam);
 }
 
-void AddColourListItem(HWND hwnd, UINT uItem, int fgIdx, int bgIdx, const char* szName)
+void AddColourListItem(HWND hwnd, UINT uItem, int fgIdx, int bgIdx, const wchar_t* szName)
 {
 	HWND hwndCtrl = GetDlgItem(hwnd, uItem);
 	int idx = SendMessageW(hwndCtrl, LB_ADDSTRING, 0, (LPARAM)szName);
 	SendMessageW(hwndCtrl, LB_SETITEMDATA, idx, static_cast<LPARAM>(MAKELONG(fgIdx, bgIdx)));//MAKELONG(fgIdx, bgIdx)
 }
 
-void AddColourComboItem(HWND hwnd, UINT uItem, COLORREF col, const char* szName)
+void AddColourComboItem(HWND hwnd, UINT uItem, COLORREF col, const wchar_t* szName)
 {
 	HWND hwndCtrl = GetDlgItem(hwnd, uItem);
 	int idx = SendMessageW(hwndCtrl, CB_ADDSTRING, 0, (LPARAM)szName);
@@ -665,9 +665,9 @@ BOOL InitFontOptionsDlg(HWND hwnd)
 	oldPreviewProc = (WNDPROC)SetWindowLongW(hwndPreview, GWLP_WNDPROC, (LONG)PreviewWndProc);
 
 
-	AddColourListItem(hwnd, IDC_LIST1, TXC_FOREGROUND, TXC_BACKGROUND, "Text");
-	AddColourListItem(hwnd, IDC_LIST1, TXC_HIGHLIGHTTEXT, TXC_HIGHLIGHT, "Selected Text");
-	AddColourListItem(hwnd, IDC_LIST1, TXC_HIGHLIGHTTEXT2, TXC_HIGHLIGHT2, "Inactive Selection");
+	AddColourListItem(hwnd, IDC_LIST1, TXC_FOREGROUND, TXC_BACKGROUND, L"Text");
+	AddColourListItem(hwnd, IDC_LIST1, TXC_HIGHLIGHTTEXT, TXC_HIGHLIGHT, L"Selected Text");
+	AddColourListItem(hwnd, IDC_LIST1, TXC_HIGHLIGHTTEXT2, TXC_HIGHLIGHT2, L"Inactive Selection");
 
 	SendDlgItemMessageW(hwnd, IDC_ITEMLIST, LB_SETCURSEL, 0, 0);
 	PostMessageW(hwnd, WM_COMMAND, MAKEWPARAM(IDC_ITEMLIST, LBN_SELCHANGE), (LPARAM)GetDlgItem(hwnd, IDC_ITEMLIST));
@@ -715,7 +715,7 @@ BOOL InitFontOptionsDlg(HWND hwnd)
 
 INT_PTR CALLBACK AdvancedDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	char lookup[] =
+	wchar_t lookup[] =
 	{
 		1,		// DEFAULT_QUALITY
 		1,		// ??
@@ -730,9 +730,9 @@ INT_PTR CALLBACK AdvancedDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 		case WM_INITDIALOG:
 
 			AddComboStringWithData(hwnd, IDC_COMBO1, L"None", NONANTIALIASED_QUALITY);
-			AddComboStringWithData(hwnd, IDC_COMBO1, _T("Default"), DEFAULT_QUALITY);
-			AddComboStringWithData(hwnd, IDC_COMBO1, _T("Antialiased"), ANTIALIASED_QUALITY);
-			AddComboStringWithData(hwnd, IDC_COMBO1, _T("ClearType"), CLEARTYPE_QUALITY);
+			AddComboStringWithData(hwnd, IDC_COMBO1, L"Default", DEFAULT_QUALITY);
+			AddComboStringWithData(hwnd, IDC_COMBO1, L"Antialiased", ANTIALIASED_QUALITY);
+			AddComboStringWithData(hwnd, IDC_COMBO1, L"ClearType", CLEARTYPE_QUALITY);
 
 			SendDlgItemMessageW(hwnd, IDC_COMBO1, CB_SETCURSEL, lookup[g_tempFontSmoothing], 0);
 
@@ -943,7 +943,7 @@ int PointsToLogical(int nPointSize)
 	return nLogSize;
 }
 
-HFONT EasyCreateFont(int nPointSize, BOOL fBold, DWORD dwQuality, TCHAR* szFace)
+HFONT EasyCreateFont(int nPointSize, BOOL fBold, DWORD dwQuality, wchar_t* szFace)
 {
 	return CreateFont(PointsToLogical(nPointSize),
 		0, 0, 0,
