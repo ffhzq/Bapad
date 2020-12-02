@@ -207,7 +207,7 @@ LONG TextView::OnPaint()
 //
 //	Draw the specified line (including margins etc)
 //
-void TextView::PaintLine(HDC hdc, ULONG nLineNo)
+void TextView::PaintLine(HDC hdc, ULONG64 nLineNo)
 {
 	RECT  rect;
 
@@ -243,7 +243,7 @@ void TextView::PaintLine(HDC hdc, ULONG nLineNo)
 //
 //	Draw a line of text into the TextView window
 //
-void TextView::PaintText(HDC hdc, ULONG nLineNo, RECT* rect)
+void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect)
 {
 	TCHAR		buff[TEXTBUFSIZE];
 	ATTR		attr[TEXTBUFSIZE];

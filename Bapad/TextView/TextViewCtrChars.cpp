@@ -30,7 +30,7 @@ void PaintRect(HDC hdc, RECT* rect, COLORREF fill)
 //
 //	Return width of specified control-character
 //
-int TextView::GetCtrlCharWidth(HDC hdc, ULONG chValue, FONT* font)
+int TextView::GetCtrlCharWidth(HDC hdc, ULONG64 chValue, FONT* font)
 {
 	SIZE sz;
 	const wchar_t* str = CtrlStr(chValue % 32);
@@ -42,7 +42,7 @@ int TextView::GetCtrlCharWidth(HDC hdc, ULONG chValue, FONT* font)
 //	Display an ASCII control character in inverted colours
 //  to what is currently set in the DC
 //
-int TextView::PaintCtrlChar(HDC hdc, int xpos, int ypos, ULONG chValue, FONT* font)
+int TextView::PaintCtrlChar(HDC hdc, int xpos, int ypos, ULONG64 chValue, FONT* font)
 {
 	SIZE  sz;
 	RECT  rect;

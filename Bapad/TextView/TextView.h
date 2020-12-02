@@ -47,19 +47,19 @@ public:
 
 private:
 
-	void	PaintLine(HDC hdc, ULONG line);
-	void	PaintText(HDC hdc, ULONG nLineNo, RECT* rect);
+	void	PaintLine(HDC hdc, ULONG64 nLineNo);
+	void	PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect);
 	
 	size_t	ApplyTextAttributes(size_t nLineNo, size_t offset, WCHAR* szText, int nTextLen, ATTR* attr);
 	int		BaTextOut(HDC hdc, int xpos, int ypos, WCHAR* szText, int nLen, int nTabOrigin, ATTR* attr);
 
-	int		PaintCtrlChar(HDC hdc, int xpos, int ypos, ULONG chValue, FONT* fa);
+	int		PaintCtrlChar(HDC hdc, int xpos, int ypos, ULONG64 chValue, FONT* fa);
 	void	InitCtrlCharFontAttr(HDC hdc, FONT* fa);
 
 	void	RefreshWindow();
 	LONG	InvalidateRange(size_t nStart, size_t nFinish);
 
-	int		GetCtrlCharWidth(HDC hdc, ULONG chValue, FONT* fa);
+	int		GetCtrlCharWidth(HDC hdc, ULONG64 chValue, FONT* fa);
 	int		BaTextWidth(HDC hdc, WCHAR* buf, int len, int nTabOrigin);
 	int		TabWidth();
 
@@ -91,8 +91,8 @@ private:
 	int		heightBelow;
 
 	// Scrollbar related data
-	ULONG	vScrollPos;
-	ULONG   vScrollMax;
+	ULONG64	vScrollPos;
+	ULONG64 vScrollMax;
 	int		hScrollPos;
 	int		hScrollMax;
 
