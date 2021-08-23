@@ -272,7 +272,7 @@ void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect)
 		//
 		//	Get a block of text for drawing
 		//
-		if ((len = pTextDoc->getline(nLineNo, charoff, buff, TEXTBUFSIZE, &fileoff)) == 0)
+		if ((len = pTextDoc->GetLine(nLineNo, charoff, buff, TEXTBUFSIZE, &fileoff)) == 0)
 			break;
 
 		// ready for the next block of characters (do this before stripping CR/LF)

@@ -70,7 +70,7 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 	//
 	//	Find the line number and character offset of specified file-offset
 	//
-	if (!pTextDoc->offset_to_line(start, &lineno, &charoff))
+	if (!pTextDoc->OffsetToLine(start, &lineno, &charoff))
 		return 0;
 
 	// clip to top of window
@@ -81,7 +81,7 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 		xpos1 = 0;
 	}
 
-	if (!pTextDoc->getlineinfo(lineno, &lineoff, &linelen))
+	if (!pTextDoc->GetLineInfo(lineno, &lineoff, &linelen))
 		return 0;
 
 	ypos = (lineno - vScrollPos) * lineHeight;
@@ -98,7 +98,7 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 		while (off < charoff)
 		{
 			size_t tlen = min(len, TEXTBUFSIZE);
-			tlen = pTextDoc->getline(lineno, off, buf, tlen, 0);
+			tlen = pTextDoc->GetLine(lineno, off, buf, tlen, 0);
 
 			len -= tlen;
 			off += tlen;
@@ -127,7 +127,7 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 		ypos += lineHeight;
 
 		// get next line 
-		if (!pTextDoc->getlineinfo(++lineno, &lineoff, &linelen))
+		if (!pTextDoc->GetLineInfo(++lineno, &lineoff, &linelen))
 			break;
 	}
 
@@ -142,7 +142,7 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 	while (offset < finish)
 	{
 		int tlen = min((finish - offset), TEXTBUFSIZE);
-		tlen = pTextDoc->getdata(offset, buf, tlen);
+		tlen = pTextDoc->GetData(offset, buf, tlen);
 
 		offset += tlen;
 
@@ -289,7 +289,7 @@ BOOL TextView::MouseCoordToFilePos(
 	if (nLineNo >= lineCount)
 	{
 		nLineNo = lineCount ? lineCount - 1 : 0;
-		fileoff = pTextDoc->getDocLength();
+		fileoff = pTextDoc->GetDocLength();
 	}
 
 	HDC    hdc = GetDC(hWnd);
@@ -304,7 +304,7 @@ BOOL TextView::MouseCoordToFilePos(
 	for (;;)
 	{
 		// grab some text
-		if ((len = pTextDoc->getline(nLineNo, charoff, buf, TEXTBUFSIZE, &fileoff)) == 0)
+		if ((len = pTextDoc->GetLine(nLineNo, charoff, buf, TEXTBUFSIZE, &fileoff)) == 0)
 			break;
 
 		LONGLONG tlen = len;
@@ -481,7 +481,7 @@ ULONG TextView::RepositionCaret()
 	SelectObject(hdc, fontAttr[0].hFont);
 
 	// get line number from cursor-offset
-	if (!pTextDoc->offset_to_line(nOffset, &lineno, &charoff))
+	if (!pTextDoc->OffsetToLine(nOffset, &lineno, &charoff))
 		return 0;
 
 	// y-coordinate from line-number
@@ -491,7 +491,7 @@ ULONG TextView::RepositionCaret()
 	while (offset < charoff)
 	{
 		size_t tlen = min((charoff - offset), TEXTBUFSIZE);
-		tlen = pTextDoc->getdata(static_cast<LONGLONG>(nOffset - charoff) + offset, buf, tlen);
+		tlen = pTextDoc->GetData(static_cast<LONGLONG>(nOffset - charoff) + offset, buf, tlen);
 
 		offset += tlen;
 		xpos += BaTextWidth(hdc, buf, tlen, -xpos);
