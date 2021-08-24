@@ -37,3 +37,13 @@ private:
     size_t      NumLines;
     
 };
+
+//Byte Order Mark
+struct BOM
+{
+    uint32_t UTF8 = 0xEFBBBF00;//后缀0去掉
+    uint32_t UTF16LE = 0xFFFE0000;//后缀0去掉
+    uint32_t UTF16BE = 0xFEFF0000;//后缀0去掉
+    uint32_t UTF32LE = 0xFFFE0000;
+    uint32_t UTF32BE = 0x0000FEFF;
+};
