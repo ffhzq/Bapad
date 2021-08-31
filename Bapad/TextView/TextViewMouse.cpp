@@ -90,7 +90,7 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 	if (charoff != 0)
 	{
 		size_t off = 0;
-		TCHAR buf[TEXTBUFSIZE];
+		char buf[TEXTBUFSIZE];
 		size_t   len = charoff;
 		int   width = 0;
 
@@ -136,7 +136,7 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 
 	xpos2 = xpos1;
 
-	TCHAR buf[TEXTBUFSIZE];
+	char buf[TEXTBUFSIZE];
 	int width;
 
 	while (offset < finish)
@@ -267,7 +267,7 @@ BOOL TextView::MouseCoordToFilePos(
 	size_t charoff = 0;
 	size_t fileoff = 0;
 
-	WCHAR buf[TEXTBUFSIZE];
+	char buf[TEXTBUFSIZE];
 	size_t  len;
 	LONGLONG  curx = 0;
 	RECT  rect;

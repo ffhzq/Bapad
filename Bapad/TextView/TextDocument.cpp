@@ -3,15 +3,19 @@
 
 //initial all var
 TextDocument::TextDocument()
-    :   Buffer(nullptr),
-        LineBuffer(nullptr),
-        DocumentLength(0),
-        NumLines(0)
+    :   buffer(nullptr),
+        lineBufferByte(nullptr),
+        lineBufferChar(nullptr)
 {
+    documentLength = 0;
+    numLines = 0;
+    lengthChars = 0;
+    fileFormat = (uint32_t)BOMLookupList().GetInstances().begin()->bom;
+    headerSize = BOMLookupList().GetInstances().begin()->headerLength;
 }
 TextDocument::~TextDocument()
 {
-    Clear();
+    Clear(); 
 }
 
 
@@ -36,23 +40,23 @@ bool TextDocument::Initialize(HANDLE hFile)
     //Retrieves the size of the specified file.
     if (GetFileSizeEx(hFile, &TmpDocumentLength) == 0)
     {
-        DocumentLength = 0;
+        documentLength = 0;
         return false;
     }
-    DocumentLength = TmpDocumentLength.QuadPart;
+    documentLength = TmpDocumentLength.QuadPart;
 
     // allocate new file-buffer
-    const size_t bufferSize = DocumentLength + 1;
-    if ((Buffer = new wchar_t[bufferSize]) == 0)
+    const size_t bufferSize = documentLength + 1;
+    if ((buffer = new char[bufferSize]) == 0)
     {
         return false;
     }
-    wmemset(Buffer, 0, bufferSize);
+    memset(buffer, 0, bufferSize);
 
     ULONG numread = 0;
 
     // read entire file into memory
-    if (ReadFile(hFile, Buffer, DocumentLength, &numread, NULL))
+    if (ReadFile(hFile, buffer, documentLength, &numread, NULL))
     {
         ;
     }
@@ -71,50 +75,55 @@ bool TextDocument::Initialize(HANDLE hFile)
 
 bool TextDocument::InitLineBuffer()
 {
-    NumLines = 0;
+    numLines = 0;
 
-    const size_t linebufferSize = DocumentLength + 1;
+    const size_t linebufferSize = documentLength + 1;
 
     // allocate the line-buffer
-    if ((LineBuffer = new size_t[linebufferSize]) == 0)
+    if ((lineBufferByte = new size_t[linebufferSize]) == 0)
         return false;
 
     size_t linestart = 0;
     // loop through every byte in the file
-    for (size_t i = 0; i < DocumentLength; )
+    for (size_t i = 0; i < documentLength; )
     {
-        if (Buffer[i++] == '\r')
+        if (buffer[i++] == '\r')
         {
             // carriage-return / line-feed combination
-            if (Buffer[i] == '\n')
+            if (buffer[i] == '\n')
                 i++;
 
             // record where the line starts
-            if(NumLines < linebufferSize)
-                LineBuffer[NumLines++] = linestart;
+            if(numLines < linebufferSize)
+                lineBufferByte[numLines++] = linestart;
             linestart = i;
         }
     }
-    if(DocumentLength>0&&NumLines < linebufferSize)
-        LineBuffer[NumLines++] = linestart;
-    if (NumLines < linebufferSize)
-    LineBuffer[NumLines] = DocumentLength;
+    if(documentLength>0&&numLines < linebufferSize)
+        lineBufferByte[numLines++] = linestart;
+    if (numLines < linebufferSize)
+    lineBufferByte[numLines] = documentLength;
 
     return true;
 }
 
-
-size_t TextDocument::GetLine(size_t lineno, size_t offset, wchar_t* buf, size_t len, size_t* fileoff)
+uint32_t TextDocument::DetectFileFormat(int& headerLength)
 {
-    if (lineno >= NumLines || Buffer == nullptr || DocumentLength == 0)
+    for (;;);
+}
+
+
+size_t TextDocument::GetLine(size_t lineno, size_t offset, char* buf, size_t len, size_t* fileoff)
+{
+    if (lineno >= numLines || buffer == nullptr || documentLength == 0)
     {
         return 0;
     }
 
     // find the start of the specified line
-    wchar_t* lineptr = Buffer + LineBuffer[lineno];
+    char* lineptr = buffer + lineBufferByte[lineno];
     // work out how long it is, by looking at the next line's starting point
-    size_t linelen = LineBuffer[lineno + 1] - LineBuffer[lineno];
+    size_t linelen = lineBufferByte[lineno + 1] - lineBufferByte[lineno];
 
     
     offset = min(offset, linelen);
@@ -128,28 +137,33 @@ size_t TextDocument::GetLine(size_t lineno, size_t offset, wchar_t* buf, size_t 
 
     lineptr += offset;
 
-    wmemcpy(buf, lineptr, linelen);
+    memcpy(buf, lineptr, linelen);
 
     if (fileoff)
-        *fileoff = LineBuffer[lineno];// + offset;
+        *fileoff = lineBufferByte[lineno];// + offset;
 
     return linelen;
 }
 
-size_t TextDocument::GetLine(size_t lineno, wchar_t* buf, size_t len, size_t* fileoff)
+size_t TextDocument::GetLine(size_t lineno, char* buf, size_t len, size_t* fileoff)
 {
     return GetLine(lineno, 0, buf, len, fileoff);
 }
 
-size_t TextDocument::GetData(size_t offset, wchar_t* buf, size_t len)
+size_t TextDocument::GetData(size_t offset, char* buf, size_t len)
 {
-    wmemcpy(buf, Buffer + offset, len);
+    memcpy(buf, buffer + offset, len);
     return len;
+}
+
+const uint32_t TextDocument::GetFileFormat() const
+{
+    return fileFormat;
 }
 
 const size_t TextDocument::GetLineCount() const
 {
-    return NumLines;
+    return numLines;
 }
 
 const size_t TextDocument::GetLongestLine(int tabwidth = 4) const
@@ -157,17 +171,17 @@ const size_t TextDocument::GetLongestLine(int tabwidth = 4) const
     size_t longest = 0;
     size_t xpos = 0;
 
-    for (size_t i = 0; i < DocumentLength; i++)
+    for (size_t i = 0; i < documentLength; i++)
     {
-        if (Buffer[i] == '\r')
+        if (buffer[i] == '\r')
         {
-            if (Buffer[i + 1] == '\n')
+            if (buffer[i + 1] == '\n')
                 i++;
 
             longest = max(longest, xpos);
             xpos = 0;
         }
-        else if (Buffer[i] == '\t')
+        else if (buffer[i] == '\t')
         {
             xpos += tabwidth - (xpos % tabwidth);
         }
@@ -183,33 +197,33 @@ const size_t TextDocument::GetLongestLine(int tabwidth = 4) const
 
 const size_t TextDocument::GetDocLength() const
 {
-    return DocumentLength;
+    return documentLength;
 }
 
 bool TextDocument::Clear()
 {
 
-    if (Buffer)
+    if (buffer)
     {
-        DocumentLength = 0;
-        delete[] Buffer;
-        Buffer = nullptr;
+        documentLength = 0;
+        delete[] buffer;
+        buffer = nullptr;
     }
-    if (LineBuffer)
+    if (lineBufferByte)
     {
-        NumLines = 0;
-        delete[] LineBuffer;
-        LineBuffer = nullptr;
+        numLines = 0;
+        delete[] lineBufferByte;
+        lineBufferByte = nullptr;
     }
     return true;
 }
 
 bool TextDocument::OffsetToLine(size_t fileoffset, size_t* lineno, size_t* offset)
 {
-    size_t low = 0, high = NumLines - 1;
+    size_t low = 0, high = numLines - 1;
     size_t line = 0;
 
-    if (NumLines == 0)
+    if (numLines == 0)
     {
         if (lineno) *lineno = 0;
         if (offset) *offset = 0;
@@ -220,11 +234,11 @@ bool TextDocument::OffsetToLine(size_t fileoffset, size_t* lineno, size_t* offse
     {
         line = (high + low) / 2;
 
-        if (fileoffset >= LineBuffer[line] && fileoffset < LineBuffer[line + 1])
+        if (fileoffset >= lineBufferByte[line] && fileoffset < lineBufferByte[line + 1])
         {
             break;
         }
-        else if (fileoffset < LineBuffer[line])
+        else if (fileoffset < lineBufferByte[line])
         {
             high = line - 1;
         }
@@ -235,20 +249,20 @@ bool TextDocument::OffsetToLine(size_t fileoffset, size_t* lineno, size_t* offse
     }
 
     if (lineno)  *lineno = line;
-    if (offset)	*offset = fileoffset - LineBuffer[line];
+    if (offset)	*offset = fileoffset - lineBufferByte[line];
 
     return true;
 }
 
 bool TextDocument::GetLineInfo(size_t lineno, size_t* fileoff, size_t* length)
 {
-    if (lineno < NumLines)
+    if (lineno < numLines)
     {
         if (length)
-            *length = LineBuffer[lineno + 1] - LineBuffer[lineno];
+            *length = lineBufferByte[lineno + 1] - lineBufferByte[lineno];
 
         if (fileoff)
-            *fileoff = LineBuffer[lineno];
+            *fileoff = lineBufferByte[lineno];
 
         return true;
     }
