@@ -40,21 +40,22 @@ public:
     
 private:
     bool            InitLineBuffer();
-    uint32_t        DetectFileFormat(int & headerLength);
+    uint32_t        DetectFileFormat(int & headerSize);
     int             GetText(size_t offset, size_t lenbytes, wchar_t* buf, int* len);
     int             GetChar(size_t offset, size_t lenbytes, size_t* pch32);
 
-
-
     char*       buffer;
+
+
     size_t      lengthChars;
+    size_t      lengthBytes;//documentLength
 
     uint32_t    fileFormat;
     int         headerSize;
 
     size_t*     lineBufferByte;
     size_t*     lineBufferChar;
-    size_t      documentLength;//lengthBytes
+    
     size_t      numLines;
     
 
@@ -165,12 +166,12 @@ public:
         {
             instances = std::vector<BOMLookup>(
                 {
-                    BOMLookup(BOM::ASCII,0),
+                    BOMLookup(BOM::UTF32LE,4),
+                    BOMLookup(BOM::UTF32BE,4),
                     BOMLookup(BOM::UTF8,3),
                     BOMLookup(BOM::UTF16LE,2),
                     BOMLookup(BOM::UTF16BE,2),
-                    BOMLookup(BOM::UTF32LE,4),
-                    BOMLookup(BOM::UTF32BE,4)
+                    BOMLookup(BOM::ASCII,0)
                 });
         }
         return instances;

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "TextDocument.h"
+#include "formatConversion.h"
 
 //initial all var
 TextDocument::TextDocument()
@@ -7,7 +8,7 @@ TextDocument::TextDocument()
         lineBufferByte(nullptr),
         lineBufferChar(nullptr)
 {
-    documentLength = 0;
+    lengthBytes = 0;
     numLines = 0;
     lengthChars = 0;
     fileFormat = (uint32_t)BOMLookupList().GetInstances().begin()->bom;
@@ -22,8 +23,7 @@ TextDocument::~TextDocument()
 
 bool TextDocument::Initialize(wchar_t* filename)
 {
-    HANDLE hFile;
-    hFile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+    HANDLE hFile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
 
     if (hFile == INVALID_HANDLE_VALUE)
         return false;
@@ -40,13 +40,13 @@ bool TextDocument::Initialize(HANDLE hFile)
     //Retrieves the size of the specified file.
     if (GetFileSizeEx(hFile, &TmpDocumentLength) == 0)
     {
-        documentLength = 0;
+        lengthBytes = 0;
         return false;
     }
-    documentLength = TmpDocumentLength.QuadPart;
+    lengthBytes = TmpDocumentLength.QuadPart;
 
     // allocate new file-buffer
-    const size_t bufferSize = documentLength + 1;
+    const size_t bufferSize = lengthBytes + 1;
     if ((buffer = new char[bufferSize]) == 0)
     {
         return false;
@@ -56,18 +56,16 @@ bool TextDocument::Initialize(HANDLE hFile)
     ULONG numread = 0;
 
     // read entire file into memory
-    if (ReadFile(hFile, buffer, documentLength, &numread, NULL))
+    if (ReadFile(hFile, buffer, lengthBytes, &numread, NULL))
     {
         ;
     }
     
-
+    fileFormat = DetectFileFormat(headerSize);
 
     // work out where each line of text starts
     if (!InitLineBuffer())
-    {
         Clear();
-    }
 
     CloseHandle(hFile);
     return true;
@@ -77,7 +75,7 @@ bool TextDocument::InitLineBuffer()
 {
     numLines = 0;
 
-    const size_t linebufferSize = documentLength + 1;
+    const size_t linebufferSize = lengthBytes + 1;
 
     // allocate the line-buffer
     if ((lineBufferByte = new size_t[linebufferSize]) == 0)
@@ -85,7 +83,7 @@ bool TextDocument::InitLineBuffer()
 
     size_t linestart = 0;
     // loop through every byte in the file
-    for (size_t i = 0; i < documentLength; )
+    for (size_t i = 0; i < lengthBytes; )
     {
         if (buffer[i++] == '\r')
         {
@@ -99,23 +97,75 @@ bool TextDocument::InitLineBuffer()
             linestart = i;
         }
     }
-    if(documentLength>0&&numLines < linebufferSize)
+    if(lengthBytes>0&&numLines < linebufferSize)
         lineBufferByte[numLines++] = linestart;
     if (numLines < linebufferSize)
-    lineBufferByte[numLines] = documentLength;
+    lineBufferByte[numLines] = lengthBytes;
 
     return true;
 }
 
-uint32_t TextDocument::DetectFileFormat(int& headerLength)
+uint32_t TextDocument::DetectFileFormat(int& headerSize)
 {
-    for (;;);
+    const char* p = buffer;
+    auto BOMLOOK = BOMLookupList().GetInstances();
+    for (auto i : BOMLOOK)
+    {
+        if (lengthBytes >= i.headerLength
+            && memcmp(p, &i.bom, i.headerLength) == 0)
+        {
+            headerSize = i.headerLength;
+            return (uint32_t)i.bom;
+        }
+    }
+
+    headerSize = 0;
+    return (uint32_t)BOM::ASCII;
+ 
+}
+
+int TextDocument::GetChar(size_t offset, size_t lenbytes, size_t* pch32)
+{
+    typedef unsigned char   Byte;
+    typedef unsigned short  Word;
+    Byte* rawData = (Byte*)(buffer + offset + headerSize);
+    Word* rawDataW = (Word*)(buffer + offset + headerSize);
+
+    switch (fileFormat)
+    {
+        // convert from ANSI->UNICODE
+    case (uint32_t)BOM::ASCII:
+        MultiByteToWideChar(CP_ACP, 0, (char *)rawData, 1, &ch16, 1);
+        *pch32 = ch16;
+        return 1;
+
+    case (uint32_t)BOM::UTF16LE:
+        //*pch32 = (ULONG)(WORD)rawdata_w[0];
+        //return 2;
+
+        return utf16_to_utf32(rawdata_w, lenbytes / 2, pch32, &ch32len) * 2;
+
+    case (uint32_t)BOM::UTF16BE:
+        //*pch32 = (ULONG)(WORD)SWAPWORD((WORD)rawdata_w[0]);
+        //return 2;
+
+        return utf16be_to_utf32(rawdata_w, lenbytes / 2, pch32, &ch32len) * 2;
+
+
+    case (uint32_t)BOM::NCP_UTF8:
+        return utf8_to_utf32(rawdata, lenbytes, pch32);
+
+    default:
+        return 0;
+    }
+
+    return 0;
 }
 
 
 size_t TextDocument::GetLine(size_t lineno, size_t offset, char* buf, size_t len, size_t* fileoff)
 {
-    if (lineno >= numLines || buffer == nullptr || documentLength == 0)
+    if (lineno >= numLines || buffer == nullptr || lengthBytes == 0)
     {
         return 0;
     }
@@ -171,7 +221,7 @@ const size_t TextDocument::GetLongestLine(int tabwidth = 4) const
     size_t longest = 0;
     size_t xpos = 0;
 
-    for (size_t i = 0; i < documentLength; i++)
+    for (size_t i = 0; i < lengthBytes; i++)
     {
         if (buffer[i] == '\r')
         {
@@ -197,24 +247,31 @@ const size_t TextDocument::GetLongestLine(int tabwidth = 4) const
 
 const size_t TextDocument::GetDocLength() const
 {
-    return documentLength;
+    return lengthBytes;
 }
 
 bool TextDocument::Clear()
 {
 
-    if (buffer)
+    if (buffer != nullptr)
     {
-        documentLength = 0;
-        delete[] buffer;
+        delete buffer;
         buffer = nullptr;
+        lengthBytes = 0;
     }
-    if (lineBufferByte)
+    if (lineBufferByte != nullptr)
     {
-        numLines = 0;
-        delete[] lineBufferByte;
+        
+        delete lineBufferByte;
         lineBufferByte = nullptr;
     }
+    if (lineBufferChar != nullptr)
+    {
+        delete lineBufferChar;
+        lineBufferChar = nullptr;
+    }
+
+    numLines = 0;
     return true;
 }
 
