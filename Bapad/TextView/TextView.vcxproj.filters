@@ -65,5 +65,8 @@
     <ClCompile Include="FormatConversion.h">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="FormatConversion.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

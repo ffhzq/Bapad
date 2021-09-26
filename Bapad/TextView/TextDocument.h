@@ -41,8 +41,8 @@ public:
 private:
     bool            InitLineBuffer();
     uint32_t        DetectFileFormat(int & headerSize);
-    int             GetText(size_t offset, size_t lenbytes, wchar_t* buf, int* len);
-    int             GetChar(size_t offset, size_t lenbytes, size_t* pch32);
+    int             GetChar(size_t offset, size_t lenBytes, size_t & pch32);
+    int             GetText(size_t offset, size_t lenBytes, wchar_t* buf, int& len);
 
     char*       buffer;
 
@@ -98,7 +98,7 @@ public:
         if (textDoc)
         {
             // get text from the TextDocument at the specified byte-offset
-            int len = textDoc->GetText(offsetBytes, lengthBytes, buf, &buflen);
+            int len = textDoc->GetText(offsetBytes, lengthBytes, buf, buflen);
 
             // adjust the iterator's internal position
             offsetBytes += len;

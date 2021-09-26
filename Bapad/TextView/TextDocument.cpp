@@ -124,18 +124,20 @@ uint32_t TextDocument::DetectFileFormat(int& headerSize)
  
 }
 
-int TextDocument::GetChar(size_t offset, size_t lenbytes, size_t* pch32)
+int TextDocument::GetChar(size_t offset, size_t lenBytes, size_t & pch32)
 {
-    typedef unsigned char   Byte;
-    typedef unsigned short  Word;
+
     Byte* rawData = (Byte*)(buffer + offset + headerSize);
     Word* rawDataW = (Word*)(buffer + offset + headerSize);
+    Word ch16;
+    size_t ch32Len = 1;
+
 
     switch (fileFormat)
     {
         // convert from ANSI->UNICODE
     case (uint32_t)BOM::ASCII:
-        MultiByteToWideChar(CP_ACP, 0, (char *)rawData, 1, &ch16, 1);
+        MultiByteToWideChar(CP_ACP, 0, (char *)rawData, 1, (wchar_t *)&ch16, 1);
         *pch32 = ch16;
         return 1;
 
@@ -143,22 +145,27 @@ int TextDocument::GetChar(size_t offset, size_t lenbytes, size_t* pch32)
         //*pch32 = (ULONG)(WORD)rawdata_w[0];
         //return 2;
 
-        return utf16_to_utf32(rawdata_w, lenbytes / 2, pch32, &ch32len) * 2;
+        return UTF16ToUTF32((wchar_t *)rawDataW, lenbytes / 2, (ULONG *)pch32, &ch32Len) * 2;
 
     case (uint32_t)BOM::UTF16BE:
         //*pch32 = (ULONG)(WORD)SWAPWORD((WORD)rawdata_w[0]);
         //return 2;
 
-        return utf16be_to_utf32(rawdata_w, lenbytes / 2, pch32, &ch32len) * 2;
+        return UTF16BEToUTF32((wchar_t*)rawDataW, lenbytes / 2, (ULONG *)pch32, &ch32Len) * 2;
 
 
-    case (uint32_t)BOM::NCP_UTF8:
-        return utf8_to_utf32(rawdata, lenbytes, pch32);
+    case (uint32_t)BOM::UTF8:
+        return UTF8ToUTF32(rawData, lenbytes, pch32);
 
     default:
         return 0;
     }
 
+    return 0;
+}
+
+int TextDocument::GetText(size_t offset, size_t lenbytes, wchar_t* buf, int& len)
+{
     return 0;
 }
 
