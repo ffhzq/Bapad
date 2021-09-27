@@ -9,7 +9,7 @@ TextDocument::TextDocument()
         lineBufferChar(nullptr)
 {
     lengthBytes = 0;
-    numLines = 0;
+    LineCount = 0;
     lengthChars = 0;
     fileFormat = (uint32_t)BOMLookupList().GetInstances().begin()->bom;
     headerSize = BOMLookupList().GetInstances().begin()->headerLength;
@@ -73,7 +73,7 @@ bool TextDocument::Initialize(HANDLE hFile)
 
 bool TextDocument::InitLineBuffer()
 {
-    numLines = 0;
+    LineCount = 0;
 
     const size_t linebufferSize = lengthBytes + 1;
 
@@ -92,15 +92,15 @@ bool TextDocument::InitLineBuffer()
                 i++;
 
             // record where the line starts
-            if(numLines < linebufferSize)
-                lineBufferByte[numLines++] = linestart;
+            if(LineCount < linebufferSize)
+                lineBufferByte[LineCount++] = linestart;
             linestart = i;
         }
     }
-    if(lengthBytes>0&&numLines < linebufferSize)
-        lineBufferByte[numLines++] = linestart;
-    if (numLines < linebufferSize)
-    lineBufferByte[numLines] = lengthBytes;
+    if(lengthBytes>0&&LineCount < linebufferSize)
+        lineBufferByte[LineCount++] = linestart;
+    if (LineCount < linebufferSize)
+    lineBufferByte[LineCount] = lengthBytes;
 
     return true;
 }
@@ -138,24 +138,24 @@ int TextDocument::GetChar(size_t offset, size_t lenBytes, size_t & pch32)
         // convert from ANSI->UNICODE
     case (uint32_t)BOM::ASCII:
         MultiByteToWideChar(CP_ACP, 0, (char *)rawData, 1, (wchar_t *)&ch16, 1);
-        *pch32 = ch16;
+        pch32 = ch16;
         return 1;
 
     case (uint32_t)BOM::UTF16LE:
         //*pch32 = (ULONG)(WORD)rawdata_w[0];
         //return 2;
 
-        return UTF16ToUTF32((wchar_t *)rawDataW, lenbytes / 2, (ULONG *)pch32, &ch32Len) * 2;
+        return UTF16ToUTF32((wchar_t *)rawDataW, lenBytes / 2, (ULONG *)pch32, ch32Len) * 2;
 
     case (uint32_t)BOM::UTF16BE:
         //*pch32 = (ULONG)(WORD)SWAPWORD((WORD)rawdata_w[0]);
         //return 2;
 
-        return UTF16BEToUTF32((wchar_t*)rawDataW, lenbytes / 2, (ULONG *)pch32, &ch32Len) * 2;
+        return UTF16BEToUTF32((wchar_t*)rawDataW, lenBytes / 2, (ULONG *)pch32, ch32Len) * 2;
 
 
     case (uint32_t)BOM::UTF8:
-        return UTF8ToUTF32(rawData, lenbytes, pch32);
+        return UTF8ToUTF32(rawData, lenBytes, pch32);
 
     default:
         return 0;
@@ -170,42 +170,42 @@ int TextDocument::GetText(size_t offset, size_t lenbytes, wchar_t* buf, int& len
 }
 
 
-size_t TextDocument::GetLine(size_t lineno, size_t offset, char* buf, size_t len, size_t* fileoff)
-{
-    if (lineno >= numLines || buffer == nullptr || lengthBytes == 0)
-    {
-        return 0;
-    }
-
-    // find the start of the specified line
-    char* lineptr = buffer + lineBufferByte[lineno];
-    // work out how long it is, by looking at the next line's starting point
-    size_t linelen = lineBufferByte[lineno + 1] - lineBufferByte[lineno];
-
-    
-    offset = min(offset, linelen);
-    
-    // make sure the CR/LF is always fetched in one go
-    if (linelen - (offset + len) < 2 && len > 2)
-        len -= 2;
-
-    // make sure we don't overflow caller's buffer
-    linelen = min(len, linelen - offset);
-
-    lineptr += offset;
-
-    memcpy(buf, lineptr, linelen);
-
-    if (fileoff)
-        *fileoff = lineBufferByte[lineno];// + offset;
-
-    return linelen;
-}
-
-size_t TextDocument::GetLine(size_t lineno, char* buf, size_t len, size_t* fileoff)
-{
-    return GetLine(lineno, 0, buf, len, fileoff);
-}
+//size_t TextDocument::GetLine(size_t lineno, size_t offset, char* buf, size_t len, size_t* fileoff)
+//{
+//    if (lineno >= numLines || buffer == nullptr || lengthBytes == 0)
+//    {
+//        return 0;
+//    }
+//
+//    // find the start of the specified line
+//    char* lineptr = buffer + lineBufferByte[lineno];
+//    // work out how long it is, by looking at the next line's starting point
+//    size_t linelen = lineBufferByte[lineno + 1] - lineBufferByte[lineno];
+//
+//    
+//    offset = min(offset, linelen);
+//    
+//    // make sure the CR/LF is always fetched in one go
+//    if (linelen - (offset + len) < 2 && len > 2)
+//        len -= 2;
+//
+//    // make sure we don't overflow caller's buffer
+//    linelen = min(len, linelen - offset);
+//
+//    lineptr += offset;
+//
+//    memcpy(buf, lineptr, linelen);
+//
+//    if (fileoff)
+//        *fileoff = lineBufferByte[lineno];// + offset;
+//
+//    return linelen;
+//}
+//
+//size_t TextDocument::GetLine(size_t lineno, char* buf, size_t len, size_t* fileoff)
+//{
+//    return GetLine(lineno, 0, buf, len, fileoff);
+//}
 
 size_t TextDocument::GetData(size_t offset, char* buf, size_t len)
 {
@@ -220,7 +220,7 @@ const uint32_t TextDocument::GetFileFormat() const
 
 const size_t TextDocument::GetLineCount() const
 {
-    return numLines;
+    return LineCount;
 }
 
 const size_t TextDocument::GetLongestLine(int tabwidth = 4) const
@@ -278,16 +278,16 @@ bool TextDocument::Clear()
         lineBufferChar = nullptr;
     }
 
-    numLines = 0;
+    LineCount = 0;
     return true;
 }
 
 bool TextDocument::OffsetToLine(size_t fileoffset, size_t* lineno, size_t* offset)
 {
-    size_t low = 0, high = numLines - 1;
+    size_t low = 0, high = LineCount - 1;
     size_t line = 0;
 
-    if (numLines == 0)
+    if (LineCount == 0)
     {
         if (lineno) *lineno = 0;
         if (offset) *offset = 0;
@@ -320,7 +320,7 @@ bool TextDocument::OffsetToLine(size_t fileoffset, size_t* lineno, size_t* offse
 
 bool TextDocument::GetLineInfo(size_t lineno, size_t* fileoff, size_t* length)
 {
-    if (lineno < numLines)
+    if (lineno < LineCount)
     {
         if (length)
             *length = lineBufferByte[lineno + 1] - lineBufferByte[lineno];
@@ -335,3 +335,71 @@ bool TextDocument::GetLineInfo(size_t lineno, size_t* fileoff, size_t* length)
         return false;
     }
 }
+
+ULONG TextDocument::lineno_from_offset(ULONG offset)
+{
+    return 0;
+}
+
+bool TextDocument::lineinfo_from_offset(ULONG offset_chars, ULONG* lineno, ULONG* lineoff_chars, ULONG* linelen_chars, ULONG* lineoff_bytes, ULONG* linelen_bytes)
+{
+    ULONG low = 0;
+    ULONG high = LineCount - 1;
+    ULONG line = 0;
+
+    if (LineCount == 0)
+    {
+        if (lineno)			*lineno = 0;
+        if (lineoff_chars)	*lineoff_chars = 0;
+        if (linelen_chars)	*linelen_chars = 0;
+        if (lineoff_bytes)	*lineoff_bytes = 0;
+        if (linelen_bytes)	*linelen_bytes = 0;
+
+        return false;
+    }
+
+    while (low <= high)
+    {
+        line = (high + low) / 2;
+
+        if (offset_chars >= lineBufferChar[line] && offset_chars < lineBufferChar[line + 1])
+        {
+            break;
+        }
+        else if (offset_chars < lineBufferChar[line])
+        {
+            high = line - 1;
+        }
+        else
+        {
+            low = line + 1;
+        }
+    }
+
+    if (lineno)			*lineno = line;
+    if (lineoff_bytes)	*lineoff_bytes = lineBufferByte[line];
+    if (linelen_bytes)	*linelen_bytes = lineBufferByte[line + 1] - lineBufferByte[line];
+    if (lineoff_chars)	*lineoff_chars = lineBufferChar[line];
+    if (linelen_chars)	*linelen_chars = lineBufferChar[line + 1] - lineBufferChar[line];
+
+    return true;
+}
+
+bool TextDocument::lineinfo_from_lineno(ULONG lineno, ULONG* lineoff_chars, ULONG* linelen_chars, ULONG* lineoff_bytes, ULONG* linelen_bytes)
+{
+    if (lineno < LineCount)
+    {
+        if (linelen_chars) *linelen_chars = lineBufferChar[lineno + 1] - lineBufferChar[lineno];
+        if (lineoff_chars) *lineoff_chars = lineBufferChar[lineno];
+
+        if (linelen_bytes) *linelen_bytes = lineBufferByte[lineno + 1] - lineBufferByte[lineno];
+        if (lineoff_bytes) *lineoff_bytes = lineBufferByte[lineno];
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+

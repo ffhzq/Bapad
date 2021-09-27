@@ -28,8 +28,9 @@ public:
     TextIterator iterate_line_offset(ULONG offset_chars, ULONG* lineno, ULONG* linestart = 0);
 
 
-    size_t  GetLine(size_t lineno, char* buf, size_t len, size_t* fileoff = 0);
-    size_t  GetLine(size_t lineno, size_t offset, char* buf, size_t len, size_t* fileoff = 0);
+    //size_t  GetLine(size_t lineno, char* buf, size_t len, size_t* fileoff = 0);
+    //size_t  GetLine(size_t lineno, size_t offset, char* buf, size_t len, size_t* fileoff = 0);
+
     size_t  GetData(size_t offset, char* buf, size_t len);
 
 
@@ -56,7 +57,7 @@ private:
     size_t*     lineBufferByte;
     size_t*     lineBufferChar;
     
-    size_t      numLines;
+    size_t      LineCount;
     
 
 
@@ -93,7 +94,7 @@ public:
         return *this;
     }
 
-    int gettext(TCHAR* buf, int buflen)
+    int GetText(wchar_t* buf, int buflen)
     {
         if (textDoc)
         {
