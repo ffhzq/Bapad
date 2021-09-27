@@ -1,6 +1,9 @@
 #pragma once
 #include "pch.h"
 
+
+class TextIterator;
+
 class TextDocument
 {
     friend class TextIterator;
@@ -21,11 +24,11 @@ public:
 ////////////////////////////////////////////////////NEED to UPDATED
     ULONG lineno_from_offset(ULONG offset);
 
-    bool  lineinfo_from_offset(ULONG offset_chars, ULONG* lineno, ULONG* lineoff_chars, ULONG* linelen_chars, ULONG* lineoff_bytes, ULONG* linelen_bytes);
-    bool  lineinfo_from_lineno(ULONG lineno, ULONG* lineoff_chars, ULONG* linelen_chars, ULONG* lineoff_bytes, ULONG* linelen_bytes);
+    bool  LineInfoFromOffset(ULONG offset_chars, size_t * lineNo, size_t * lineoff_chars, size_t * linelen_chars, size_t * lineoff_bytes, size_t * linelen_bytes);
+    bool  lineinfo_from_lineno(size_t lineno, size_t * lineoff_chars, size_t * linelen_chars, size_t * lineoff_bytes, size_t * linelen_bytes);
 
-    TextIterator iterate_line(ULONG lineno, ULONG* linestart = 0, ULONG* linelen = 0);
-    TextIterator iterate_line_offset(ULONG offset_chars, ULONG* lineno, ULONG* linestart = 0);
+    TextIterator iterate_line(size_t lineno, size_t* linestart = 0, size_t* linelen = 0);
+    TextIterator iterate_line_offset(size_t offset_chars, size_t* lineno, size_t* linestart = 0);
 
 
     //size_t  GetLine(size_t lineno, char* buf, size_t len, size_t* fileoff = 0);

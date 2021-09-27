@@ -341,7 +341,7 @@ ULONG TextDocument::lineno_from_offset(ULONG offset)
     return 0;
 }
 
-bool TextDocument::lineinfo_from_offset(ULONG offset_chars, ULONG* lineno, ULONG* lineoff_chars, ULONG* linelen_chars, ULONG* lineoff_bytes, ULONG* linelen_bytes)
+bool TextDocument::LineInfoFromOffset(ULONG offset_chars, size_t * lineNo, size_t * lineoff_chars, size_t * linelen_chars, size_t * lineoff_bytes, size_t * linelen_bytes)
 {
     ULONG low = 0;
     ULONG high = LineCount - 1;
@@ -349,7 +349,7 @@ bool TextDocument::lineinfo_from_offset(ULONG offset_chars, ULONG* lineno, ULONG
 
     if (LineCount == 0)
     {
-        if (lineno)			*lineno = 0;
+        if (lineNo)			*lineNo = 0;
         if (lineoff_chars)	*lineoff_chars = 0;
         if (linelen_chars)	*linelen_chars = 0;
         if (lineoff_bytes)	*lineoff_bytes = 0;
@@ -376,7 +376,7 @@ bool TextDocument::lineinfo_from_offset(ULONG offset_chars, ULONG* lineno, ULONG
         }
     }
 
-    if (lineno)			*lineno = line;
+    if (lineNo)			*lineNo = line;
     if (lineoff_bytes)	*lineoff_bytes = lineBufferByte[line];
     if (linelen_bytes)	*linelen_bytes = lineBufferByte[line + 1] - lineBufferByte[line];
     if (lineoff_chars)	*lineoff_chars = lineBufferChar[line];
@@ -385,7 +385,7 @@ bool TextDocument::lineinfo_from_offset(ULONG offset_chars, ULONG* lineno, ULONG
     return true;
 }
 
-bool TextDocument::lineinfo_from_lineno(ULONG lineno, ULONG* lineoff_chars, ULONG* linelen_chars, ULONG* lineoff_bytes, ULONG* linelen_bytes)
+bool TextDocument::lineinfo_from_lineno(size_t lineno, size_t * lineoff_chars, size_t * linelen_chars, size_t * lineoff_bytes, size_t * linelen_bytes)
 {
     if (lineno < LineCount)
     {
@@ -403,3 +403,23 @@ bool TextDocument::lineinfo_from_lineno(ULONG lineno, ULONG* lineoff_chars, ULON
     }
 }
 
+TextIterator TextDocument::iterate_line(size_t lineno, size_t* linestart, size_t* linelen)
+{
+    size_t offset_bytes;
+    size_t length_bytes;
+
+    if (!lineinfo_from_lineno(lineno, linestart, linelen, &offset_bytes, &length_bytes))
+        return TextIterator();
+
+    return TextIterator(offset_bytes, length_bytes, this);
+}
+TextIterator TextDocument::iterate_line_offset(size_t offset_chars, size_t* lineno, size_t* linestart)
+{
+    size_t offset_bytes;
+    size_t length_bytes;
+
+    if (!LineInfoFromOffset(offset_chars, lineno, linestart, 0, &offset_bytes, &length_bytes))
+        return TextIterator();
+
+    return TextIterator(offset_bytes, length_bytes, this);
+}

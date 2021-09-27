@@ -147,6 +147,11 @@
     <ClInclude Include="targetver.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\TextView\TextViewFile.cpp" />
+    <ClCompile Include="..\TextView\TextViewFont.cpp" />
+    <ClCompile Include="..\TextView\TextViewMouse.cpp" />
+    <ClCompile Include="..\TextView\TextViewPaint.cpp" />
+    <ClCompile Include="..\TextView\TextViewScoll.cpp" />
     <ClCompile Include="Bapad.cpp" />
     <ClCompile Include="Options.cpp" />
     <ClCompile Include="OptionsFont.cpp" />

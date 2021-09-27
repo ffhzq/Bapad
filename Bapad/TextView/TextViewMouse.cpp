@@ -472,7 +472,7 @@ ULONG TextView::RepositionCaret()
 	size_t offset = 0;
 	int   xpos = 0;
 	int   ypos = 0;
-	TCHAR buf[TEXTBUFSIZE];
+	wchar_t buf[TEXTBUFSIZE];
 
 	ULONG nOffset = cursorOffset;
 
