@@ -25,7 +25,7 @@ public:
     ULONG lineno_from_offset(ULONG offset);
 
     bool  LineInfoFromOffset(ULONG offset_chars, size_t * lineNo, size_t * lineoff_chars, size_t * linelen_chars, size_t * lineoff_bytes, size_t * linelen_bytes);
-    bool  lineinfo_from_lineno(size_t lineno, size_t * lineoff_chars, size_t * linelen_chars, size_t * lineoff_bytes, size_t * linelen_bytes);
+    bool  LineInfoFromLineNo(size_t lineno, size_t * lineoff_chars, size_t * linelen_chars, size_t * lineoff_bytes, size_t * linelen_bytes);
 
     TextIterator iterate_line(size_t lineno, size_t* linestart = 0, size_t* linelen = 0);
     TextIterator iterate_line_offset(size_t offset_chars, size_t* lineno, size_t* linestart = 0);

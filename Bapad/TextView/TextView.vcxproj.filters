@@ -15,19 +15,19 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="FontStruct.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="framework.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TextView.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="TextDocument.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FontStruct.h">
+    <ClInclude Include="TextView.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TextViewWin32.h">
@@ -38,19 +38,19 @@
     <ClCompile Include="TextView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TextViewCtrChars.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TextDocument.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="TextViewCtrChars.cpp">
+    <ClCompile Include="FormatConversion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FormatConversion.h">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FormatConversion.cpp">
+    <ClCompile Include="TextDocument.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
