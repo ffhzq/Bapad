@@ -6,6 +6,10 @@ class TextIterator;
 
 class TextDocument
 {
+    //4 bytes long for ch32
+    //using CH32 = char32_t;
+
+
     friend class TextIterator;
 public:
     TextDocument();
@@ -45,7 +49,7 @@ public:
 private:
     bool            InitLineBuffer();
     uint32_t        DetectFileFormat(int & headerSize);
-    int             GetChar(size_t offset, size_t lenBytes, size_t & pch32);
+    int             GetChar(size_t offset, size_t lenBytes, char32_t& pch32);
     int             GetText(size_t offset, size_t lenBytes, wchar_t* buf, int& len);
 
     char*       buffer;
@@ -57,8 +61,8 @@ private:
     uint32_t    fileFormat;
     int         headerSize;
 
-    size_t*     lineBufferByte;
-    size_t*     lineBufferChar;
+    size_t*     lineOffsetByte;
+    size_t*     lineOffsetChar;
     
     size_t      LineCount;
     

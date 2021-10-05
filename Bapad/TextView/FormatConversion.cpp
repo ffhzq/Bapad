@@ -10,7 +10,7 @@ int UTF8ToUTF16(Byte* utf8Str, size_t utf8Len, wchar_t* utf16Str, size_t& utf16L
     return 0;
 }
 
-size_t UTF8ToUTF32(Byte* utf8Str, size_t utf8Len, size_t & pch32)
+size_t UTF8ToUTF32(Byte* utf8Str, size_t utf8Len, char32_t & pch32)
 {
     return size_t();
 }
