@@ -194,9 +194,39 @@ int TextDocument::GetChar(size_t offset, size_t lenBytes, char32_t& pch32)
     return 0;
 }
 
-int TextDocument::GetText(size_t offset, size_t lenbytes, wchar_t* buf, int& len)
+int TextDocument::GetText(size_t offset, size_t lenbytes, wchar_t* buf, size_t & bufLen)
 {
-    return 0;
+    Byte* rawdata = (Byte*)(docBuffer + offset + headerSize);
+    size_t  len;
+
+    if (offset >= lengthBytes)
+    {
+        bufLen = 0;
+        return 0;
+    }
+
+    switch (fileFormat)
+    {
+        // convert from ANSI->UNICODE
+    case (uint32_t)BOM::ASCII:
+        return AsciiToUTF16(rawdata, lenbytes, buf, bufLen);
+
+    case (uint32_t)BOM::UTF8:
+        return UTF8ToUTF16(rawdata, lenbytes, buf, bufLen);
+
+        // already unicode, do a straight memory copy
+    case (uint32_t)BOM::UTF16LE:
+        return CopyUTF16(static_cast<wchar_t*>(rawdata), lenbytes / sizeof(wchar_t), buf, bufLen);
+
+        // need to convert from big-endian to little-endian
+    case (uint32_t)BOM::UTF16BE:
+        return SwapUTF16(static_cast<wchar_t*>(rawdata), lenbytes / sizeof(wchar_t), buf, bufLen);
+
+        // error! we should *never* reach this point
+    default:
+        bufLen = 0;
+        return 0;
+    }
 }
 
 
@@ -237,11 +267,11 @@ int TextDocument::GetText(size_t offset, size_t lenbytes, wchar_t* buf, int& len
 //    return GetLine(lineno, 0, buf, len, fileoff);
 //}
 
-size_t TextDocument::GetData(size_t offset, char* buf, size_t len)
-{
-    memcpy(buf, docBuffer + offset, len);
-    return len;
-}
+//size_t TextDocument::GetData(size_t offset, char* buf, size_t len)
+//{
+//    memcpy(buf, docBuffer + offset, len);
+//    return len;
+//}
 
 const uint32_t TextDocument::GetFileFormat() const
 {
@@ -257,18 +287,25 @@ const size_t TextDocument::GetLongestLine(int tabwidth = 4) const
 {
     size_t longest = 0;
     size_t xpos = 0;
+    char* bufPtr = (char*)(docBuffer + headerSize);
+
 
     for (size_t i = 0; i < lengthBytes; i++)
     {
-        if (docBuffer[i] == '\r')
+        if (bufPtr[i] == '\r')
         {
-            if (docBuffer[i + 1] == '\n')
+            if (bufPtr[i + 1] == '\n')
                 i++;
 
             longest = max(longest, xpos);
             xpos = 0;
         }
-        else if (docBuffer[i] == '\t')
+        else if (bufPtr[i] == '\n')
+        {
+            longest = max(longest, xpos);
+            xpos = 0;
+        }
+        else if (bufPtr[i] == '\t')
         {
             xpos += tabwidth - (xpos % tabwidth);
         }

@@ -38,7 +38,7 @@ public:
     //size_t  GetLine(size_t lineno, char* buf, size_t len, size_t* fileoff = 0);
     //size_t  GetLine(size_t lineno, size_t offset, char* buf, size_t len, size_t* fileoff = 0);
 
-    size_t  GetData(size_t offset, char* buf, size_t len);
+    //size_t  GetData(size_t offset, char* buf, size_t len);
 
 
     const uint32_t  GetFileFormat() const;
@@ -50,7 +50,7 @@ private:
     bool            InitLineBuffer();
     uint32_t        DetectFileFormat(int & headerSize);
     int             GetChar(size_t offset, size_t lenBytes, char32_t& pch32);
-    int             GetText(size_t offset, size_t lenBytes, wchar_t* buf, int& len);
+    int             GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t & bufLen);
 
     char*       docBuffer;
 
@@ -73,6 +73,11 @@ private:
 
 class TextIterator
 {
+private:
+    //use shared_ptr<TextDocument>
+    TextDocument* textDoc;
+    ULONG offsetBytes;
+    ULONG lengthBytes;
 public:
     // default constructor sets all members to zero
     TextIterator()
@@ -101,7 +106,7 @@ public:
         return *this;
     }
 
-    int GetText(wchar_t* buf, int buflen)
+    int GetText(wchar_t* buf, size_t buflen)
     {
         if (textDoc)
         {
@@ -124,13 +129,6 @@ public:
     {
         return textDoc ? true : false;
     }
-
-private:
-
-    TextDocument* textDoc;
-
-    ULONG offsetBytes;
-    ULONG lengthBytes;
 };
 
 
