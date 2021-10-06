@@ -24,6 +24,7 @@
     <ProjectGuid>{48d297e5-31c8-47c1-bdb4-0664b4bc0f11}</ProjectGuid>
     <RootNamespace>TextDocument</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>TextView</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

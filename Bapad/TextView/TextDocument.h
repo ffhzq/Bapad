@@ -52,7 +52,7 @@ private:
     int             GetChar(size_t offset, size_t lenBytes, char32_t& pch32);
     int             GetText(size_t offset, size_t lenBytes, wchar_t* buf, int& len);
 
-    char*       buffer;
+    char*       docBuffer;
 
 
     size_t      lengthChars;

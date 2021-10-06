@@ -662,7 +662,7 @@ BOOL InitFontOptionsDlg(HWND hwnd)
 	//	Subclass the PREVIEW static control so we can custom-draw it
 	//
 	hwndPreview = GetDlgItem(hwnd, IDC_PREVIEW);
-	oldPreviewProc = (WNDPROC)SetWindowLongW(hwndPreview, GWLP_WNDPROC, (LONG)PreviewWndProc);
+	oldPreviewProc = (WNDPROC)SetWindowLongPtrW(hwndPreview, GWLP_WNDPROC, (LONG)PreviewWndProc);//SetWindowLongW
 
 
 	AddColourListItem(hwnd, IDC_LIST1, TXC_FOREGROUND, TXC_BACKGROUND, L"Text");

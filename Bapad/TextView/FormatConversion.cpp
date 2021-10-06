@@ -1,4 +1,6 @@
+#include "pch.h"
 #include "FormatConversion.h"
+
 
 int AsciiToUTF16(Byte* asciiStr, size_t asciiLen, wchar_t* utf16Str, size_t& utf16Len)
 {
