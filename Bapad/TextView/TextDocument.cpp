@@ -194,7 +194,7 @@ int TextDocument::GetChar(size_t offset, size_t lenBytes, char32_t& pch32)
     return 0;
 }
 
-int TextDocument::GetText(size_t offset, size_t lenbytes, wchar_t* buf, size_t & bufLen)
+int TextDocument::GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t & bufLen)
 {
     Byte* rawdata = (Byte*)(docBuffer + offset + headerSize);
     size_t  len;
@@ -209,18 +209,18 @@ int TextDocument::GetText(size_t offset, size_t lenbytes, wchar_t* buf, size_t &
     {
         // convert from ANSI->UNICODE
     case (uint32_t)BOM::ASCII:
-        return AsciiToUTF16(rawdata, lenbytes, buf, bufLen);
+        return AsciiToUTF16(rawdata, lenBytes, buf, bufLen);
 
     case (uint32_t)BOM::UTF8:
-        return UTF8ToUTF16(rawdata, lenbytes, buf, bufLen);
+        return UTF8ToUTF16(rawdata, lenBytes, buf, bufLen);
 
         // already unicode, do a straight memory copy
     case (uint32_t)BOM::UTF16LE:
-        return CopyUTF16(static_cast<wchar_t*>(rawdata), lenbytes / sizeof(wchar_t), buf, bufLen);
+        return CopyUTF16(reinterpret_cast<wchar_t*>(rawdata), lenBytes / sizeof(wchar_t), buf, bufLen);
 
         // need to convert from big-endian to little-endian
     case (uint32_t)BOM::UTF16BE:
-        return SwapUTF16(static_cast<wchar_t*>(rawdata), lenbytes / sizeof(wchar_t), buf, bufLen);
+        return SwapUTF16(reinterpret_cast<wchar_t*>(rawdata), lenBytes / sizeof(wchar_t), buf, bufLen);
 
         // error! we should *never* reach this point
     default:
