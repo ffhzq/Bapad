@@ -106,18 +106,18 @@ public:
         return *this;
     }
 
-    int GetText(wchar_t* buf, size_t buflen)
+    int GetText(wchar_t* buf, size_t bufLen)
     {
         if (textDoc)
         {
             // get text from the TextDocument at the specified byte-offset
-            int len = textDoc->GetText(offsetBytes, lengthBytes, buf, buflen);
+            int len = textDoc->GetText(offsetBytes, lengthBytes, buf, bufLen);
 
             // adjust the iterator's internal position
             offsetBytes += len;
             lengthBytes -= len;
 
-            return buflen;
+            return bufLen;
         }
         else
         {

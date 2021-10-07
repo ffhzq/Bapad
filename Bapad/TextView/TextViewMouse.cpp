@@ -90,9 +90,10 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 	if (charoff != 0)
 	{
 		size_t off = 0;
-		char buf[TEXTBUFSIZE];
+		wchar_t buf[TEXTBUFSIZE];
 		size_t   len = charoff;
 		int   width = 0;
+		TextIterator it
 
 		// loop until we get on-screen
 		while (off < charoff)
@@ -267,7 +268,7 @@ BOOL TextView::MouseCoordToFilePos(
 	size_t charoff = 0;
 	size_t fileoff = 0;
 
-	char buf[TEXTBUFSIZE];
+	wchar_t buf[TEXTBUFSIZE];
 	size_t  len;
 	LONGLONG  curx = 0;
 	RECT  rect;
