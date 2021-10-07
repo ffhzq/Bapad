@@ -22,7 +22,7 @@ TextDocument::~TextDocument()
 
 
 
-bool TextDocument::Initialize(wchar_t* filename)
+bool TextDocument::Initialize(wchar_t* filename)//跨平台要改
 {
     HANDLE hFile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
 
@@ -32,7 +32,7 @@ bool TextDocument::Initialize(wchar_t* filename)
     return Initialize(hFile);
 }
 
-bool TextDocument::Initialize(HANDLE hFile)
+bool TextDocument::Initialize(HANDLE hFile)//跨平台要改
 {
 
     //PLARGE_INTEGER Represents a 64-bit signed integer value
@@ -137,37 +137,35 @@ bool TextDocument::InitLineBuffer()
 
 uint32_t TextDocument::DetectFileFormat(int& headerSize)
 {
-    const char* p = docBuffer;
     auto BOMLOOK = BOMLookupList().GetInstances();
     for (auto i : BOMLOOK)
     {
         if (lengthBytes >= i.headerLength
-            && memcmp(p, &i.bom, i.headerLength) == 0)
+            && memcmp(docBuffer, &i.bom, i.headerLength) == 0)
         {
             headerSize = i.headerLength;
-            return (uint32_t)i.bom;
+            return static_cast<uint32_t>(i.bom);
         }
     }
 
     headerSize = 0;
-    return (uint32_t)BOM::ASCII;
+    return static_cast<uint32_t>(BOM::ASCII);
 
 }
 
 int TextDocument::GetChar(size_t offset, size_t lenBytes, char32_t& pch32)
 {
 
-    Byte* rawData = (Byte*)(docBuffer + offset + headerSize);
-    Word* rawDataW = (Word*)(docBuffer + offset + headerSize);
+    Byte* rawData = reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
+    Word* rawDataW = reinterpret_cast<Word*>(docBuffer + offset + headerSize);
     Word ch16;
     size_t ch32Len = 1;
-
 
     switch (fileFormat)
     {
         // convert from ANSI->UNICODE
     case (uint32_t)BOM::ASCII:
-        MultiByteToWideChar(CP_ACP, 0, (char*)rawData, 1, (wchar_t*)&ch16, 1);
+        MultiByteToWideChar(CP_ACP, 0, reinterpret_cast<char *>(rawData), 1, reinterpret_cast<wchar_t*>(&ch16), 1);//跨平台要改
         pch32 = ch16;
         return 1;
 
@@ -175,13 +173,13 @@ int TextDocument::GetChar(size_t offset, size_t lenBytes, char32_t& pch32)
         //*pch32 = (ULONG)(WORD)rawdata_w[0];
         //return 2;
 
-        return UTF16ToUTF32((wchar_t*)rawDataW, lenBytes / 2, (ULONG*)pch32, ch32Len) * 2;
+        return UTF16ToUTF32(reinterpret_cast<wchar_t*>(rawDataW), lenBytes / 2, reinterpret_cast<ULONG*>(pch32), ch32Len) * 2;
 
     case (uint32_t)BOM::UTF16BE:
         //*pch32 = (ULONG)(WORD)SWAPWORD((WORD)rawdata_w[0]);
         //return 2;
 
-        return UTF16BEToUTF32((wchar_t*)rawDataW, lenBytes / 2, (ULONG*)pch32, ch32Len) * 2;
+        return UTF16BEToUTF32(reinterpret_cast<wchar_t*>(rawDataW), lenBytes / 2, reinterpret_cast<ULONG*>(pch32), ch32Len) * 2;
 
 
     case (uint32_t)BOM::UTF8:
@@ -196,7 +194,7 @@ int TextDocument::GetChar(size_t offset, size_t lenBytes, char32_t& pch32)
 
 int TextDocument::GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t & bufLen)
 {
-    Byte* rawdata = (Byte*)(docBuffer + offset + headerSize);
+    Byte* rawData = reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
     size_t  len;
 
     if (offset >= lengthBytes)
@@ -209,18 +207,18 @@ int TextDocument::GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t &
     {
         // convert from ANSI->UNICODE
     case (uint32_t)BOM::ASCII:
-        return AsciiToUTF16(rawdata, lenBytes, buf, bufLen);
+        return AsciiToUTF16(rawData, lenBytes, buf, bufLen);
 
     case (uint32_t)BOM::UTF8:
-        return UTF8ToUTF16(rawdata, lenBytes, buf, bufLen);
+        return UTF8ToUTF16(rawData, lenBytes, buf, bufLen);
 
         // already unicode, do a straight memory copy
     case (uint32_t)BOM::UTF16LE:
-        return CopyUTF16(reinterpret_cast<wchar_t*>(rawdata), lenBytes / sizeof(wchar_t), buf, bufLen);
+        return CopyUTF16(reinterpret_cast<wchar_t*>(rawData), lenBytes / sizeof(wchar_t), buf, bufLen);
 
         // need to convert from big-endian to little-endian
     case (uint32_t)BOM::UTF16BE:
-        return SwapUTF16(reinterpret_cast<wchar_t*>(rawdata), lenBytes / sizeof(wchar_t), buf, bufLen);
+        return SwapUTF16(reinterpret_cast<wchar_t*>(rawData), lenBytes / sizeof(wchar_t), buf, bufLen);
 
         // error! we should *never* reach this point
     default:
