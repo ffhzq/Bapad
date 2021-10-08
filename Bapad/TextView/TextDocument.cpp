@@ -401,12 +401,14 @@ bool TextDocument::GetLineInfo(size_t lineno, size_t* fileoff, size_t* length)
     }
 }
 
-ULONG TextDocument::lineno_from_offset(ULONG offset)
+size_t TextDocument::LineNumFromOffset(size_t offset)
 {
-    return 0;
+    size_t lineNum = 0;
+    LineInfoFromOffset(offset, lineNum, 0, 0, 0, 0);
+    return lineNum;
 }
 
-bool TextDocument::LineInfoFromOffset(ULONG offset_chars, size_t* lineNo, size_t* lineoff_chars, size_t* linelen_chars, size_t* lineoff_bytes, size_t* linelen_bytes)
+bool TextDocument::LineInfoFromOffset(ULONG offset_chars, size_t & lineNo, size_t* lineoff_chars, size_t* linelen_chars, size_t* lineoff_bytes, size_t* linelen_bytes)
 {
     ULONG low = 0;
     ULONG high = LineCount - 1;
@@ -414,7 +416,7 @@ bool TextDocument::LineInfoFromOffset(ULONG offset_chars, size_t* lineNo, size_t
 
     if (LineCount == 0)
     {
-        if (lineNo)			*lineNo = 0;
+        if (lineNo != 0)			lineNo = 0;
         if (lineoff_chars)	*lineoff_chars = 0;
         if (linelen_chars)	*linelen_chars = 0;
         if (lineoff_bytes)	*lineoff_bytes = 0;
@@ -441,7 +443,7 @@ bool TextDocument::LineInfoFromOffset(ULONG offset_chars, size_t* lineNo, size_t
         }
     }
 
-    if (lineNo)			*lineNo = line;
+    if (lineNo != 0)	lineNo = line;
     if (lineoff_bytes)	*lineoff_bytes = lineOffsetByte[line];
     if (linelen_bytes)	*linelen_bytes = lineOffsetByte[line + 1] - lineOffsetByte[line];
     if (lineoff_chars)	*lineoff_chars = lineOffsetChar[line];

@@ -26,9 +26,9 @@ public:
     bool    GetLineInfo(size_t lineno, size_t* fileoff, size_t* length);
 
 ////////////////////////////////////////////////////NEED to UPDATED
-    ULONG lineno_from_offset(ULONG offset);
+    size_t LineNumFromOffset(size_t offset);
 
-    bool  LineInfoFromOffset(ULONG offset_chars, size_t * lineNo, size_t * lineoff_chars, size_t * linelen_chars, size_t * lineoff_bytes, size_t * linelen_bytes);
+    bool  LineInfoFromOffset(ULONG offset_chars, size_t& lineNo, size_t * lineoff_chars, size_t * linelen_chars, size_t * lineoff_bytes, size_t * linelen_bytes);
     bool  LineInfoFromLineNo(size_t lineno, size_t * lineoff_chars, size_t * linelen_chars, size_t * lineoff_bytes, size_t * linelen_bytes);
 
     TextIterator iterate_line(size_t lineno, size_t* linestart = 0, size_t* linelen = 0);

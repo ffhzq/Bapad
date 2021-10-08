@@ -70,8 +70,9 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 	//
 	//	Find the line number and character offset of specified file-offset
 	//
-	if (!pTextDoc->OffsetToLine(start, &lineno, &charoff))
-		return 0;
+	//if (!pTextDoc->OffsetToLine(start, &lineno, &charoff)) return 0;
+
+	size_t lineNo = pTextDoc->LineNumFromOffset(start);
 
 	// clip to top of window
 	if (lineno < vScrollPos)
