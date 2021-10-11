@@ -100,6 +100,7 @@ public:
     // assignment operator
     TextIterator& operator= (TextIterator& ti)
     {
+        //自赋值考虑一下 NEED TO BE UPDATED
         textDoc = ti.textDoc;
         offsetBytes = ti.offsetBytes;
         lengthBytes = ti.lengthBytes;
