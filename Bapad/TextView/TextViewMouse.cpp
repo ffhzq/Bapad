@@ -57,10 +57,9 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 	int   xpos1 = 0, xpos2 = 0;
 	int  ypos;
 
-	HDC hdc = GetDC(hWnd);
-	SelectObject(hdc, fontAttr[0].hFont);
 
-	RECT rect, client;
+
+	RECT client;
 	GetClientRect(hWnd, &client);
 
 	// nothing to do?
@@ -73,6 +72,28 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 	//if (!pTextDoc->OffsetToLine(start, &lineno, &charoff)) return 0;
 
 	size_t lineNo = pTextDoc->LineNumFromOffset(start);
+
+	TextIterator itor;
+	size_t offChars = 0, lenChars = 0;
+
+	// clip to top of window
+	if (lineno < vScrollPos)
+	{
+		lineno = vScrollPos;
+		itor.operator= (pTextDoc.get()->iterate_line(lineno, offChars, lenChars));
+		start = offChars;
+	}
+	else
+	{
+		itor = pTextDoc->iterate_line(lineno, offChars, lenChars);
+	}
+
+	if (!itor || start >= finish)
+		return 0;
+
+
+	HDC hdc = GetDC(hWnd);
+	SelectObject(hdc, fontAttr[0].hFont);
 
 	// clip to top of window
 	if (lineno < vScrollPos)
@@ -94,7 +115,7 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 		wchar_t buf[TEXTBUFSIZE];
 		size_t   len = charoff;
 		int   width = 0;
-		TextIterator it
+		TextIterator it;
 
 		// loop until we get on-screen
 		while (off < charoff)
@@ -114,6 +135,8 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 
 		// xpos now equals the start of range
 	}
+
+	RECT rect;
 
 	// Invalidate any lines that aren't part of the last line
 	while (finish >= lineoff + linelen)

@@ -404,23 +404,24 @@ bool TextDocument::GetLineInfo(size_t lineno, size_t* fileoff, size_t* length)
 size_t TextDocument::LineNumFromOffset(size_t offset)
 {
     size_t lineNum = 0;
-    LineInfoFromOffset(offset, lineNum, 0, 0, 0, 0);
+    size_t USELESS_PARAM = 0;
+    LineInfoFromOffset(offset, lineNum, USELESS_PARAM, USELESS_PARAM, USELESS_PARAM, USELESS_PARAM);
     return lineNum;
 }
 
-bool TextDocument::LineInfoFromOffset(ULONG offset_chars, size_t & lineNo, size_t* lineoff_chars, size_t* linelen_chars, size_t* lineoff_bytes, size_t* linelen_bytes)
+bool TextDocument::LineInfoFromOffset(size_t offset_chars, size_t & lineNo, size_t & lineoffChars, size_t & linelenChars, size_t & lineoffBytes, size_t & linelenBytes)
 {
-    ULONG low = 0;
-    ULONG high = LineCount - 1;
-    ULONG line = 0;
+    size_t low = 0;
+    size_t high = LineCount - 1;
+    size_t line = 0;
 
     if (LineCount == 0)
     {
-        if (lineNo != 0)			lineNo = 0;
-        if (lineoff_chars)	*lineoff_chars = 0;
-        if (linelen_chars)	*linelen_chars = 0;
-        if (lineoff_bytes)	*lineoff_bytes = 0;
-        if (linelen_bytes)	*linelen_bytes = 0;
+        lineNo = 0;
+        lineoffChars = 0;
+        linelenChars = 0;
+        lineoffBytes = 0;
+        linelenBytes = 0;
 
         return false;
     }
@@ -444,23 +445,23 @@ bool TextDocument::LineInfoFromOffset(ULONG offset_chars, size_t & lineNo, size_
     }
 
     if (lineNo != 0)	lineNo = line;
-    if (lineoff_bytes)	*lineoff_bytes = lineOffsetByte[line];
-    if (linelen_bytes)	*linelen_bytes = lineOffsetByte[line + 1] - lineOffsetByte[line];
-    if (lineoff_chars)	*lineoff_chars = lineOffsetChar[line];
-    if (linelen_chars)	*linelen_chars = lineOffsetChar[line + 1] - lineOffsetChar[line];
+    if (lineoffBytes != 0)	lineoffBytes = lineOffsetByte[line];
+    if (linelenBytes != 0)	linelenBytes = lineOffsetByte[line + 1] - lineOffsetByte[line];
+    if (lineoffChars != 0)	lineoffChars = lineOffsetChar[line];
+    if (linelenChars != 0)	linelenChars = lineOffsetChar[line + 1] - lineOffsetChar[line];
 
     return true;
 }
 
-bool TextDocument::LineInfoFromLineNo(size_t lineno, size_t* lineoff_chars, size_t* linelen_chars, size_t* lineoff_bytes, size_t* linelen_bytes)
+bool TextDocument::LineInfoFromLineNo(size_t lineno, size_t & lineoffChars, size_t & linelenChars, size_t & lineoffBytes, size_t & linelenBytes)
 {
     if (lineno < LineCount)
     {
-        if (linelen_chars) *linelen_chars = lineOffsetChar[lineno + 1] - lineOffsetChar[lineno];
-        if (lineoff_chars) *lineoff_chars = lineOffsetChar[lineno];
+        if (linelenChars!=0) linelenChars = lineOffsetChar[lineno + 1] - lineOffsetChar[lineno];
+        if (lineoffChars != 0) lineoffChars = lineOffsetChar[lineno];
 
-        if (linelen_bytes) *linelen_bytes = lineOffsetByte[lineno + 1] - lineOffsetByte[lineno];
-        if (lineoff_bytes) *lineoff_bytes = lineOffsetByte[lineno];
+        if (linelenBytes != 0) linelenBytes = lineOffsetByte[lineno + 1] - lineOffsetByte[lineno];
+        if (lineoffBytes != 0) lineoffBytes = lineOffsetByte[lineno];
 
         return true;
     }
@@ -471,23 +472,24 @@ bool TextDocument::LineInfoFromLineNo(size_t lineno, size_t* lineoff_chars, size
 }
 
 
-TextIterator TextDocument::iterate_line(size_t lineno, size_t* linestart, size_t* linelen)
+TextIterator TextDocument::iterate_line(size_t lineno, size_t & linestart, size_t & linelen)
 {
     size_t offset_bytes;
     size_t length_bytes;
 
-    if (!LineInfoFromLineNo(lineno, linestart, linelen, &offset_bytes, &length_bytes))
+    if (!LineInfoFromLineNo(lineno, linestart, linelen, offset_bytes, length_bytes))
         return TextIterator();
 
     return TextIterator(offset_bytes, length_bytes, this);
 }
 
-TextIterator TextDocument::iterate_line_offset(size_t offset_chars, size_t* lineno, size_t* linestart)
+TextIterator TextDocument::iterate_line_offset(size_t offset_chars, size_t & lineno, size_t & linestart)
 {
     size_t offset_bytes;
     size_t length_bytes;
+    size_t USELESS_PARAM = 0;
 
-    if (!LineInfoFromOffset(offset_chars, lineno, linestart, 0, &offset_bytes, &length_bytes))
+    if (!LineInfoFromOffset(offset_chars, lineno, linestart, USELESS_PARAM, offset_bytes, length_bytes))
         return TextIterator();
 
     return TextIterator(offset_bytes, length_bytes, this);

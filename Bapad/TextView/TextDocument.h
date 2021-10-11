@@ -28,11 +28,11 @@ public:
 ////////////////////////////////////////////////////NEED to UPDATED
     size_t LineNumFromOffset(size_t offset);
 
-    bool  LineInfoFromOffset(ULONG offset_chars, size_t& lineNo, size_t * lineoff_chars, size_t * linelen_chars, size_t * lineoff_bytes, size_t * linelen_bytes);
-    bool  LineInfoFromLineNo(size_t lineno, size_t * lineoff_chars, size_t * linelen_chars, size_t * lineoff_bytes, size_t * linelen_bytes);
+    bool  LineInfoFromOffset(size_t offset_chars, size_t& lineNo, size_t & lineoffChars, size_t & linelenChars, size_t & lineoffBytes, size_t & linelenBytes);
+    bool  LineInfoFromLineNo(size_t lineno, size_t & lineoffChars, size_t & linelenChars, size_t & lineoffBytes, size_t & linelenBytes);
 
-    TextIterator iterate_line(size_t lineno, size_t* linestart = 0, size_t* linelen = 0);
-    TextIterator iterate_line_offset(size_t offset_chars, size_t* lineno, size_t* linestart = 0);
+    TextIterator iterate_line(size_t lineno, size_t & linestart, size_t & linelen);
+    TextIterator iterate_line_offset(size_t offset_chars, size_t & lineno, size_t & linestart);
 
 
     //size_t  GetLine(size_t lineno, char* buf, size_t len, size_t* fileoff = 0);
@@ -76,8 +76,8 @@ class TextIterator
 private:
     //use shared_ptr<TextDocument>
     TextDocument* textDoc;
-    ULONG offsetBytes;
-    ULONG lengthBytes;
+    size_t offsetBytes;
+    size_t lengthBytes;
 public:
     // default constructor sets all members to zero
     TextIterator()
@@ -85,7 +85,7 @@ public:
     {
     }
 
-    TextIterator(ULONG off, ULONG len, TextDocument* td)
+    TextIterator(size_t off, size_t len, TextDocument* td)
         : textDoc(td), offsetBytes(off), lengthBytes(len)
     {
 
