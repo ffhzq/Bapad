@@ -73,14 +73,15 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 
 	size_t lineNo = pTextDoc->LineNumFromOffset(start);
 
-	TextIterator itor;
+	
 	size_t offChars = 0, lenChars = 0;
-
+	TextIterator itor;
 	// clip to top of window
 	if (lineno < vScrollPos)
 	{
 		lineno = vScrollPos;
-		itor.operator= (pTextDoc.get()->iterate_line(lineno, offChars, lenChars));
+		TextIterator newItor = pTextDoc.get()->iterate_line(lineno, offChars, lenChars);
+		itor = newItor;
 		start = offChars;
 	}
 	else
@@ -115,7 +116,7 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 		wchar_t buf[TEXTBUFSIZE];
 		size_t   len = charoff;
 		int   width = 0;
-		TextIterator it;
+
 
 		// loop until we get on-screen
 		while (off < charoff)

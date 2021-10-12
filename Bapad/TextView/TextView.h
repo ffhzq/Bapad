@@ -117,5 +117,5 @@ private:
 	UINT	scrollTimer;
 	int		scrollCounter;
 	
-	std::unique_ptr<TextDocument> pTextDoc;
+	std::shared_ptr<TextDocument> pTextDoc;
 };

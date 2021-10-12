@@ -75,7 +75,7 @@ class TextIterator
 {
 private:
     //use shared_ptr<TextDocument>
-    TextDocument* textDoc;
+    std::shared_ptr<TextDocument> textDoc;
     size_t offsetBytes;
     size_t lengthBytes;
 public:
@@ -100,7 +100,11 @@ public:
     // assignment operator
     TextIterator& operator= (TextIterator& ti)
     {
-        //自赋值考虑一下 NEED TO BE UPDATED
+        if (ti == *this)
+        {
+            return *this;
+        }
+
         textDoc = ti.textDoc;
         offsetBytes = ti.offsetBytes;
         lengthBytes = ti.lengthBytes;
