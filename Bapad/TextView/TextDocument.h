@@ -97,6 +97,9 @@ public:
     {
     }
 
+
+
+
     // assignment operator
     TextIterator& operator= (TextIterator& ti)
     {

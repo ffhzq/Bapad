@@ -1,7 +1,6 @@
 #include "pch.h"
 
 namespace zq {
-    namespace Bapad {
 
 
     //char8_t
@@ -26,22 +25,36 @@ namespace zq {
 #define UNI_SUR_LOW_START    (UTF32)0xDC00
 #define UNI_SUR_LOW_END      (UTF32)0xDFFF
 
-//#define SWAPWORD(val) (((WORD)(val) << 8) | ((WORD)(val) >> 8))
+//#define SwapWord(val) (((WORD)(val) << 8) | ((WORD)(val) >> 8))
 
-    inline void LittleToBig16(char16_t & ch16)
+    //inline char16_t SwapWord(char16_t & ch16)
+    //{
+    //    return (ch16 =(((char16_t)(ch16) << 8) | ((char16_t)(ch16) >> 8)));
+    //}
+    //inline wchar_t SwapWord(wchar_t& ch16)
+    //{
+    //    return (ch16 = (((char16_t)(ch16) << 8) | ((char16_t)(ch16) >> 8)));
+    //}
+
+    template<typename T>
+    inline auto SwapWord16(T ch16)
     {
-        unsigned char* data = reinterpret_cast<unsigned char*>(&ch16);
-
-        ch16 = (ch16 << 8) | (ch16 >> 8);
-
+        return (ch16 = (((T)(ch16) << 8) | ((T)(ch16) >> 8)));
     }
-    inline void BigToLittle16(char16_t& ch16)
-    {
-        /*unsigned char* data = reinterpret_cast<unsigned char*>(&ch16);
 
-        ch16 = (ch16 << 8) | (ch16 >> 8);*/
-        BigToLittle16(ch16);
-    }
+    //inline void LittleToBig16(char16_t & ch16)
+    //{
+    //    unsigned char* data = reinterpret_cast<unsigned char*>(&ch16);
+
+    //    ch16 = (ch16 << 8) | (ch16 >> 8);
+
+    //}
+    //inline void BigToLittle16(char16_t& ch16)
+    //{
+    //    /*unsigned char* data = reinterpret_cast<unsigned char*>(&ch16);
+    //    ch16 = (ch16 << 8) | (ch16 >> 8);*/
+    //    LittleToBig16(ch16);
+    //}
 
 
 
@@ -77,5 +90,4 @@ namespace zq {
     int    UTF16BEToUTF32(wchar_t* utf16Str, size_t utf16Len, ULONG* utf32Str, size_t& utf32Len);
 
 
-}
 }

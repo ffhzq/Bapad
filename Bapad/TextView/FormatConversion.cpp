@@ -3,8 +3,6 @@
 
 namespace zq {
 
-	namespace Bapad{
-
 
 int AsciiToUTF16(Byte* asciiStr, size_t asciiLen, wchar_t* utf16Str, size_t& utf16Len)
 {
@@ -185,7 +183,7 @@ int SwapUTF16(wchar_t* src, size_t srcLen, wchar_t* dest, size_t & destLen)
 	size_t len = min(destLen, srcLen);
 
 	for (size_t i = 0; i < len; i++)
-		dest[i] = SWAPWORD(src[i]);
+		dest[i] = SwapWord(src[i]);
 
 	destLen = len;
 	return len * sizeof(WCHAR);
@@ -239,12 +237,12 @@ int UTF16BEToUTF32(wchar_t* utf16Str, size_t utf16Len, ULONG* utf32Str, size_t& 
 
 	while (utf16Len > 0 && utf32Len > 0)
 	{
-		ULONG ch = SWAPWORD(*utf16Str);
+		ULONG ch = SwapWord(*utf16Str);
 
 		// first of a surrogate pair?
 		if (ch >= UNI_SUR_HIGH_START && ch < UNI_SUR_HIGH_END && utf16Len >= 2)
 		{
-			ULONG ch2 = SWAPWORD(*(utf16Str + 1));
+			ULONG ch2 = SwapWord(*(utf16Str + 1));
 
 			// valid trailing surrogate unit?
 			if (ch2 >= UNI_SUR_LOW_START && ch < UNI_SUR_LOW_END)
@@ -271,8 +269,6 @@ int UTF16BEToUTF32(wchar_t* utf16Str, size_t utf16Len, ULONG* utf32Str, size_t& 
 
 	utf32Len = utf32Str - utf32start;
 	return utf16Str - utf16start;
-}
-
 }
 
 }

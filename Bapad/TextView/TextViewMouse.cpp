@@ -80,13 +80,14 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 	if (lineno < vScrollPos)
 	{
 		lineno = vScrollPos;
-		TextIterator newItor = pTextDoc.get()->iterate_line(lineno, offChars, lenChars);
+		auto newItor = pTextDoc.get()->iterate_line(lineno, offChars, lenChars);
 		itor = newItor;
 		start = offChars;
 	}
 	else
 	{
-		itor = pTextDoc->iterate_line(lineno, offChars, lenChars);
+		auto newItor = pTextDoc->iterate_line(lineno, offChars, lenChars);
+		itor = newItor;
 	}
 
 	if (!itor || start >= finish)
