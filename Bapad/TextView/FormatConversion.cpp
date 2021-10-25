@@ -1,23 +1,9 @@
 #include "pch.h"
 #include "FormatConversion.h"
 
-typedef unsigned long	UTF32;	// at least 32 bits
-typedef unsigned short	UTF16;	// at least 16 bits
-typedef unsigned char	UTF8;	// typically 8 bits
+namespace zq {
 
-// Some fundamental constants 
-#define UNI_REPLACEMENT_CHAR (UTF32)0x0000FFFD
-#define UNI_MAX_BMP			 (UTF32)0x0000FFFF
-#define UNI_MAX_UTF16		 (UTF32)0x0010FFFF
-#define UNI_MAX_UTF32		 (UTF32)0x7FFFFFFF
-#define UNI_MAX_LEGAL_UTF32  (UTF32)0x0010FFFF
-
-#define UNI_SUR_HIGH_START   (UTF32)0xD800
-#define UNI_SUR_HIGH_END     (UTF32)0xDBFF
-#define UNI_SUR_LOW_START    (UTF32)0xDC00
-#define UNI_SUR_LOW_END      (UTF32)0xDFFF
-
-#define SWAPWORD(val) (((WORD)(val) << 8) | ((WORD)(val) >> 8))
+	namespace Bapad{
 
 
 int AsciiToUTF16(Byte* asciiStr, size_t asciiLen, wchar_t* utf16Str, size_t& utf16Len)
@@ -285,4 +271,8 @@ int UTF16BEToUTF32(wchar_t* utf16Str, size_t utf16Len, ULONG* utf32Str, size_t& 
 
 	utf32Len = utf32Str - utf32start;
 	return utf16Str - utf16start;
+}
+
+}
+
 }

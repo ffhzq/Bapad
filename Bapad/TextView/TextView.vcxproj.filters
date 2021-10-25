@@ -47,11 +47,11 @@
     <ClCompile Include="FormatConversion.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FormatConversion.h">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="TextDocument.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FormatConversion.h">
+      <Filter>Header Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

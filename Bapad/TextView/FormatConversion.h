@@ -1,23 +1,81 @@
 #include "pch.h"
 
-//char8_t
-using Byte = unsigned char;
+namespace zq {
+    namespace Bapad {
 
-using Word = char16_t;//unsigned short;
 
-//
-//	Conversions to UTF-16
-//
-int	   AsciiToUTF16(Byte* asciiStr, size_t asciiLen, wchar_t* utf16Str, size_t& utf16Len);
-int    UTF8ToUTF16(Byte* utf8Str, size_t utf8Len, wchar_t* utf16Str, size_t& utf16Len);
-size_t UTF8ToUTF32(Byte* utf8Str, size_t utf8Len, char32_t & pch32);
+    //char8_t
+    using Byte = unsigned char;
 
-int	   CopyUTF16(wchar_t* src, size_t srcLen, wchar_t* dest, size_t & destLen);
-int	   SwapUTF16(wchar_t* src, size_t srcLen, wchar_t* dest, size_t & destLen);
+    using Word = char16_t;//unsigned short;
 
-//
-//	Conversions to UTF-32
-//
-int    UTF16ToUTF32(wchar_t* utf16Str, size_t utf16Len, ULONG* utf32Str, size_t& utf32Len);
-int    UTF16BEToUTF32(wchar_t* utf16Str, size_t utf16Len, ULONG* utf32Str, size_t& utf32Len);
+    typedef unsigned long	UTF32;	// at least 32 bits
+    typedef unsigned short	UTF16;	// at least 16 bits
+    typedef unsigned char	UTF8;	// typically 8 bits
 
+
+    // Some fundamental constants 
+#define UNI_REPLACEMENT_CHAR (UTF32)0x0000FFFD
+#define UNI_MAX_BMP			 (UTF32)0x0000FFFF
+#define UNI_MAX_UTF16		 (UTF32)0x0010FFFF
+#define UNI_MAX_UTF32		 (UTF32)0x7FFFFFFF
+#define UNI_MAX_LEGAL_UTF32  (UTF32)0x0010FFFF
+
+#define UNI_SUR_HIGH_START   (UTF32)0xD800
+#define UNI_SUR_HIGH_END     (UTF32)0xDBFF
+#define UNI_SUR_LOW_START    (UTF32)0xDC00
+#define UNI_SUR_LOW_END      (UTF32)0xDFFF
+
+//#define SWAPWORD(val) (((WORD)(val) << 8) | ((WORD)(val) >> 8))
+
+    inline void LittleToBig16(char16_t & ch16)
+    {
+        unsigned char* data = reinterpret_cast<unsigned char*>(&ch16);
+
+        ch16 = (ch16 << 8) | (ch16 >> 8);
+
+    }
+    inline void BigToLittle16(char16_t& ch16)
+    {
+        /*unsigned char* data = reinterpret_cast<unsigned char*>(&ch16);
+
+        ch16 = (ch16 << 8) | (ch16 >> 8);*/
+        BigToLittle16(ch16);
+    }
+
+
+
+    inline void LittleToBig32(char32_t ch32)
+    {
+        unsigned char* data = reinterpret_cast<unsigned char*>(&ch32);
+
+        ch32 = (data[0] << 0) | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
+
+    }
+
+    inline void BigToLittle32(char32_t ch32)
+    {
+        unsigned char* data = reinterpret_cast<unsigned char*>(&ch32);
+
+        ch32 = (data[3] << 0) | (data[2] << 8) | (data[1] << 16) | (data[0] << 24);
+    }
+
+    //
+    //	Conversions to UTF-16
+    //
+    int	   AsciiToUTF16(Byte* asciiStr, size_t asciiLen, wchar_t* utf16Str, size_t& utf16Len);
+    int    UTF8ToUTF16(Byte* utf8Str, size_t utf8Len, wchar_t* utf16Str, size_t& utf16Len);
+    size_t UTF8ToUTF32(Byte* utf8Str, size_t utf8Len, char32_t& pch32);
+
+    int	   CopyUTF16(wchar_t* src, size_t srcLen, wchar_t* dest, size_t& destLen);
+    int	   SwapUTF16(wchar_t* src, size_t srcLen, wchar_t* dest, size_t& destLen);
+
+    //
+    //	Conversions to UTF-32
+    //
+    int    UTF16ToUTF32(wchar_t* utf16Str, size_t utf16Len, ULONG* utf32Str, size_t& utf32Len);
+    int    UTF16BEToUTF32(wchar_t* utf16Str, size_t utf16Len, ULONG* utf32Str, size_t& utf32Len);
+
+
+}
+}
