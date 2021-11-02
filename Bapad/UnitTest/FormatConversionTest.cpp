@@ -7,19 +7,6 @@ TEST(DataEndian, ByteOrder)
 { 
     ASSERT_EQ(ENDIANNESS, 'l');
 }
-
-//TEST(LittleToBig16, FormatConvertion)
-//{
-//    union {
-//        char c[2];
-//        char16_t ch16;
-//    } e = { {'1','2'}};
-//    zq::LittleToBig16(e.ch16);
-//    
-//    ASSERT_EQ(e.c[0], '2');
-//    ASSERT_EQ(e.c[1], '1');
-//
-//}
 TEST(SWAPWORDCh16, FormatConvertion)
 {
     union {
