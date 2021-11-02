@@ -35,16 +35,18 @@ TEST(SWAPWORDWCh, FormatConvertion)
 union {
     char c[2];
     wchar_t wCh;
-} e = { 0x12 };
+} e = { {'1','2'} };
 zq::SwapWord16(e.wCh);
-ASSERT_EQ(e.c[0], 2);
-ASSERT_EQ(e.c[1], 1);
+ASSERT_EQ(e.c[0], '2');
+ASSERT_EQ(e.c[1], '1');
 }
 TEST(SWAPWORDMACRO, FormatConvertion)
 {
-    union {
+    union u {
         char c[2];
         wchar_t wCh;
-    } e = { '1','2'};
-    //ASSERT_EQ(SwapWord(e.wCh), '2');
+    } in = { '1','2' }, exp = {'2','1'};
+    unsigned long var = SwapWord(in.wCh);
+    const size_t cmpSize = sizeof(u);
+    ASSERT_TRUE(memcpy_s(&var, cmpSize, &exp, cmpSize) == 0);
 }

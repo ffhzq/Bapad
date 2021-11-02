@@ -25,16 +25,8 @@ namespace zq {
 #define UNI_SUR_LOW_START    (UTF32)0xDC00
 #define UNI_SUR_LOW_END      (UTF32)0xDFFF
 
+//without side affect
 #define SwapWord(val) (((WORD)(val) << 8) | ((WORD)(val) >> 8))
-
-    //inline char16_t SwapWord(char16_t & ch16)
-    //{
-    //    return (ch16 =(((char16_t)(ch16) << 8) | ((char16_t)(ch16) >> 8)));
-    //}
-    //inline wchar_t SwapWord(wchar_t& ch16)
-    //{
-    //    return (ch16 = (((char16_t)(ch16) << 8) | ((char16_t)(ch16) >> 8)));
-    //}
 
     template<typename T>
     inline auto SwapWord16(T & ch16)
@@ -42,23 +34,7 @@ namespace zq {
         return (ch16 = (((T)(ch16) << 8) | ((T)(ch16) >> 8)));
     }
 
-    //inline void LittleToBig16(char16_t & ch16)
-    //{
-    //    unsigned char* data = reinterpret_cast<unsigned char*>(&ch16);
-
-    //    ch16 = (ch16 << 8) | (ch16 >> 8);
-
-    //}
-    //inline void BigToLittle16(char16_t& ch16)
-    //{
-    //    /*unsigned char* data = reinterpret_cast<unsigned char*>(&ch16);
-    //    ch16 = (ch16 << 8) | (ch16 >> 8);*/
-    //    LittleToBig16(ch16);
-    //}
-
-
-
-    inline void LittleToBig32(char32_t ch32)
+    inline void LittleToBig32(char32_t & ch32)
     {
         unsigned char* data = reinterpret_cast<unsigned char*>(&ch32);
 
@@ -66,7 +42,7 @@ namespace zq {
 
     }
 
-    inline void BigToLittle32(char32_t ch32)
+    inline void BigToLittle32(char32_t & ch32)
     {
         unsigned char* data = reinterpret_cast<unsigned char*>(&ch32);
 
