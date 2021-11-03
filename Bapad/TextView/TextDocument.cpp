@@ -405,8 +405,8 @@ bool TextDocument::GetLineInfo(size_t lineno, size_t* fileoff, size_t* length)
 
 size_t TextDocument::LineNumFromOffset(size_t offset)
 {
-    size_t lineNum = 0;
-    size_t USELESS_PARAM = 0;
+    size_t lineNum = 1;
+    size_t USELESS_PARAM = -1;
     LineInfoFromOffset(offset, lineNum, USELESS_PARAM, USELESS_PARAM, USELESS_PARAM, USELESS_PARAM);
     return lineNum;
 }
@@ -461,7 +461,6 @@ bool TextDocument::LineInfoFromLineNo(size_t lineno, size_t & lineoffChars, size
     {
         if (linelenChars!=0) linelenChars = lineOffsetChar[lineno + 1] - lineOffsetChar[lineno];
         if (lineoffChars != 0) lineoffChars = lineOffsetChar[lineno];
-
         if (linelenBytes != 0) linelenBytes = lineOffsetByte[lineno + 1] - lineOffsetByte[lineno];
         if (lineoffBytes != 0) lineoffBytes = lineOffsetByte[lineno];
 

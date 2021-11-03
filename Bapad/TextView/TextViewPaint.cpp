@@ -88,7 +88,6 @@ size_t StripCRLF(WCHAR* szText, size_t nLength)
 	return nLength;
 }
 
-
 //
 //	Perform a full redraw of the entire window
 //
@@ -245,11 +244,11 @@ void TextView::PaintLine(HDC hdc, ULONG64 nLineNo)
 //
 void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect)
 {
-	TCHAR		buff[TEXTBUFSIZE];
+	wchar_t		buff[TEXTBUFSIZE]{ 0 };
 	ATTR		attr[TEXTBUFSIZE];
+	size_t		charoff = -1;
 
-	size_t		charoff = 0;
-	size_t			len;
+	size_t		colNo = 0;
 
 	int			xpos = rect->left;
 	int			ypos = rect->top;
@@ -258,28 +257,19 @@ void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect)
 	//
 	//	TODO: Clip text to left side of window
 	//
+	size_t USELESS_PARAM = 0;
+	TextIterator itor = pTextDoc->iterate_line(nLineNo, charoff, USELESS_PARAM);
 
 
 	//
 	//	Keep drawing until we reach the edge of the window
 	//
-	while (xpos < rect->right)
+
+	size_t		len = 0;
+	while ((len = itor.GetText(buff,TEXTBUFSIZE))  > 0)
 	{
 		size_t fileoff;
-		int	  lasti = 0;
 		int   i;
-
-		//
-		//	Get a block of text for drawing
-		//
-		if ((len = pTextDoc->GetLine(nLineNo, charoff, buff, TEXTBUFSIZE, &fileoff)) == 0)
-			break;
-
-		// ready for the next block of characters (do this before stripping CR/LF)
-		fileoff += charoff;
-		charoff += len;
-
-
 		//
 		//	Apply text attributes - 
 		//	i.e. syntax highlighting, mouse selection colours etc.
@@ -287,10 +277,13 @@ void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect)
 		//len = ApplyTextAttributes(nLineNo, fileoff+charoff, buff, len, attr);
 		len = ApplyTextAttributes(nLineNo, fileoff, buff, len, attr);
 
+		if (len == 0)
+			Sleep(0);
+
 		//
 		//	Display the text by breaking it into spans of colour/style
 		//
-		for (i = 0; i <= len; i++)
+		for (int i = 0, lasti = 0; lasti <= len; i++)
 		{
 			// if the colour or font changes, then need to output 
 			if (i == len ||
@@ -303,6 +296,7 @@ void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect)
 				lasti = i;
 			}
 		}
+		charoff += len;
 	}
 
 	//
@@ -338,14 +332,7 @@ COLORREF TextView::GetColour(UINT idx)
 		return 0;
 
 	return REALIZE_SYSCOL(rgbColourList[idx]);
-	/*switch(idx)
-	{
-	case TXC_BACKGROUND:	return GetSysColor(COLOR_WINDOW);
-	case TXC_FOREGROUND:	return GetSysColor(COLOR_WINDOWTEXT);
-	case TXC_HIGHLIGHT:		return GetSysColor(COLOR_HIGHLIGHT);
-	case TXC_HIGHLIGHTTEXT:	return GetSysColor(COLOR_HIGHLIGHTTEXT);
-	default:				return 0;
-	}*/
+	
 }
 
 COLORREF TextView::SetColour(UINT idx, COLORREF rgbColour)
