@@ -167,8 +167,8 @@
     <Image Include="small.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\TextDocument\TextDocument.vcxproj">
-      <Project>{48d297e5-31c8-47c1-bdb4-0664b4bc0f11}</Project>
+    <ProjectReference Include="..\TextView\TextView.vcxproj">
+      <Project>{a4d7d867-3420-448e-a353-d1b781069bb1}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
