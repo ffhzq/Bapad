@@ -1,7 +1,5 @@
 #include "pch.h"
 
-namespace zq {
-
 
     //char8_t
     using Byte = unsigned char;
@@ -66,4 +64,3 @@ namespace zq {
     int    UTF16BEToUTF32(wchar_t* utf16Str, size_t utf16Len, ULONG* utf32Str, size_t& utf32Len);
 
 
-}

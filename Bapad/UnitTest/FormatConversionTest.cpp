@@ -13,7 +13,7 @@ TEST(SWAPWORDCh16, FormatConvertion)
         char c[2];
         char16_t ch16;
     } e = { {'1','2'} };
-    zq::SwapWord16(e.ch16);
+    SwapWord16(e.ch16);
     ASSERT_EQ(e.c[0], '2');
     ASSERT_EQ(e.c[1], '1');
 }
@@ -23,7 +23,7 @@ union {
     char c[2];
     wchar_t wCh;
 } e = { {'1','2'} };
-zq::SwapWord16(e.wCh);
+SwapWord16(e.wCh);
 ASSERT_EQ(e.c[0], '2');
 ASSERT_EQ(e.c[1], '1');
 }

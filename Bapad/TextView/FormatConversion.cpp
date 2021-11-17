@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "FormatConversion.h"
 
-//namespace zq {
-using namespace zq;
 
 int AsciiToUTF16(Byte* asciiStr, size_t asciiLen, wchar_t* utf16Str, size_t& utf16Len)
 {
@@ -270,5 +268,3 @@ int UTF16BEToUTF32(wchar_t* utf16Str, size_t utf16Len, ULONG* utf32Str, size_t& 
 	utf32Len = utf32Str - utf32start;
 	return utf16Str - utf16start;
 }
-
-//}

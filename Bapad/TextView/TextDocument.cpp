@@ -2,8 +2,6 @@
 #include "TextDocument.h"
 #include "formatConversion.h"
 
-using namespace zq;
-
 //initial all var
 TextDocument::TextDocument()
     : docBuffer(nullptr),
