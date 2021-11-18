@@ -1,5 +1,5 @@
 #pragma once
-#include "TextDocument.h"
+#include "..\TextDocument\TextDocument.h"
 #include "FontStruct.h"
 #include "TextViewWin32.h"
 

@@ -204,5 +204,3 @@ ATOM RegisterTextView(HINSTANCE hInstance)
 
     return RegisterClassExW(&wcex);
 }
-
-

@@ -15,16 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="FontStruct.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="framework.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TextDocument.h">
+    <ClInclude Include="FontStruct.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TextView.h">
@@ -33,24 +30,30 @@
     <ClInclude Include="TextViewWin32.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FormatConversion.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="pch.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="TextView.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="TextViewCtrChars.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pch.cpp">
+    <ClCompile Include="TextViewFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TextDocument.cpp">
+    <ClCompile Include="TextViewFont.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FormatConversion.cpp">
+    <ClCompile Include="TextViewMouse.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TextViewPaint.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TextViewScoll.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

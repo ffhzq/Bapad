@@ -42,4 +42,3 @@ LONG TextView::ClearFile()
 
 	return TRUE;
 }
-
