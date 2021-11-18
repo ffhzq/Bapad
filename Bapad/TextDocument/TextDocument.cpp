@@ -135,7 +135,7 @@ bool TextDocument::InitLineBuffer()
     return true;
 }
 
-uint32_t TextDocument::DetectFileFormat(int& headerSize)
+uint32_t TextDocument::DetectFileFormat(size_t& headerSize)
 {
     auto BOMLOOK = BOMLookupList().GetInstances();
     for (auto i : BOMLOOK)
@@ -153,7 +153,7 @@ uint32_t TextDocument::DetectFileFormat(int& headerSize)
 
 }
 
-int TextDocument::GetChar(size_t offset, size_t lenBytes, char32_t& pch32)
+size_t TextDocument::GetChar(size_t offset, size_t lenBytes, char32_t& pch32)
 {
 
     Byte* rawData = reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
@@ -192,7 +192,7 @@ int TextDocument::GetChar(size_t offset, size_t lenBytes, char32_t& pch32)
     return 0;
 }
 
-int TextDocument::GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t & bufLen)
+size_t TextDocument::GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t & bufLen)
 {
     Byte* rawData = reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
     size_t  len;

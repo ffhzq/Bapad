@@ -2,22 +2,22 @@
 #include "FormatConversion.h"
 
 
-int AsciiToUTF16(Byte* asciiStr, size_t asciiLen, wchar_t* utf16Str, size_t& utf16Len)
+size_t AsciiToUTF16(Byte* asciiStr, size_t asciiLen, wchar_t* utf16Str, size_t& utf16Len)
 {
-	int len = min(utf16Len, asciiLen);
+	size_t len = min(utf16Len, asciiLen);
 
 	MultiByteToWideChar(CP_ACP, 0, (CCHAR*)asciiStr, len, utf16Str, len);
 	utf16Len = len;
 	return len;
 }
 
-int UTF8ToUTF16(Byte* utf8Str, size_t utf8Len, wchar_t* utf16Str, size_t& utf16Len)
+size_t UTF8ToUTF16(Byte* utf8Str, size_t utf8Len, wchar_t* utf16Str, size_t& utf16Len)
 {
 
 	size_t len = 0;
 	char32_t ch32 = 0;
 	WCHAR* utf16Start = utf16Str;
-	BYTE* utf8Start = utf8Str;
+	Byte* utf8Start = utf8Str;
 
 	while (utf8Len > 0 && utf16Len > 0)
 	{
@@ -167,7 +167,7 @@ size_t UTF8ToUTF32(Byte* utf8Str, size_t utf8Len, char32_t & pch32)
 	return len;
 }
 
-int CopyUTF16(wchar_t* src, size_t srcLen, wchar_t* dest, size_t & destLen)
+size_t CopyUTF16(wchar_t* src, size_t srcLen, wchar_t* dest, size_t & destLen)
 {
 	size_t len = min(destLen, srcLen);
 	memcpy(dest, src, len * sizeof(WCHAR));
@@ -176,7 +176,7 @@ int CopyUTF16(wchar_t* src, size_t srcLen, wchar_t* dest, size_t & destLen)
 	return len * sizeof(WCHAR);
 }
 
-int SwapUTF16(wchar_t* src, size_t srcLen, wchar_t* dest, size_t & destLen)
+size_t SwapUTF16(wchar_t* src, size_t srcLen, wchar_t* dest, size_t & destLen)
 {
 	size_t len = min(destLen, srcLen);
 
@@ -187,7 +187,7 @@ int SwapUTF16(wchar_t* src, size_t srcLen, wchar_t* dest, size_t & destLen)
 	return len * sizeof(WCHAR);
 }
 
-int UTF16ToUTF32(wchar_t* utf16Str, size_t utf16Len, ULONG* utf32Str, size_t& utf32Len)
+size_t UTF16ToUTF32(wchar_t* utf16Str, size_t utf16Len, ULONG* utf32Str, size_t& utf32Len)
 {
 	WCHAR* utf16start = utf16Str;
 	ULONG* utf32start = utf32Str;
@@ -228,7 +228,7 @@ int UTF16ToUTF32(wchar_t* utf16Str, size_t utf16Len, ULONG* utf32Str, size_t& ut
 	return utf16Str - utf16start;
 }
 
-int UTF16BEToUTF32(wchar_t* utf16Str, size_t utf16Len, ULONG* utf32Str, size_t& utf32Len)
+size_t UTF16BEToUTF32(wchar_t* utf16Str, size_t utf16Len, ULONG* utf32Str, size_t& utf32Len)
 {
 	WCHAR* utf16start = utf16Str;
 	ULONG* utf32start = utf32Str;

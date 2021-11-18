@@ -46,9 +46,9 @@ public:
 
 private:
     bool            InitLineBuffer();
-    uint32_t        DetectFileFormat(int& headerSize);
-    int             GetChar(size_t offset, size_t lenBytes, char32_t& pch32);
-    int             GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t& bufLen);
+    uint32_t        DetectFileFormat(size_t& headerSize);
+    size_t          GetChar(size_t offset, size_t lenBytes, char32_t& pch32);
+    size_t          GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t& bufLen);
 
     char* docBuffer;
 
@@ -57,7 +57,7 @@ private:
     size_t      lengthBytes;//documentLength
 
     uint32_t    fileFormat;
-    int         headerSize;
+    size_t         headerSize;
 
     size_t* lineOffsetByte;
     size_t* lineOffsetChar;
@@ -112,12 +112,12 @@ public:
         return *this;
     }
 
-    int GetText(wchar_t* buf, size_t bufLen)
+    size_t GetText(wchar_t* buf, size_t bufLen)
     {
         if (textDoc)
         {
             // get text from the TextDocument at the specified byte-offset
-            int len = textDoc->GetText(offsetBytes, lengthBytes, buf, bufLen);
+            size_t len = textDoc->GetText(offsetBytes, lengthBytes, buf, bufLen);
 
             // adjust the iterator's internal position
             offsetBytes += len;
@@ -141,7 +141,7 @@ public:
 
 
 //Byte Order Mark
-enum class BOM //uint32_t
+enum class BOM : uint32_t //uint32_t
 {                           //BOMHeaderLength
     ASCII = 0,              //0
     UTF8 = 0xEFBBBF,        //3

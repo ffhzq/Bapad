@@ -161,14 +161,6 @@
     <Image Include="icon2.ico" />
     <Image Include="small.ico" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\TextDocument\TextDocument.vcxproj">
-      <Project>{5e363b1b-d6cd-4415-8bd4-582942ed860d}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\TextView\TextView.vcxproj">
-      <Project>{09402ac5-6115-4fbe-8c0f-ce47de39ca8a}</Project>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

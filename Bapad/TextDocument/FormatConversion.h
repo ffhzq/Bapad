@@ -1,17 +1,16 @@
 #include "pch.h"
 
+//char8_t
+using Byte = unsigned char;
 
-    //char8_t
-    using Byte = unsigned char;
+using Word = char16_t;//unsigned short;
 
-    using Word = char16_t;//unsigned short;
-
-    typedef unsigned long	UTF32;	// at least 32 bits
-    typedef unsigned short	UTF16;	// at least 16 bits
-    typedef unsigned char	UTF8;	// typically 8 bits
+typedef unsigned long	UTF32;	// at least 32 bits
+typedef unsigned short	UTF16;	// at least 16 bits
+typedef unsigned char	UTF8;	// typically 8 bits
 
 
-    // Some fundamental constants 
+// Some fundamental constants 
 #define UNI_REPLACEMENT_CHAR (UTF32)0x0000FFFD
 #define UNI_MAX_BMP			 (UTF32)0x0000FFFF
 #define UNI_MAX_UTF16		 (UTF32)0x0010FFFF
@@ -50,17 +49,17 @@
     //
     //	Conversions to UTF-16
     //
-    int	   AsciiToUTF16(Byte* asciiStr, size_t asciiLen, wchar_t* utf16Str, size_t& utf16Len);
-    int    UTF8ToUTF16(Byte* utf8Str, size_t utf8Len, wchar_t* utf16Str, size_t& utf16Len);
+    size_t	   AsciiToUTF16(Byte* asciiStr, size_t asciiLen, wchar_t* utf16Str, size_t& utf16Len);
+    size_t    UTF8ToUTF16(Byte* utf8Str, size_t utf8Len, wchar_t* utf16Str, size_t& utf16Len);
     size_t UTF8ToUTF32(Byte* utf8Str, size_t utf8Len, char32_t& pch32);
 
-    int	   CopyUTF16(wchar_t* src, size_t srcLen, wchar_t* dest, size_t& destLen);
-    int	   SwapUTF16(wchar_t* src, size_t srcLen, wchar_t* dest, size_t& destLen);
+    size_t	   CopyUTF16(wchar_t* src, size_t srcLen, wchar_t* dest, size_t& destLen);
+    size_t	   SwapUTF16(wchar_t* src, size_t srcLen, wchar_t* dest, size_t& destLen);
 
     //
     //	Conversions to UTF-32
     //
-    int    UTF16ToUTF32(wchar_t* utf16Str, size_t utf16Len, ULONG* utf32Str, size_t& utf32Len);
-    int    UTF16BEToUTF32(wchar_t* utf16Str, size_t utf16Len, ULONG* utf32Str, size_t& utf32Len);
+    size_t    UTF16ToUTF32(wchar_t* utf16Str, size_t utf16Len, ULONG* utf32Str, size_t& utf32Len);
+    size_t    UTF16BEToUTF32(wchar_t* utf16Str, size_t utf16Len, ULONG* utf32Str, size_t& utf32Len);
 
 
