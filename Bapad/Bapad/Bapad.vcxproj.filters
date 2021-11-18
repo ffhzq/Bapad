@@ -13,6 +13,15 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="TextView">
+      <UniqueIdentifier>{3b764e47-8965-46bd-a31a-936c63b2e312}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TextView\Header Files">
+      <UniqueIdentifier>{a2d448f7-f52f-4c5d-b878-b73d1fa16312}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="TextView\Source Files">
+      <UniqueIdentifier>{9531735e-6529-4e26-a079-83e322186abf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -27,6 +36,15 @@
     <ClInclude Include="Bapad.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="TextView.h">
+      <Filter>TextView\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TextViewWin32.h">
+      <Filter>TextView\Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FontStruct.h">
+      <Filter>TextView\Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Bapad.cpp">
@@ -40,6 +58,27 @@
     </ClCompile>
     <ClCompile Include="OptionsFont.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TextView.cpp">
+      <Filter>TextView\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TextViewCtrChars.cpp">
+      <Filter>TextView\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TextViewFile.cpp">
+      <Filter>TextView\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TextViewFont.cpp">
+      <Filter>TextView\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TextViewMouse.cpp">
+      <Filter>TextView\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TextViewPaint.cpp">
+      <Filter>TextView\Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TextViewScoll.cpp">
+      <Filter>TextView\Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
