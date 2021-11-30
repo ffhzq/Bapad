@@ -55,9 +55,9 @@ bool TextDocument::Initialize(HANDLE hFile)//跨平台要改
 
     //memset(buffer, 0, bufferSize);
 
-    ULONG numread = 0;
+    ULONG numOfBytesRead = 0;
     // read entire file into memory
-    if (ReadFile(hFile, docBuffer, lengthBytes, &numread, NULL))
+    if (ReadFile(hFile, docBuffer, lengthBytes, &numOfBytesRead, NULL))
     {
         ;
     }

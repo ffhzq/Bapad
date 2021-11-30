@@ -1,7 +1,7 @@
 #include "windows.h"
 #include "framework.h"
 #include "Bapad.h"
-#include "..\TextView\TextView.h"
+#include "TextView.h"
 #include "resource.h"
 
 #pragma comment(lib, "comctl32.lib")

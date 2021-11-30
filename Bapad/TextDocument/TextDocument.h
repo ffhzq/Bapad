@@ -4,18 +4,12 @@ class TextIterator;
 
 class TextDocument
 {
-    //4 bytes long for ch32
-    //using CH32 = char32_t;
-
-
     friend class TextIterator;
 public:
     TextDocument();
     ~TextDocument();
 
-    //Initialize the TextDocument with the specified file
     bool    Initialize(wchar_t* filename);
-    //	Initialize using a file-handle
     bool    Initialize(HANDLE hFile);
     bool    Clear();
 
@@ -35,7 +29,6 @@ public:
 
     //size_t  GetLine(size_t lineno, char* buf, size_t len, size_t* fileoff = 0);
     //size_t  GetLine(size_t lineno, size_t offset, char* buf, size_t len, size_t* fileoff = 0);
-
     //size_t  GetData(size_t offset, char* buf, size_t len);
 
 
@@ -50,14 +43,13 @@ private:
     size_t          GetChar(size_t offset, size_t lenBytes, char32_t& pch32);
     size_t          GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t& bufLen);
 
-    char* docBuffer;
-
+    char*       docBuffer;
 
     size_t      lengthChars;
-    size_t      lengthBytes;//documentLength
+    size_t      lengthBytes;
 
     uint32_t    fileFormat;
-    size_t         headerSize;
+    size_t      headerSize;
 
     size_t* lineOffsetByte;
     size_t* lineOffsetChar;
