@@ -26,12 +26,6 @@ public:
     TextIterator iterate_line(size_t lineno, size_t& linestart, size_t& linelen);
     TextIterator iterate_line_offset(size_t offset_chars, size_t& lineno, size_t& linestart);
 
-
-    //size_t  GetLine(size_t lineno, char* buf, size_t len, size_t* fileoff = 0);
-    //size_t  GetLine(size_t lineno, size_t offset, char* buf, size_t len, size_t* fileoff = 0);
-    //size_t  GetData(size_t offset, char* buf, size_t len);
-
-
     const uint32_t  GetFileFormat() const;
     const size_t    GetLineCount() const;
     const size_t    GetLongestLine(int tabwidth) const;

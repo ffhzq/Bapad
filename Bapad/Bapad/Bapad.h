@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <fstream>
-#include "../TextView/TextView.h"
+#include "TextView.h"
 
 /*
 #include "..\TextView\TextDocument.h"
