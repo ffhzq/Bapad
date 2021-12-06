@@ -63,9 +63,13 @@ private:
 	int		BaTextWidth(HDC hdc, WCHAR* buf, int len, int nTabOrigin);
 	int		TabWidth();
 
-	BOOL	MouseCoordToFilePos(int x, int y, 
-		size_t& pnLineNo, size_t& pnCharOffset,
-		size_t& pnFileOffset, int& px);
+	BOOL	MouseCoordToFilePos(
+		LONGLONG mx,
+		LONGLONG my,
+		size_t& pnLineNo,
+		size_t& pnCharOffset,
+		size_t& pnFileOffset, 
+		LONGLONG& px);
 	ULONG  RepositionCaret();
 
 
@@ -76,8 +80,8 @@ private:
 	VOID	RecalcLineHeight();
 	bool    PinToBottomCorner();
 
-	void	Scroll(int dx, int dy);
-	HRGN	ScrollRgn(int dx, int dy, bool fReturnUpdateRgn);
+	void	Scroll(LONG64 dx, LONG64 dy);
+	HRGN	ScrollRgn(LONG64 dx, LONG64 dy, bool fReturnUpdateRgn);
 
 	HWND	hWnd;
 
@@ -91,14 +95,14 @@ private:
 	int		heightBelow;
 
 	// Scrollbar related data
-	ULONG64	vScrollPos;
-	ULONG64 vScrollMax;
-	int		hScrollPos;
-	int		hScrollMax;
+	ULONG64		vScrollPos;
+	ULONG64		vScrollMax;
+	LONGLONG	hScrollPos;
+	LONGLONG	hScrollMax;
 
-	size_t	longestLine;
-	int		windowLines;
-	int		windowColumns;
+	size_t		longestLine;
+	ULONG64		windowLines;
+	ULONG64		windowColumns;
 
 	// Display related data
 	int		tabWidthChars;
@@ -114,7 +118,7 @@ private:
 
 	// Runtime related data
 	bool	mouseDown;
-	UINT	scrollTimer;
+	UINT_PTR	scrollTimer;
 	int		scrollCounter;
 	
 	std::shared_ptr<TextDocument> pTextDoc;

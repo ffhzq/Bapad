@@ -24,7 +24,7 @@ LONG TextView::OnLButtonDown(UINT nFlags, int mx, int my)
 	size_t nLineNo;
 	size_t nCharOff;
 	size_t nFileOff;
-	int   px;
+	LONGLONG   px;
 
 	// map the mouse-coordinates to a real file-offset-coordinate
 	MouseCoordToFilePos(mx, my, nLineNo, nCharOff, nFileOff, px);
@@ -52,8 +52,8 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 	size_t start = min(nStart, nFinish);
 	size_t finish = max(nStart, nFinish);
 
-	int   xpos1 = 0, xpos2 = 0;
-	int  ypos = 0;
+	LONGLONG  xpos1 = 0, xpos2 = 0;
+	LONGLONG  ypos = 0;
 
 
 
@@ -129,7 +129,7 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 	{
 		SetRect(&rect, xpos1, ypos, client.right, ypos + lineHeight);
 
-		rect.left -= hScrollPos * fontWidth;
+		rect.left -= static_cast<LONG>(hScrollPos * fontWidth);
 		//rect.left += LeftMarginWidth();
 
 		//InvertRect(hdc, &rect);
@@ -148,7 +148,7 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 	{
 		wchar_t buf[TEXTBUFSIZE]{ {0} };
 		int width{0};
-		int len{0};
+		LONGLONG len{0};
 
 		while ((len = itor.GetText(buf,min((finish - offChars),TEXTBUFSIZE))) && offChars < finish)
 		{
@@ -211,7 +211,7 @@ LONG TextView::OnMouseMove(UINT nFlags, int mx, int my)
 		RECT	rect;
 		POINT	pt = { mx, my };
 		// caret coordinates
-		int		cx;
+		LONGLONG		cx;
 
 		// get the non-scrolling area (an even no. of lines)
 		GetClientRect(hWnd, &rect);
@@ -265,12 +265,16 @@ LONG TextView::OnMouseMove(UINT nFlags, int mx, int my)
 //	fonts introduced by syntax highlighting
 //
 BOOL TextView::MouseCoordToFilePos(
-	int		mx,			// [in]  mouse x-coord
-	int		my,			// [in]  mouse x-coord
-	size_t&	pnLineNo,		// [out] line number
-	size_t&	pnCharOffset,	// [out] char-offset from start of line
-	size_t&	pfnFileOffset, // [out] zero-based file-offset
-	int&	px				// [out] adjusted x coord of caret
+	LONGLONG mx, LONGLONG my,
+
+			// [in]  mouse x-coord
+	size_t&	pnLineNo,
+
+		// [out] line number
+	size_t&	pnCharOffset,
+
+	// [out] char-offset from start of line
+	size_t&	pfnFileOffset, LONGLONG & px				// [out] adjusted x coord of caret
 )
 {
 	size_t nLineNo;
@@ -472,12 +476,12 @@ LONG TextView::OnTimer(UINT nTimerId)
 //
 ULONG TextView::RepositionCaret()
 {
-	size_t	lineno = 0;
-	size_t	charoff = 0;
-	size_t	offset = 0;
-	int		xpos = 0;
-	int		ypos = 0;
-	int		len = 0;
+	size_t		lineno = 0;
+	size_t		charoff = 0;
+	size_t		offset = 0;
+	LONGLONG	xpos = 0;
+	LONGLONG	ypos = 0;
+	ULONG64		len = 0;
 	wchar_t buf[TEXTBUFSIZE]{ {0} };
 
 
@@ -512,7 +516,7 @@ ULONG TextView::RepositionCaret()
 	//xpos += LeftMarginWidth();
 
 
-	SetCaretPos(xpos, ypos);
+	SetCaretPos(static_cast<int>(xpos), static_cast<int>(ypos));
 	return 0;
 }
 

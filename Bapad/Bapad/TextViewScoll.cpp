@@ -22,7 +22,7 @@ VOID TextView::SetupScrollbars()
 	//
 	//	Horizontal scrollbar
 	//
-	si.nPos = hScrollPos;		// scrollbar thumb position
+	si.nPos = static_cast<int>(hScrollPos);		// scrollbar thumb position
 	si.nPage = windowColumns;	// number of lines in a page
 	si.nMin = 0;
 	si.nMax = longestLine - 1;	// total number of lines in file
@@ -86,7 +86,7 @@ LONG TextView::OnSize(UINT nFlags, int width, int height)
 //
 //  Otherwise ScrollRgn returns NULL and updates the entire window 
 //
-HRGN TextView::ScrollRgn(int dx, int dy, bool fReturnUpdateRgn)
+HRGN TextView::ScrollRgn(LONG64 dx, LONG64 dy, bool fReturnUpdateRgn)
 {
 	RECT clip;
 
@@ -106,7 +106,7 @@ HRGN TextView::ScrollRgn(int dx, int dy, bool fReturnUpdateRgn)
 	else if (dy > 0)
 	{
 		dy = min((ULONG)dy, vScrollMax - vScrollPos);
-		clip.bottom = (windowLines - dy) * lineHeight;
+		clip.bottom = static_cast<LONG>((windowLines - dy) * lineHeight);
 	}
 
 
@@ -118,9 +118,9 @@ HRGN TextView::ScrollRgn(int dx, int dy, bool fReturnUpdateRgn)
 	}
 	// scroll right
 	else if (dx > 0)
-	{
+	{	
 		dx = min((unsigned)dx, (unsigned)hScrollMax - hScrollPos);
-		clip.right = (windowColumns - dx - 4) * fontWidth;
+		clip.right = static_cast<LONG>((windowColumns - dx - 4) * fontWidth);
 	}
 
 	// adjust the scrollbar thumb position
@@ -170,7 +170,7 @@ HRGN TextView::ScrollRgn(int dx, int dy, bool fReturnUpdateRgn)
 //
 //	Scroll viewport in specified direction
 //
-VOID TextView::Scroll(int dx, int dy)
+VOID TextView::Scroll(LONG64 dx, LONG64 dy)
 {
 
 	// do a "normal" scroll - don't worry about invalid regions,
@@ -217,7 +217,7 @@ LONG TextView::OnVScroll(UINT nSBCode, UINT nPos)
 			break;
 
 		case SB_PAGEUP:
-			Scroll(0, -windowLines);
+			Scroll(0, -1*static_cast<LONG64>(windowLines));
 			break;
 
 		case SB_THUMBPOSITION:
@@ -267,7 +267,7 @@ LONG TextView::OnHScroll(UINT nSBCode, UINT nPos)
 			break;
 
 		case SB_PAGELEFT:
-			Scroll(-windowColumns, 0);
+			Scroll(-1 * static_cast<LONG64>(windowColumns), 0);
 			break;
 
 		case SB_PAGERIGHT:
