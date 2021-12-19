@@ -20,8 +20,6 @@ TextDocument::~TextDocument()
     Clear();
 }
 
-
-
 bool TextDocument::Initialize(wchar_t* filename)//跨平台要改
 {
     HANDLE hFile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
@@ -316,7 +314,6 @@ const size_t TextDocument::GetDocLength() const
 
 bool TextDocument::Clear()
 {
-
     if (docBuffer != nullptr)
     {
         delete docBuffer;
@@ -325,7 +322,6 @@ bool TextDocument::Clear()
     }
     if (byteOffsetBuffer != nullptr)
     {
-
         delete byteOffsetBuffer;
         byteOffsetBuffer = nullptr;
     }
@@ -334,7 +330,6 @@ bool TextDocument::Clear()
         delete charOffsetBuffer;
         charOffsetBuffer = nullptr;
     }
-
     LineCount = 0;
     return true;
 }
