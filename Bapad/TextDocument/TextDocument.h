@@ -34,7 +34,7 @@ public:
 private:
     bool            InitLineBuffer();
     uint32_t        DetectFileFormat(size_t& headerSize);
-    size_t          GetChar(size_t offset, size_t lenBytes, char32_t& pch32);
+    size_t          GetUTF32Char(size_t offset, size_t lenBytes, char32_t& pch32);
     size_t          GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t& bufLen);
 
     char*       docBuffer;
@@ -45,8 +45,8 @@ private:
     uint32_t    fileFormat;
     size_t      headerSize;
 
-    size_t* lineOffsetByte;
-    size_t* lineOffsetChar;
+    size_t*     byteOffsetBuffer;
+    size_t*     charOffsetBuffer;
 
     size_t      LineCount;
 

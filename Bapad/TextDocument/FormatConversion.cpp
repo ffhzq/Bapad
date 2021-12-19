@@ -13,7 +13,6 @@ size_t AsciiToUTF16(Byte* asciiStr, size_t asciiLen, wchar_t* utf16Str, size_t& 
 
 size_t UTF8ToUTF16(Byte* utf8Str, size_t utf8Len, wchar_t* utf16Str, size_t& utf16Len)
 {
-
 	size_t len = 0;
 	char32_t ch32 = 0;
 	WCHAR* utf16Start = utf16Str;
@@ -194,18 +193,19 @@ size_t UTF16ToUTF32(wchar_t* utf16Str, size_t utf16Len, ULONG* utf32Str, size_t&
 
 	while (utf16Len > 0 && utf32Len > 0)
 	{
-		ULONG ch = *utf16Str;
+		//TODO:try wchar_t
+		ULONG charTemp1 = *utf16Str;
 
 		// first of a surrogate pair?
-		if (ch >= UNI_SUR_HIGH_START && ch < UNI_SUR_HIGH_END && utf16Len >= 2)
+		if (charTemp1 >= UNI_SUR_HIGH_START && charTemp1 < UNI_SUR_HIGH_END && utf16Len >= 2)
 		{
-			ULONG ch2 = *(utf16Str + 1);
+			ULONG charTemp2 = *(utf16Str + 1);
 
 			// valid trailing surrogate unit?
-			if (ch2 >= UNI_SUR_LOW_START && ch < UNI_SUR_LOW_END)
+			if (charTemp2 >= UNI_SUR_LOW_START && charTemp1 < UNI_SUR_LOW_END)
 			{
-				ch = ((ch - UNI_SUR_HIGH_START) << 10) +
-					((ch2 - UNI_SUR_LOW_START) + 0x00010000);
+				charTemp1 = ((charTemp1 - UNI_SUR_HIGH_START) << 10) +
+					((charTemp2 - UNI_SUR_LOW_START) + 0x00010000);
 
 				utf16Str++;
 				utf16Len--;
@@ -213,11 +213,11 @@ size_t UTF16ToUTF32(wchar_t* utf16Str, size_t utf16Len, ULONG* utf32Str, size_t&
 			// illegal character
 			else
 			{
-				ch = UNI_REPLACEMENT_CHAR;
+				charTemp1 = UNI_REPLACEMENT_CHAR;
 			}
 		}
 
-		*utf32Str++ = ch;
+		*utf32Str++ = charTemp1;
 		utf32Len--;
 
 		utf16Str++;

@@ -1,9 +1,13 @@
 #include "pch.h"
 
-//char8_t
+//unsigned,8 bits long,BYTE
 using Byte = unsigned char;
 
-using Word = char16_t;//unsigned short;
+//unsigned,16 bits long,WORD
+using Word = wchar_t;
+
+//signed,8 bits long,CCHAR
+using Cchar = char;
 
 typedef unsigned long	UTF32;	// at least 32 bits
 typedef unsigned short	UTF16;	// at least 16 bits
