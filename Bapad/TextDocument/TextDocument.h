@@ -9,6 +9,10 @@ public:
     TextDocument();
     ~TextDocument();
 
+    //TextDocument(TextDocument &a) = delete;
+    //TextDocument& operator=(TextDocument& a) = delete;
+
+
     bool    Initialize(wchar_t* filename);
     bool    Initialize(HANDLE hFile);
     bool    Clear();
@@ -22,8 +26,8 @@ public:
     bool  LineInfoFromOffset(size_t offset_chars, size_t * lineNo, size_t * lineoffChars, size_t * linelenChars, size_t * lineoffBytes, size_t * linelenBytes);
     bool  LineInfoFromLineNo(size_t lineno, size_t * lineoffChars, size_t * linelenChars, size_t * lineoffBytes, size_t * linelenBytes);
 
-    TextIterator IterateLine(size_t lineno, size_t& linestart, size_t& linelen);
-    TextIterator iterate_line_offset(size_t offset_chars, size_t& lineno, size_t& linestart);
+    TextIterator IterateLine(size_t lineno, size_t * linestart = nullptr, size_t * linelen = nullptr);
+    TextIterator iterate_line_offset(size_t offset_chars, size_t * lineno, size_t * linestart = nullptr);
 
     const uint32_t  GetFileFormat() const;
     const size_t    GetLineCount() const;
