@@ -17,13 +17,12 @@ public:
     bool    OffsetToLine(size_t fileoffset, size_t* lineno, size_t* offset);
     bool    GetLineInfo(size_t lineno, size_t* fileoff, size_t* length);
 
-    ////////////////////////////////////////////////////NEED to UPDATED
     size_t LineNumFromOffset(size_t offset);
 
-    bool  LineInfoFromOffset(size_t offset_chars, size_t& lineNo, size_t& lineoffChars, size_t& linelenChars, size_t& lineoffBytes, size_t& linelenBytes);
-    bool  LineInfoFromLineNo(size_t lineno, size_t& lineoffChars, size_t& linelenChars, size_t& lineoffBytes, size_t& linelenBytes);
+    bool  LineInfoFromOffset(size_t offset_chars, size_t * lineNo, size_t * lineoffChars, size_t * linelenChars, size_t * lineoffBytes, size_t * linelenBytes);
+    bool  LineInfoFromLineNo(size_t lineno, size_t * lineoffChars, size_t * linelenChars, size_t * lineoffBytes, size_t * linelenBytes);
 
-    TextIterator iterate_line(size_t lineno, size_t& linestart, size_t& linelen);
+    TextIterator IterateLine(size_t lineno, size_t& linestart, size_t& linelen);
     TextIterator iterate_line_offset(size_t offset_chars, size_t& lineno, size_t& linestart);
 
     const uint32_t  GetFileFormat() const;

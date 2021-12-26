@@ -257,7 +257,7 @@ void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect)
 	//	TODO: Clip text to left side of window
 	//
 	size_t USELESS_PARAM = 0;
-	TextIterator itor = pTextDoc->iterate_line(nLineNo, charoff, USELESS_PARAM);
+	TextIterator itor = pTextDoc->IterateLine(nLineNo, charoff, USELESS_PARAM);
 
 
 	//
