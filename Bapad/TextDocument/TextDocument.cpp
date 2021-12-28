@@ -8,9 +8,9 @@ TextDocument::TextDocument()
     byteOffsetBuffer(nullptr),
     charOffsetBuffer(nullptr)
 {
-    lengthBytes = 0;
+    lengthByBytes = 0;
     LineCount = 0;
-    lengthChars = 0;
+    lengthByChars = 0;
 
     fileFormat = (uint32_t)BOMLookupList().GetInstances().begin()->bom;
     headerSize = BOMLookupList().GetInstances().begin()->headerLength;
@@ -38,13 +38,13 @@ bool TextDocument::Initialize(HANDLE hFile)//跨平台要改
     //Retrieves the size of the specified file.
     if (GetFileSizeEx(hFile, &TmpDocumentLength) == 0)
     {
-        lengthBytes = 0;
+        lengthByBytes = 0;
         return false;
     }
-    lengthBytes = TmpDocumentLength.QuadPart;
+    lengthByBytes = TmpDocumentLength.QuadPart;
 
     // allocate new file-buffer
-    const size_t bufferSize = lengthBytes;
+    const size_t bufferSize = lengthByBytes;
     if ((docBuffer = new char[bufferSize]) == 0)
     {
         return false;
@@ -54,7 +54,7 @@ bool TextDocument::Initialize(HANDLE hFile)//跨平台要改
 
     ULONG numOfBytesRead = 0;
     // read entire file into memory
-    if (ReadFile(hFile, docBuffer, lengthBytes, &numOfBytesRead, NULL))
+    if (ReadFile(hFile, docBuffer, lengthByBytes, &numOfBytesRead, NULL))
     {
         ;
     }
@@ -72,7 +72,7 @@ bool TextDocument::Initialize(HANDLE hFile)//跨平台要改
 
 bool TextDocument::InitLineBuffer()
 {
-    const size_t bufLen = lengthBytes - headerSize;
+    const size_t bufLen = lengthByBytes - headerSize;
     //NEED TO BE UPDATED 用std::vector
     if ((byteOffsetBuffer = new size_t[bufLen]) == 0)
         return false;
@@ -143,7 +143,7 @@ uint32_t TextDocument::DetectFileFormat(size_t& headerSize)
     auto BOMLOOK = BOMLookupList().GetInstances();
     for (auto i : BOMLOOK)
     {
-        if (lengthBytes >= i.headerLength
+        if (lengthByBytes >= i.headerLength
             && memcmp(docBuffer, &i.bom, i.headerLength) == 0)
         {
             headerSize = i.headerLength;
@@ -187,7 +187,7 @@ size_t TextDocument::GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_
     Byte* rawData = reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
     size_t  len;
 
-    if (offset >= lengthBytes)
+    if (offset >= lengthByBytes)
     {
         bufLen = 0;
         return 0;
@@ -278,7 +278,7 @@ const size_t TextDocument::GetLongestLine(int tabwidth = 4) const
     char* bufPtr = (char*)(docBuffer + headerSize);
 
 
-    for (size_t i = 0; i < lengthBytes; i++)
+    for (size_t i = 0; i < lengthByBytes; i++)
     {
         if (bufPtr[i] == '\r')
         {
@@ -309,7 +309,7 @@ const size_t TextDocument::GetLongestLine(int tabwidth = 4) const
 
 const size_t TextDocument::GetDocLength() const
 {
-    return lengthBytes;
+    return lengthByBytes;
 }
 
 bool TextDocument::Clear()
@@ -318,7 +318,7 @@ bool TextDocument::Clear()
     {
         delete docBuffer;
         docBuffer = nullptr;
-        lengthBytes = 0;
+        lengthByBytes = 0;
     }
     if (byteOffsetBuffer != nullptr)
     {

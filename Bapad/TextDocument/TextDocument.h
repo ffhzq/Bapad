@@ -38,8 +38,8 @@ private:
 
     char*       docBuffer;
 
-    size_t      lengthChars;
-    size_t      lengthBytes;
+    size_t      lengthByChars;
+    size_t      lengthByBytes;
 
     uint32_t    fileFormat;
     size_t      headerSize;
@@ -57,14 +57,13 @@ private:
 class TextIterator
 {
 private:
-    //use shared_ptr<TextDocument>
     std::shared_ptr<TextDocument> textDoc;
     size_t offsetBytes;
     size_t lengthBytes;
 public:
     // default constructor sets all members to zero
     TextIterator()
-        : textDoc(0), offsetBytes(0), lengthBytes(0)
+        : textDoc(nullptr), offsetBytes(0), lengthBytes(0)
     {
     }
 
@@ -118,12 +117,9 @@ public:
 
     operator bool()
     {
-        return textDoc ? true : false;
+        return textDoc.use_count()!=0 ? true : false;
     }
 };
-
-
-
 
 //Byte Order Mark
 enum class BOM : uint32_t //uint32_t
