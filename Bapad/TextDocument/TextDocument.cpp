@@ -334,59 +334,6 @@ bool TextDocument::Clear()
     return true;
 }
 
-bool TextDocument::OffsetToLine(size_t fileoffset, size_t* lineno, size_t* offset)
-{
-    size_t low = 0, high = LineCount - 1;
-    size_t line = 0;
-
-    if (LineCount == 0)
-    {
-        if (lineno) *lineno = 0;
-        if (offset) *offset = 0;
-        return false;
-    }
-
-    while (low <= high)
-    {
-        line = (high + low) / 2;
-
-        if (fileoffset >= byteOffsetBuffer[line] && fileoffset < byteOffsetBuffer[line + 1])
-        {
-            break;
-        }
-        else if (fileoffset < byteOffsetBuffer[line])
-        {
-            high = line - 1;
-        }
-        else
-        {
-            low = line + 1;
-        }
-    }
-
-    if (lineno)  *lineno = line;
-    if (offset)	*offset = fileoffset - byteOffsetBuffer[line];
-
-    return true;
-}
-
-bool TextDocument::GetLineInfo(size_t lineno, size_t* fileoff, size_t* length)
-{
-    if (lineno < LineCount)
-    {
-        if (length)
-            *length = byteOffsetBuffer[lineno + 1] - byteOffsetBuffer[lineno];
-
-        if (fileoff)
-            *fileoff = byteOffsetBuffer[lineno];
-
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
 
 size_t TextDocument::LineNumFromOffset(size_t offset)
 {
@@ -439,7 +386,7 @@ bool TextDocument::LineInfoFromOffset(size_t offset_chars, size_t * lineNo, size
     return true;
 }
 
-bool TextDocument::LineInfoFromLineNo(size_t lineno, size_t * lineoffChars, size_t * linelenChars, size_t * lineoffBytes, size_t * linelenBytes)
+bool TextDocument::LineInfoFromLineNumber(size_t lineno, size_t * lineoffChars, size_t * linelenChars, size_t * lineoffBytes, size_t * linelenBytes)
 {
     if (lineno < LineCount)
     {
@@ -457,18 +404,18 @@ bool TextDocument::LineInfoFromLineNo(size_t lineno, size_t * lineoffChars, size
 }
 
 
-TextIterator TextDocument::IterateLine(size_t lineno, size_t * linestart, size_t * linelen)
+TextIterator TextDocument::IterateLineByLineNumber(size_t lineno, size_t * linestart, size_t * linelen)
 {
     size_t offset_bytes;
     size_t length_bytes;
 
-    if (!LineInfoFromLineNo(lineno, linestart, linelen, &offset_bytes, &length_bytes))
+    if (!LineInfoFromLineNumber(lineno, linestart, linelen, &offset_bytes, &length_bytes))
         return TextIterator();
 
     return TextIterator(offset_bytes, length_bytes, this);
 }
 
-TextIterator TextDocument::iterate_line_offset(size_t offset_chars, size_t * lineno, size_t * linestart)
+TextIterator TextDocument::IterateLineByOffset(size_t offset_chars, size_t * lineno, size_t * linestart)
 {
     size_t offset_bytes;
     size_t length_bytes;

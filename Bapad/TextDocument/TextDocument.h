@@ -17,17 +17,13 @@ public:
     bool    Initialize(HANDLE hFile);
     bool    Clear();
 
-    //	Perform a reverse lookup - file-offset to line number
-    bool    OffsetToLine(size_t fileoffset, size_t* lineno, size_t* offset);
-    bool    GetLineInfo(size_t lineno, size_t* fileoff, size_t* length);
-
     size_t LineNumFromOffset(size_t offset);
 
     bool  LineInfoFromOffset(size_t offset_chars, size_t * lineNo, size_t * lineoffChars, size_t * linelenChars, size_t * lineoffBytes, size_t * linelenBytes);
-    bool  LineInfoFromLineNo(size_t lineno, size_t * lineoffChars, size_t * linelenChars, size_t * lineoffBytes, size_t * linelenBytes);
+    bool  LineInfoFromLineNumber(size_t lineno, size_t * lineoffChars, size_t * linelenChars, size_t * lineoffBytes, size_t * linelenBytes);
 
-    TextIterator IterateLine(size_t lineno, size_t * linestart = nullptr, size_t * linelen = nullptr);
-    TextIterator iterate_line_offset(size_t offset_chars, size_t * lineno, size_t * linestart = nullptr);
+    TextIterator IterateLineByLineNumber(size_t lineno, size_t * linestart = nullptr, size_t * linelen = nullptr);
+    TextIterator IterateLineByOffset(size_t offset_chars, size_t * lineno, size_t * linestart = nullptr);
 
     const uint32_t  GetFileFormat() const;
     const size_t    GetLineCount() const;

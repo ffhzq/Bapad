@@ -76,13 +76,13 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 	if (lineNo < vScrollPos)
 	{
 		lineNo = vScrollPos;
-		auto newItor = pTextDoc.get()->IterateLine(lineNo, &offChars, &lenChars);
+		auto newItor = pTextDoc.get()->IterateLineByLineNumber(lineNo, &offChars, &lenChars);
 		itor = newItor;
 		start = offChars;
 	}
 	else
 	{
-		auto newItor = pTextDoc->IterateLine(lineNo, &offChars, &lenChars);
+		auto newItor = pTextDoc->IterateLineByLineNumber(lineNo, &offChars, &lenChars);
 		itor = newItor;
 	}
 
@@ -138,7 +138,7 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 		xpos1 = 0;
 		ypos += lineHeight;
 
-		auto a = pTextDoc->IterateLine(++lineNo, &offChars, &lenChars);
+		auto a = pTextDoc->IterateLineByLineNumber(++lineNo, &offChars, &lenChars);
 		itor = a;
 	}
 
@@ -316,7 +316,7 @@ BOOL TextView::MouseCoordToFilePos(
 
 	mx += hScrollPos * fontWidth;
 
-	TextIterator itor = pTextDoc->IterateLine(nLineNo, &charOff);
+	TextIterator itor = pTextDoc->IterateLineByLineNumber(nLineNo, &charOff);
 	// character offset within the line is more complicated. We have to 
 	// parse the text.
 	while ((len = itor.GetText(buf, TEXTBUFSIZE)) > 0)
@@ -485,7 +485,7 @@ ULONG TextView::RepositionCaret()
 
 
 	// get start-of-line information from cursor-offset
-	TextIterator itor = pTextDoc->iterate_line_offset(cursorOffset, &lineno, &charoff);
+	TextIterator itor = pTextDoc->IterateLineByOffset(cursorOffset, &lineno, &charoff);
 
 	if (!itor)
 		return 0;
