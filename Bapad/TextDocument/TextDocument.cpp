@@ -5,8 +5,8 @@
 //initial all var
 TextDocument::TextDocument()
     : docBuffer(nullptr),
-    byteOffsetBuffer(nullptr),
-    charOffsetBuffer(nullptr)
+    byteOffsetLineBuffer(nullptr),
+    charOffsetLineBuffer(nullptr)
 {
     lengthByBytes = 0;
     LineCount = 0;
@@ -74,10 +74,10 @@ bool TextDocument::InitLineBuffer()
 {
     const size_t bufLen = lengthByBytes - headerSize;
     //NEED TO BE UPDATED 用std::vector
-    if ((byteOffsetBuffer = new size_t[bufLen]) == 0)
+    if ((byteOffsetLineBuffer = new size_t[bufLen]) == 0)
         return false;
 
-    if ((charOffsetBuffer = new size_t[bufLen]) == 0)
+    if ((charOffsetLineBuffer = new size_t[bufLen]) == 0)
         return false;
 
     LineCount = 0;
@@ -95,8 +95,8 @@ bool TextDocument::InitLineBuffer()
         if (ch32 == '\r')
         {
             //记录行起始位置
-            byteOffsetBuffer[LineCount] = lineStartBytes;
-            charOffsetBuffer[LineCount] = lineStartChars;
+            byteOffsetLineBuffer[LineCount] = lineStartBytes;
+            charOffsetLineBuffer[LineCount] = lineStartChars;
             lineStartBytes = offsetBytes;
             lineStartChars = offsetChars;
 
@@ -117,8 +117,8 @@ bool TextDocument::InitLineBuffer()
         else if (ch32 == '\n')
         {
             //记录行起始位置
-            byteOffsetBuffer[LineCount] = lineStartBytes;
-            charOffsetBuffer[LineCount] = lineStartChars;
+            byteOffsetLineBuffer[LineCount] = lineStartBytes;
+            charOffsetLineBuffer[LineCount] = lineStartChars;
             lineStartBytes = offsetBytes;
             lineStartChars = offsetChars;
 
@@ -128,13 +128,13 @@ bool TextDocument::InitLineBuffer()
 
     if (bufLen > 0)
     {
-        byteOffsetBuffer[LineCount] = lineStartBytes;
-        charOffsetBuffer[LineCount] = lineStartChars;
+        byteOffsetLineBuffer[LineCount] = lineStartBytes;
+        charOffsetLineBuffer[LineCount] = lineStartChars;
         LineCount++;
     }
     //SIZE_MAX
-    byteOffsetBuffer[LineCount] = bufLen;
-    charOffsetBuffer[LineCount] = offsetChars;
+    byteOffsetLineBuffer[LineCount] = bufLen;
+    charOffsetLineBuffer[LineCount] = offsetChars;
     return true;
 }
 
@@ -320,15 +320,15 @@ bool TextDocument::Clear()
         docBuffer = nullptr;
         lengthByBytes = 0;
     }
-    if (byteOffsetBuffer != nullptr)
+    if (byteOffsetLineBuffer != nullptr)
     {
-        delete byteOffsetBuffer;
-        byteOffsetBuffer = nullptr;
+        delete byteOffsetLineBuffer;
+        byteOffsetLineBuffer = nullptr;
     }
-    if (charOffsetBuffer != nullptr)
+    if (charOffsetLineBuffer != nullptr)
     {
-        delete charOffsetBuffer;
-        charOffsetBuffer = nullptr;
+        delete charOffsetLineBuffer;
+        charOffsetLineBuffer = nullptr;
     }
     LineCount = 0;
     return true;
@@ -363,11 +363,11 @@ bool TextDocument::LineInfoFromOffset(size_t offset_chars, size_t * lineNo, size
     {
         line = (high + low) / 2;
 
-        if (offset_chars >= charOffsetBuffer[line] && offset_chars < charOffsetBuffer[line + 1])
+        if (offset_chars >= charOffsetLineBuffer[line] && offset_chars < charOffsetLineBuffer[line + 1])
         {
             break;
         }
-        else if (offset_chars < charOffsetBuffer[line])
+        else if (offset_chars < charOffsetLineBuffer[line])
         {
             high = line - 1;
         }
@@ -378,10 +378,10 @@ bool TextDocument::LineInfoFromOffset(size_t offset_chars, size_t * lineNo, size
     }
 
     if (lineNo != nullptr)	        *lineNo = line;
-    if (lineoffBytes != nullptr)	*lineoffBytes = byteOffsetBuffer[line];
-    if (linelenBytes != nullptr)	*linelenBytes = byteOffsetBuffer[line + 1] - byteOffsetBuffer[line];
-    if (lineoffChars != nullptr)	*lineoffChars = charOffsetBuffer[line];
-    if (linelenChars != nullptr)	*linelenChars = charOffsetBuffer[line + 1] - charOffsetBuffer[line];
+    if (lineoffBytes != nullptr)	*lineoffBytes = byteOffsetLineBuffer[line];
+    if (linelenBytes != nullptr)	*linelenBytes = byteOffsetLineBuffer[line + 1] - byteOffsetLineBuffer[line];
+    if (lineoffChars != nullptr)	*lineoffChars = charOffsetLineBuffer[line];
+    if (linelenChars != nullptr)	*linelenChars = charOffsetLineBuffer[line + 1] - charOffsetLineBuffer[line];
 
     return true;
 }
@@ -390,10 +390,10 @@ bool TextDocument::LineInfoFromLineNumber(size_t lineno, size_t * lineoffChars, 
 {
     if (lineno < LineCount)
     {
-        if (linelenChars != nullptr) *linelenChars = charOffsetBuffer[lineno + 1] - charOffsetBuffer[lineno];
-        if (lineoffChars != nullptr) *lineoffChars = charOffsetBuffer[lineno];
-        if (linelenBytes != nullptr) *linelenBytes = byteOffsetBuffer[lineno + 1] - byteOffsetBuffer[lineno];
-        if (lineoffBytes != nullptr) *lineoffBytes = byteOffsetBuffer[lineno];
+        if (linelenChars != nullptr) *linelenChars = charOffsetLineBuffer[lineno + 1] - charOffsetLineBuffer[lineno];
+        if (lineoffChars != nullptr) *lineoffChars = charOffsetLineBuffer[lineno];
+        if (linelenBytes != nullptr) *linelenBytes = byteOffsetLineBuffer[lineno + 1] - byteOffsetLineBuffer[lineno];
+        if (lineoffBytes != nullptr) *lineoffBytes = byteOffsetLineBuffer[lineno];
 
         return true;
     }

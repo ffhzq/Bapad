@@ -249,9 +249,21 @@ void SetWindowFileName(HWND hwnd, wchar_t* szFileName)
 
 BOOL DoOpenFile(HWND hwnd, WCHAR* szFileName, WCHAR* szFileTitle)
 {
+    int fmt, fmtlook[] =
+    {
+        IDM_VIEW_ASCII, IDM_VIEW_UTF8, IDM_VIEW_UTF16, IDM_VIEW_UTF16BE
+    };
+
     if (TextView_OpenFile(g_hwndTextView, szFileName))
     {
         SetWindowFileName(hwnd, szFileTitle);
+
+        fmt = TextView_GetFormat(g_hwndTextView);
+
+        CheckMenuRadioItem(GetMenu(hwnd),
+            IDM_VIEW_ASCII, IDM_VIEW_UTF16BE,
+            fmtlook[fmt], MF_BYCOMMAND);
+
         return TRUE;
     }
     else

@@ -44,8 +44,8 @@ private:
     uint32_t    fileFormat;
     size_t      headerSize;
 
-    size_t*     byteOffsetBuffer;
-    size_t*     charOffsetBuffer;
+    size_t*     byteOffsetLineBuffer;
+    size_t*     charOffsetLineBuffer;
 
     size_t      LineCount;
 

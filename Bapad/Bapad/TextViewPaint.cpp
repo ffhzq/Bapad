@@ -1,8 +1,10 @@
 #include "TextView.h"
 
-size_t		StripCRLF(WCHAR* szText, size_t nLength);
+size_t	StripCRLF(WCHAR* szText, size_t nLength);
 void	PaintRect(HDC hdc, int x, int y, int width, int height, COLORREF fill);
 void	DrawCheckedRect(HDC hdc, RECT* rect, COLORREF fg, COLORREF bg);
+
+extern "C" COLORREF MixRGB(COLORREF, COLORREF);
 
 size_t TextView::ApplyTextAttributes(size_t nLineNo, size_t nOffset, WCHAR* szText, int nTextLen, ATTR* attr)
 {
@@ -14,17 +16,7 @@ size_t TextView::ApplyTextAttributes(size_t nLineNo, size_t nOffset, WCHAR* szTe
 	size_t selstart = min(selectionStart, selectionEnd);
 	size_t selend = max(selectionStart, selectionEnd);
 
-	//
-	//	TODO: 1. Apply syntax colouring first of all
-	//
 
-	//
-	//	TODO: 2. Apply bookmarks, line highlighting etc (override syntax colouring)
-	//
-
-	//
-	//	STEP 3:  Now apply text-selection (overrides everything else)
-	//
 	for (i = 0; i < nTextLen; i++)
 	{
 		// apply highlight colours 
@@ -245,7 +237,7 @@ void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect)
 {
 	wchar_t		buff[TEXTBUFSIZE]{ 0 };
 	ATTR		attr[TEXTBUFSIZE];
-	size_t		charoff = -1;
+	size_t		charoff = 0;
 
 	size_t		colNo = 0;
 
@@ -379,4 +371,29 @@ void DrawCheckedRect(HDC hdc, RECT* rect, COLORREF fg, COLORREF bg)
 	SelectObject(hdc, hbrold);
 	DeleteObject(hbr);
 	DeleteObject(hbmp);
+}
+
+COLORREF MixRGB(COLORREF rgbCol1, COLORREF rgbCol2)
+{
+	return RGB(
+		(GetRValue(rgbCol1) + GetRValue(rgbCol2)) / 2,
+		(GetGValue(rgbCol1) + GetGValue(rgbCol2)) / 2,
+		(GetBValue(rgbCol1) + GetBValue(rgbCol2)) / 2
+	);
+}
+
+COLORREF RealizeColour(COLORREF col)
+{
+	COLORREF result = col;
+
+	if (col & 0x80000000)
+		result = GetSysColor(col & 0xff);
+
+	if (col & 0x40000000)
+		result = MixRGB(GetSysColor((col & 0xff00) >> 8), result);
+
+	if (col & 0x20000000)
+		result = MixRGB(GetSysColor((col & 0xff00) >> 8), result);
+
+	return result;
 }

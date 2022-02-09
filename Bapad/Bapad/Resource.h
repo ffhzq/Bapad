@@ -73,11 +73,22 @@
 #define IDC_RADIO1                      1026
 #define IDC_RADIO2                      1027
 #define IDC_CHECK5                      1028
+
+
 /*#define IDM_FILE_NEW                    40001
 #define IDM_FILE_OPEN                   40002
 #define IDM_FILE_EXIT                   40003
 #define IDM_HELP_ABOUT                  40004
 #define IDM_VIEW_FONT                   40005*/
+#define IDM_VIEW_LINENUMBERS            40006
+#define IDM_VIEW_LONGLINES              40007
+#define IDM_VIEW_SAVENOW                40008
+#define IDM_VIEW_SAVEEXIT               40009
+#define IDM_FILE_PRINT                  40010
+#define IDM_VIEW_ASCII                  40012
+#define IDM_VIEW_UTF8                   40013
+#define IDM_VIEW_UTF16                  40014
+#define IDM_VIEW_UTF16BE                40015
 /////////////////
 ////////////////////////////////////////////////////////////
 
