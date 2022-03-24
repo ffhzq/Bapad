@@ -4,7 +4,8 @@
 
 //initial all var
 TextDocument::TextDocument()
-    : docBuffer(nullptr),
+    : 
+    docBuffer(nullptr),
     byteOffsetLineBuffer(nullptr),
     charOffsetLineBuffer(nullptr)
 {
@@ -12,7 +13,7 @@ TextDocument::TextDocument()
     LineCount = 0;
     lengthByChars = 0;
 
-    fileFormat = (uint32_t)BOMLookupList().GetInstances().begin()->bom;
+    fileFormat = (uint32_t)(BOMLookupList().GetInstances().rbegin()->bom);
     headerSize = BOMLookupList().GetInstances().begin()->headerLength;
 }
 TextDocument::~TextDocument()

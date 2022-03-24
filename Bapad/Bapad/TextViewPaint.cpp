@@ -255,7 +255,7 @@ void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect)
 	//	Keep drawing until we reach the edge of the window
 	//
 
-	size_t		len = 0;
+	size_t	len = 0;
 	while ((len = itor.GetText(buff,TEXTBUFSIZE))  > 0)
 	{
 		int   i;

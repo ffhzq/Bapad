@@ -50,6 +50,11 @@ TextView::TextView(HWND hwnd)
 //
 TextView::~TextView()
 {
+    if (pTextDoc)
+    {
+        delete pTextDoc;
+    }
+    //DestroyCursor(m_hMarginCursor);
 }
 
 VOID TextView::UpdateMetrics()
@@ -59,6 +64,8 @@ VOID TextView::UpdateMetrics()
 
 	OnSize(0, rect.right, rect.bottom);
 	RefreshWindow();
+
+    RepositionCaret();
 }
 
 LONG TextView::OnSetFocus(HWND hwndOld)

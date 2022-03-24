@@ -22,8 +22,8 @@ public:
     bool  LineInfoFromOffset(size_t offset_chars, size_t * lineNo, size_t * lineoffChars, size_t * linelenChars, size_t * lineoffBytes, size_t * linelenBytes);
     bool  LineInfoFromLineNumber(size_t lineno, size_t * lineoffChars, size_t * linelenChars, size_t * lineoffBytes, size_t * linelenBytes);
 
-    TextIterator IterateLineByLineNumber(size_t lineno, size_t * linestart = nullptr, size_t * linelen = nullptr);
-    TextIterator IterateLineByOffset(size_t offset_chars, size_t * lineno, size_t * linestart = nullptr);
+    TextIterator IterateLineByLineNumber(size_t lineno, size_t * linestart = 0, size_t * linelen = 0);
+    TextIterator IterateLineByOffset(size_t offset_chars, size_t * lineno, size_t * linestart = 0);
 
     const uint32_t  GetFileFormat() const;
     const size_t    GetLineCount() const;
@@ -57,11 +57,10 @@ private:
 class TextIterator
 {
 private:
-    std::shared_ptr<TextDocument> textDoc;
+    TextDocument* textDoc;
     size_t offsetBytes;
     size_t lengthBytes;
 public:
-    // default constructor sets all members to zero
     TextIterator()
         : textDoc(nullptr), offsetBytes(0), lengthBytes(0)
     {
@@ -73,17 +72,12 @@ public:
 
     }
 
-    // default copy-constructor
     TextIterator(const TextIterator& ti)
         : textDoc(ti.textDoc), offsetBytes(ti.offsetBytes), lengthBytes(ti.lengthBytes)
     {
     }
 
-
-
-
-    // assignment operator
-    TextIterator& operator= (TextIterator& ti)
+    TextIterator& operator= (TextIterator ti)
     {
         if (ti == *this)
         {
@@ -117,7 +111,7 @@ public:
 
     operator bool()
     {
-        return textDoc.use_count()!=0 ? true : false;
+        return textDoc != nullptr ? true : false;
     }
 };
 
@@ -137,7 +131,7 @@ struct BOMLookup
 public:
     BOM    bom;
     //bytes
-    size_t      headerLength;
+    size_t headerLength;
 
     BOMLookup(BOM _bom, size_t _headerLength)
         : bom(_bom), headerLength(_headerLength)
@@ -152,10 +146,7 @@ class BOMLookupList
 public:
     BOMLookupList() {}
     static const std::vector<BOMLookup>& GetInstances() {
-        static std::vector<BOMLookup> instances;
-        if (instances.empty())
-        {
-            instances = std::vector<BOMLookup>(
+        static std::vector<BOMLookup> instances = std::vector<BOMLookup>(
                 {
                     BOMLookup(BOM::UTF32LE,4),
                     BOMLookup(BOM::UTF32BE,4),
@@ -164,7 +155,7 @@ public:
                     BOMLookup(BOM::UTF16BE,2),
                     BOMLookup(BOM::ASCII,0)
                 });
-        }
+
         return instances;
     }
 };
