@@ -2,7 +2,6 @@
 #include "TextDocument.h"
 #include "formatConversion.h"
 
-//initial all var
 TextDocument::TextDocument()
     : 
     docBuffer(nullptr),
@@ -60,7 +59,7 @@ bool TextDocument::Initialize(HANDLE hFile)//跨平台要改
         ;
     }
 
-    fileFormat = DetectFileFormat(headerSize);
+    fileFormat = DetectFileFormat();
 
     // work out where each line of text starts
     if (!InitLineBuffer())
@@ -139,7 +138,7 @@ bool TextDocument::InitLineBuffer()
     return true;
 }
 
-uint32_t TextDocument::DetectFileFormat(size_t& headerSize)
+uint32_t TextDocument::DetectFileFormat()
 {
     auto BOMLOOK = BOMLookupList().GetInstances();
     for (auto i : BOMLOOK)

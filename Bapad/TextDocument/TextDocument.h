@@ -32,7 +32,7 @@ public:
 
 private:
     bool            InitLineBuffer();
-    uint32_t        DetectFileFormat(size_t& headerSize);
+    uint32_t        DetectFileFormat();
     size_t          GetUTF32Char(size_t offset, size_t lenBytes, char32_t& pch32);
     size_t          GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t& bufLen);
 

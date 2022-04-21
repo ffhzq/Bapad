@@ -16,6 +16,7 @@ LONG TextView::OpenFile(WCHAR *szFileName)
 		vScrollPos  = 0;
 		hScrollPos  = 0;
 
+
 		UpdateMetrics();
 		return TRUE;
 	}

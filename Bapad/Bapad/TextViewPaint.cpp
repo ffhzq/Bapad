@@ -272,7 +272,7 @@ void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect)
 		//
 		//	Display the text by breaking it into spans of colour/style
 		//
-		for (int i = 0, lasti = 0; lasti <= len; i++)
+		for (int i = 0, lasti = 0; i <= len; i++)
 		{
 			// if the colour or font changes, then need to output 
 			if (i == len ||
