@@ -153,13 +153,9 @@ void ApplyRegSettings()
 
 void ShowProperties(HWND hwndParent)
 {
-	/*PROPSHEETHEADERW psh = { sizeof(psh) };
-	PROPSHEETPAGEW   psp[2] = { { sizeof(psp[0]) },  { sizeof(psp[1]) }, };
-	*/
-
 	PROPSHEETHEADERW psh = { sizeof(psh) };
-	PROPSHEETPAGEW   psp[2] = { { sizeof(psp[0]) },  { sizeof(psp[1]) }, };
-
+	PROPSHEETPAGEW   psp[3] = { { sizeof(psp[0]) },  { sizeof(psp[1]) }, { sizeof(psp[2]) } };
+	
 	CoInitialize(0);
 
 	// configure property sheet
@@ -169,19 +165,24 @@ void ShowProperties(HWND hwndParent)
 	psh.ppsp = psp;
 	psh.pszCaption = _T("Options");
 
-	// configure property sheet page(1)
+	// configure property sheet page
 	psp[0].dwFlags = PSP_USETITLE;
 	psp[0].hInstance = GetModuleHandle(0);
 	psp[0].pfnDlgProc = FontOptionsDlgProc;
 	psp[0].pszTemplate = MAKEINTRESOURCE(IDD_FONT);
 	psp[0].pszTitle = _T("Font");
 
-	// configure property sheet page(2)
 	psp[1].dwFlags = PSP_USETITLE;
 	psp[1].hInstance = GetModuleHandle(0);
-	psp[1].pfnDlgProc = MiscOptionsDlgProc;
-	psp[1].pszTemplate = MAKEINTRESOURCE(IDD_OPTIONS);
-	psp[1].pszTitle = _T("Settings");
+	//psp[1].pfnDlgProc = DisplayOptionsDlgProc;
+	//psp[1].pszTemplate = MAKEINTRESOURCE(IDD_DISPLAY);
+	psp[1].pszTitle = _T("Display");
+
+	psp[2].dwFlags = PSP_USETITLE;
+	psp[2].hInstance = GetModuleHandle(0);
+	psp[2].pfnDlgProc = MiscOptionsDlgProc;
+	psp[2].pszTemplate = MAKEINTRESOURCE(IDD_OPTIONS);
+	psp[2].pszTitle = _T("Settings");
 	
 	if (PropertySheetW(&psh))
 	{
