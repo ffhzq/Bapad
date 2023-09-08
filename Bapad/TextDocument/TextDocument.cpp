@@ -174,7 +174,7 @@ size_t TextDocument::GetUTF32Char(size_t offset, size_t lenBytes, char32_t & pch
 {
     //Byte* rawData = reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
     //Word* rawDataW = reinterpret_cast<Word*>(docBuffer + offset + headerSize);
-    BYTE* rawdata;
+    Byte* rawdata;
 
     lenBytes = min(16, lenBytes);
     rawdata= reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
