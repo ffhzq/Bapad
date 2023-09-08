@@ -65,7 +65,7 @@ BOOL WriteSettingInt(HKEY hkey, const wchar_t szKeyName[], LONG nValue)
 // Get a string buffer from the registry
 BOOL WriteSettingStr(HKEY hkey, const wchar_t szKeyName[], wchar_t szString[])
 {
-	return !RegSetValueExW(hkey, szKeyName, 0, REG_SZ, (BYTE*)szString, (wcslen(szString) + 1) * sizeof(wchar_t));
+	return !RegSetValueExW(hkey, szKeyName, 0, REG_SZ, (BYTE*)szString, static_cast<DWORD>((wcslen(szString) + 1) * sizeof(wchar_t)));
 }
 
 void LoadRegSettings()

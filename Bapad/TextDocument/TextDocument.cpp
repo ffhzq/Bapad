@@ -2,6 +2,18 @@
 #include "TextDocument.h"
 #include "formatConversion.h"
 
+struct _BOM_LOOKUP BOMLOOK[] =
+{
+    // define longest headers first
+    { 0x0000FEFF, 4, BCP_UTF32    },
+    { 0xFFFE0000, 4, BCP_UTF32BE  },
+    { 0xBFBBEF,	  3, BCP_UTF8	  },
+    { 0xFFFE,	  2, BCP_UTF16BE  },
+    { 0xFEFF,	  2, BCP_UTF16    },
+    { 0,          0, BCP_ASCII	  },
+};
+
+
 TextDocument::TextDocument()
     : 
     docBuffer(nullptr),
@@ -9,11 +21,11 @@ TextDocument::TextDocument()
     charOffsetLineBuffer(nullptr)
 {
     lengthByBytes = 0;
-    LineCount = 0;
     lengthByChars = 0;
+    LineCount = 0;
 
-    fileFormat = (uint32_t)(BOMLookupList().GetInstances().rbegin()->bom);
-    headerSize = BOMLookupList().GetInstances().begin()->headerLength;
+    fileFormat = BCP_ASCII;
+    headerSize = 0;
 }
 TextDocument::~TextDocument()
 {
@@ -36,28 +48,26 @@ bool TextDocument::Initialize(HANDLE hFile)//跨平台要改
     LARGE_INTEGER TmpDocumentLength = { 0 };
 
     //Retrieves the size of the specified file.
+    
     if (GetFileSizeEx(hFile, &TmpDocumentLength) == 0)
     {
         lengthByBytes = 0;
         return false;
     }
+    
     lengthByBytes = TmpDocumentLength.QuadPart;
+    if (GetFileSize(hFile, 0) != lengthByBytes)//todo
+        abort();
 
     // allocate new file-buffer
     const size_t bufferSize = lengthByBytes;
     if ((docBuffer = new char[bufferSize]) == 0)
-    {
         return false;
-    }
-
-    //memset(buffer, 0, bufferSize);
 
     ULONG numOfBytesRead = 0;
     // read entire file into memory
-    if (ReadFile(hFile, docBuffer, lengthByBytes, &numOfBytesRead, NULL))
-    {
-        ;
-    }
+    ReadFile(hFile, docBuffer, static_cast<DWORD>(lengthByBytes), &numOfBytesRead, NULL);
+
 
     fileFormat = DetectFileFormat();
 
@@ -73,7 +83,7 @@ bool TextDocument::Initialize(HANDLE hFile)//跨平台要改
 bool TextDocument::InitLineBuffer()
 {
     const size_t bufLen = lengthByBytes - headerSize;
-    //NEED TO BE UPDATED 用std::vector
+    //NEED TO BE UPDATED 用std::vector 吗？
     if ((byteOffsetLineBuffer = new size_t[bufLen]) == 0)
         return false;
 
@@ -138,21 +148,25 @@ bool TextDocument::InitLineBuffer()
     return true;
 }
 
-uint32_t TextDocument::DetectFileFormat()
+int TextDocument::DetectFileFormat()
 {
-    auto BOMLOOK = BOMLookupList().GetInstances();
+    int res=-1;
     for (auto i : BOMLOOK)
     {
         if (lengthByBytes >= i.headerLength
             && memcmp(docBuffer, &i.bom, i.headerLength) == 0)
         {
             headerSize = i.headerLength;
-            return static_cast<uint32_t>(i.bom);
+            res = i.type;
+            break;
         }
     }
-
-    headerSize = 0;
-    return static_cast<uint32_t>(BOM::ASCII);
+    if (res == -1)
+    {
+        headerSize = 0;
+        res = BCP_ASCII;
+    }
+    return res;
 
 }
 
@@ -160,20 +174,20 @@ size_t TextDocument::GetUTF32Char(size_t offset, size_t lenBytes, char32_t& pch3
 {
     Byte* rawData = reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
     Word* rawDataW = reinterpret_cast<Word*>(docBuffer + offset + headerSize);
-    Word ch16;
+    wchar_t ch16;
     size_t ch32Len = 1;
 
     switch (fileFormat)
     {
-    case (uint32_t)BOM::ASCII:
+    case BCP_ASCII:
         MultiByteToWideChar(CP_ACP, 0, reinterpret_cast<Cchar *>(rawData), 1, reinterpret_cast<wchar_t*>(&ch16), 1);
         pch32 = ch16;
         return 1;
-    case (uint32_t)BOM::UTF16LE:
+    case BCP_UTF16:
         return UTF16ToUTF32(reinterpret_cast<wchar_t*>(rawDataW), lenBytes / 2, reinterpret_cast<ULONG*>(pch32), ch32Len) * 2;
-    case (uint32_t)BOM::UTF16BE:
+    case BCP_UTF16BE:
         return UTF16BEToUTF32(reinterpret_cast<wchar_t*>(rawDataW), lenBytes / 2, reinterpret_cast<ULONG*>(pch32), ch32Len) * 2;
-    case (uint32_t)BOM::UTF8:
+    case BCP_UTF8:
         return UTF8ToUTF32(rawData, lenBytes, pch32);
     default:
         return 0;
@@ -184,37 +198,39 @@ size_t TextDocument::GetUTF32Char(size_t offset, size_t lenBytes, char32_t& pch3
 
 size_t TextDocument::GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t & bufLen)
 {
-    Byte* rawData = reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
-    size_t  len;
+    //Byte* rawData = reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
+    //size_t  len;
 
     if (offset >= lengthByBytes)
     {
         bufLen = 0;
         return 0;
     }
-
-    switch (fileFormat)
+    ULONG chars_copied = 0;
+    ULONG bytes_processed = 0;
+    while (lenBytes > 0 && bufLen > 0)
     {
-        // convert from ANSI->UNICODE
-    case (uint32_t)BOM::ASCII:
-        return AsciiToUTF16(rawData, lenBytes, buf, bufLen);
+        BYTE   rawdata[0x100];
+        size_t rawlen = min(lenBytes, 0x100);
 
-    case (uint32_t)BOM::UTF8:
-        return UTF8ToUTF16(rawData, lenBytes, buf, bufLen);
+        // get next block of data from the piece-table
+        //m_seq.render(offset + m_nHeaderSize, rawdata, rawlen);
 
-        // already unicode, do a straight memory copy
-    case (uint32_t)BOM::UTF16LE:
-        return CopyUTF16(reinterpret_cast<wchar_t*>(rawData), lenBytes / sizeof(wchar_t), buf, bufLen);
+        // convert to UTF-16 
+        size_t tmplen = bufLen;
+        rawlen = rawdata_to_utf16(rawdata, rawlen, buf, tmplen);
 
-        // need to convert from big-endian to little-endian
-    case (uint32_t)BOM::UTF16BE:
-        return SwapUTF16(reinterpret_cast<wchar_t*>(rawData), lenBytes / sizeof(wchar_t), buf, bufLen);
+        lenBytes -= rawlen;
+        offset += rawlen;
+        bytes_processed += rawlen;
 
-        // error! we should *never* reach this point
-    default:
-        bufLen = 0;
-        return 0;
+        buf += tmplen;
+        bufLen -= tmplen;
+        chars_copied += tmplen;
     }
+
+    bufLen = chars_copied;
+    return bytes_processed;
 }
 
 
@@ -316,18 +332,18 @@ bool TextDocument::Clear()
 {
     if (docBuffer != NULL)
     {
-        delete docBuffer;
+        delete[] docBuffer;
         docBuffer = nullptr;
         lengthByBytes = 0;
     }
     if (byteOffsetLineBuffer != NULL)
     {
-        delete byteOffsetLineBuffer;
+        delete[] byteOffsetLineBuffer;
         byteOffsetLineBuffer = nullptr;
     }
     if (charOffsetLineBuffer != NULL)
     {
-        delete charOffsetLineBuffer;
+        delete[] charOffsetLineBuffer;
         charOffsetLineBuffer = nullptr;
     }
     LineCount = 0;
@@ -424,4 +440,33 @@ TextIterator TextDocument::IterateLineByOffset(size_t offset_chars, size_t * lin
         return TextIterator();
 
     return TextIterator(offset_bytes, length_bytes, this);
+}
+
+
+size_t      TextDocument::rawdata_to_utf16(BYTE* rawdata, size_t rawlen, WCHAR* utf16str, size_t& utf16len)
+{
+    switch (fileFormat)
+    {
+        // convert from ANSI->UNICODE
+    case BCP_ASCII:
+        return AsciiToUTF16(rawdata, rawlen, (UTF16*)utf16str, utf16len);
+
+    case BCP_UTF8:
+        return UTF8ToUTF16(rawdata, rawlen, (UTF16*)utf16str, utf16len);
+
+        // already unicode, do a straight memory copy
+    case BCP_UTF16:
+        rawlen /= sizeof(TCHAR);
+        return CopyUTF16((UTF16*)rawdata, rawlen, (UTF16*)utf16str, utf16len) * sizeof(TCHAR);
+
+        // need to convert from big-endian to little-endian
+    case BCP_UTF16BE:
+        rawlen /= sizeof(TCHAR);
+        return SwapUTF16((UTF16*)rawdata, rawlen, (UTF16*)utf16str, utf16len) * sizeof(TCHAR);
+
+        // error! we should *never* reach this point
+    default:
+        utf16len = 0;
+        return 0;
+    }
 }

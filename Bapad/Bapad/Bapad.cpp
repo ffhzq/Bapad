@@ -258,7 +258,7 @@ BOOL DoOpenFile(HWND hwnd, WCHAR* szFileName, WCHAR* szFileTitle)
     {
         SetWindowFileName(hwnd, szFileTitle);
 
-        fmt = TextView_GetFormat(g_hwndTextView);
+        fmt = static_cast<int>(TextView_GetFormat(g_hwndTextView));
 
         CheckMenuRadioItem(GetMenu(hwnd),
             IDM_VIEW_ASCII, IDM_VIEW_UTF16BE,

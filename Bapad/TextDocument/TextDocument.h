@@ -1,5 +1,14 @@
 #include "pch.h"
 
+#define BCP_ASCII		0
+#define BCP_UTF8		1
+#define BCP_UTF16		2
+#define BCP_UTF16BE		3
+#define BCP_UTF32		4
+#define BCP_UTF32BE		5
+
+
+
 class TextIterator;
 
 class TextDocument
@@ -32,16 +41,16 @@ public:
 
 private:
     bool            InitLineBuffer();
-    uint32_t        DetectFileFormat();
+    int        DetectFileFormat();
     size_t          GetUTF32Char(size_t offset, size_t lenBytes, char32_t& pch32);
     size_t          GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t& bufLen);
-
+    size_t      rawdata_to_utf16(BYTE* rawdata, size_t rawlen, WCHAR* utf16str, size_t& utf16len);
     char*       docBuffer;
 
     size_t      lengthByChars;
     size_t      lengthByBytes;
 
-    uint32_t    fileFormat;
+    int         fileFormat;
     size_t      headerSize;
 
     size_t*     byteOffsetLineBuffer;
@@ -116,14 +125,23 @@ public:
 };
 
 //Byte Order Mark
-enum class BOM : uint32_t //uint32_t
+struct _BOM_LOOKUP
+{
+    DWORD  bom;
+    ULONG  headerLength;
+    int    type;
+};
+
+
+/*
+enum class BOM : uint32_t
 {                           //BOMHeaderLength
     ASCII = 0,              //0
-    UTF8 = 0xEFBBBF,        //3
-    UTF16LE = 0xFFFE,       //2
-    UTF16BE = 0xFEFF,       //2
-    UTF32LE = 0xFFFE0000,   //4
-    UTF32BE = 0x0000FEFF    //4
+    UTF8 = 0xBFBBEF,        //3
+    UTF16LE = 0xFEFF,       //2
+    UTF16BE = 0xFFFE,       //2
+    UTF32LE = 0x0000FEFF,   //4
+    UTF32BE = 0xFFFE0000    //4
 };
 
 struct BOMLookup
@@ -158,4 +176,4 @@ public:
 
         return instances;
     }
-};
+};*/

@@ -258,7 +258,6 @@ void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect)
 	size_t	len = 0;
 	while ((len = itor.GetText(buff,TEXTBUFSIZE))  > 0)
 	{
-		int   i;
 		//
 		//	Apply text attributes - 
 		//	i.e. syntax highlighting, mouse selection colours etc.

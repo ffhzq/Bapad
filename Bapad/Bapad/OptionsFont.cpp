@@ -76,19 +76,19 @@ int LogicalToPoints(int nLogicalSize)
 
 DWORD GetCurrentComboData(HWND hwnd, UINT uCtrl)
 {
-	int idx = SendDlgItemMessageW(hwnd, uCtrl, CB_GETCURSEL, 0, 0);
-	return    SendDlgItemMessageW(hwnd, uCtrl, CB_GETITEMDATA, idx == -1 ? 0 : idx, 0);
+	LRESULT idx = SendDlgItemMessageW(hwnd, uCtrl, CB_GETCURSEL, 0, 0);
+	return    SendDlgItemMessageW(hwnd, uCtrl, CB_GETITEMDATA, idx == -1 ? 0 : (idx), 0);
 }
 
 DWORD GetCurrentListData(HWND hwnd, UINT uCtrl)
 {
-	int idx = SendDlgItemMessageW(hwnd, uCtrl, LB_GETCURSEL, 0, 0);
+	LRESULT idx = SendDlgItemMessageW(hwnd, uCtrl, LB_GETCURSEL, 0, 0);
 	return    SendDlgItemMessageW(hwnd, uCtrl, LB_GETITEMDATA, idx == -1 ? 0 : idx, 0);
 }
 
 DWORD AddComboStringWithData(HWND hwnd, UINT uCtrl,const wchar_t* szText, DWORD data)
 {
-	int idx = SendDlgItemMessageW(hwnd, uCtrl, CB_ADDSTRING, 0, (LPARAM)szText);
+	LRESULT idx = SendDlgItemMessageW(hwnd, uCtrl, CB_ADDSTRING, 0, (LPARAM)szText);
 	return    SendDlgItemMessageW(hwnd, uCtrl, CB_SETITEMDATA, idx, data);
 }
 
@@ -106,7 +106,7 @@ int CALLBACK EnumFontNames(ENUMLOGFONTEX* lpelfe, NEWTEXTMETRICEX* lpntme, DWORD
 	// make sure font doesn't already exist in our list
 	if (SendMessageW(hwndCombo, CB_FINDSTRING, 0, (LPARAM)pszName) == CB_ERR)
 	{
-		int		idx;
+		LRESULT	idx;
 		BOOL	fFixed;
 		BOOL	fTrueType;
 
@@ -278,7 +278,7 @@ BOOL FontCombo_DrawItem(HWND hwnd, DRAWITEMSTRUCT* dis)
 
 	// draw the text
 	ExtTextOutW(dis->hDC, xpos, ypos,
-		ETO_CLIPPED | ETO_OPAQUE, &dis->rcItem, szText, wcslen(szText), 0);
+		ETO_CLIPPED | ETO_OPAQUE, &dis->rcItem, szText, static_cast<UINT>(wcslen(szText)), 0);
 
 	// draw a 'TT' icon if the font is TRUETYPE
 	if (fTrueType)
@@ -371,7 +371,8 @@ int CALLBACK EnumFontSizes(ENUMLOGFONTEX* lpelfe, NEWTEXTMETRICEX* lpntme, DWORD
 	BOOL fTrueType = (lpelfe->elfLogFont.lfOutPrecision == OUT_STROKE_PRECIS) ? TRUE : FALSE;
 
 	HWND hwndCombo = (HWND)lParam;
-	int  i, count, idx;
+	int  i;
+	LRESULT idx, count;
 
 	if (fTrueType)
 	{
@@ -419,8 +420,9 @@ void InitSizeList(HWND hwnd)
 	// get current font size
 	int cursize = GetDlgItemInt(hwnd, IDC_SIZELIST, 0, 0);
 
-	int item = SendDlgItemMessageW(hwnd, IDC_FONTLIST, CB_GETCURSEL, 0, 0);
-	int i, count, nearest = 0;
+	LRESULT item = SendDlgItemMessageW(hwnd, IDC_FONTLIST, CB_GETCURSEL, 0, 0);
+	LRESULT count;
+	int i, nearest = 0;
 
 	lf.lfCharSet = DEFAULT_CHARSET;
 	lf.lfPitchAndFamily = 0;
@@ -437,7 +439,7 @@ void InitSizeList(HWND hwnd)
 
 	for (i = 0; i < count; i++)
 	{
-		int n = SendDlgItemMessageW(hwnd, IDC_SIZELIST, CB_GETITEMDATA, i, 0);
+		LRESULT n = SendDlgItemMessageW(hwnd, IDC_SIZELIST, CB_GETITEMDATA, i, 0);
 
 		if (n <= cursize)
 			nearest = i;
@@ -451,7 +453,7 @@ void InitSizeList(HWND hwnd)
 static WNDPROC  oldPreviewProc;
 static HFONT	g_hPreviewFont;
 
-LONG CALLBACK PreviewWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK PreviewWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
 	RECT		rect;
 	PAINTSTRUCT ps;
@@ -491,21 +493,21 @@ LONG CALLBACK PreviewWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 void AddColourListItem(HWND hwnd, UINT uItem, int fgIdx, int bgIdx, const wchar_t* szName)
 {
 	HWND hwndCtrl = GetDlgItem(hwnd, uItem);
-	int idx = SendMessageW(hwndCtrl, LB_ADDSTRING, 0, (LPARAM)szName);
+	LRESULT idx = SendMessageW(hwndCtrl, LB_ADDSTRING, 0, (LPARAM)szName);
 	SendMessageW(hwndCtrl, LB_SETITEMDATA, idx, static_cast<LPARAM>(MAKELONG(fgIdx, bgIdx)));//MAKELONG(fgIdx, bgIdx)
 }
 
 void AddColourComboItem(HWND hwnd, UINT uItem, COLORREF col, const wchar_t* szName)
 {
 	HWND hwndCtrl = GetDlgItem(hwnd, uItem);
-	int idx = SendMessageW(hwndCtrl, CB_ADDSTRING, 0, (LPARAM)szName);
+	LRESULT idx = SendMessageW(hwndCtrl, CB_ADDSTRING, 0, (LPARAM)szName);
 	SendMessageW(hwndCtrl, CB_SETITEMDATA, idx, col);
 }
 
 void UpdatePreviewPane(HWND hwnd)
 {
 	wchar_t szFaceName[200]{ 0 };
-	int idx = SendDlgItemMessageW(hwnd, IDC_FONTLIST, CB_GETCURSEL, 0, 0);
+	LRESULT idx = SendDlgItemMessageW(hwnd, IDC_FONTLIST, CB_GETCURSEL, 0, 0);
 	int size;
 	DWORD data;
 
