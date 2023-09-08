@@ -173,7 +173,7 @@ size_t UTF8ToUTF16(UTF8* utf8Str, size_t utf8Len, UTF16* utf16Str, size_t& utf16
 
 		// convert to utf-16
 		tmp16len = utf16Len;
-		len = UTF32ToUTF16(&ch32, 1, utf16Str, &tmp16len);
+		len = UTF32ToUTF16(&ch32, 1, utf16Str, tmp16len);
 		utf16Str += len;
 		utf16Len -= len;
 	}

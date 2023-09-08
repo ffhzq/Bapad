@@ -170,30 +170,40 @@ int TextDocument::DetectFileFormat()
 
 }
 
-size_t TextDocument::GetUTF32Char(size_t offset, size_t lenBytes, char32_t& pch32)
+size_t TextDocument::GetUTF32Char(size_t offset, size_t lenBytes, char32_t & pch32)
 {
-    Byte* rawData = reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
-    Word* rawDataW = reinterpret_cast<Word*>(docBuffer + offset + headerSize);
-    wchar_t ch16;
-    size_t ch32Len = 1;
+    //Byte* rawData = reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
+    //Word* rawDataW = reinterpret_cast<Word*>(docBuffer + offset + headerSize);
+    BYTE* rawdata;
+
+    lenBytes = min(16, lenBytes);
+    rawdata= reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
+    //m_seq.render(offset + m_nHeaderSize, rawdata, lenbytes);
+
+
+    UTF16* rawdata_w = (UTF16*)rawdata;//(WCHAR*)(buffer + offset + m_nHeaderSize);
+    WCHAR     ch16;
+    size_t   ch32len = 1;
 
     switch (fileFormat)
     {
     case BCP_ASCII:
-        MultiByteToWideChar(CP_ACP, 0, reinterpret_cast<Cchar *>(rawData), 1, reinterpret_cast<wchar_t*>(&ch16), 1);
+        MultiByteToWideChar(CP_ACP, 0, (CCHAR*)rawdata, 1, &ch16, 1);
         pch32 = ch16;
         return 1;
+
     case BCP_UTF16:
-        return UTF16ToUTF32(reinterpret_cast<wchar_t*>(rawDataW), lenBytes / 2, reinterpret_cast<ULONG*>(pch32), ch32Len) * 2;
+        return UTF16ToUTF32(rawdata_w, lenBytes / 2, (UTF32*)(&pch32), ch32len) * sizeof(WCHAR);
+
     case BCP_UTF16BE:
-        return UTF16BEToUTF32(reinterpret_cast<wchar_t*>(rawDataW), lenBytes / 2, reinterpret_cast<ULONG*>(pch32), ch32Len) * 2;
+        return UTF16BEToUTF32(rawdata_w, lenBytes / 2, (UTF32*)(&pch32), ch32len) * sizeof(WCHAR);
+
     case BCP_UTF8:
-        return UTF8ToUTF32(rawData, lenBytes, pch32);
+        return UTF8ToUTF32(rawdata, lenBytes, (UTF32&)pch32);
+
     default:
         return 0;
     }
-
-    return 0;
 }
 
 size_t TextDocument::GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t & bufLen)
@@ -206,8 +216,8 @@ size_t TextDocument::GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_
         bufLen = 0;
         return 0;
     }
-    ULONG chars_copied = 0;
-    ULONG bytes_processed = 0;
+    size_t chars_copied = 0;
+    size_t bytes_processed = 0;
     while (lenBytes > 0 && bufLen > 0)
     {
         BYTE   rawdata[0x100];
@@ -232,50 +242,6 @@ size_t TextDocument::GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_
     bufLen = chars_copied;
     return bytes_processed;
 }
-
-
-//size_t TextDocument::GetLine(size_t lineno, size_t offset, char* buf, size_t len, size_t* fileoff)
-//{
-//    if (lineno >= numLines || buffer == nullptr || lengthBytes == 0)
-//    {
-//        return 0;
-//    }
-//
-//    // find the start of the specified line
-//    char* lineptr = buffer + lineBufferByte[lineno];
-//    // work out how long it is, by looking at the next line's starting point
-//    size_t linelen = lineBufferByte[lineno + 1] - lineBufferByte[lineno];
-//
-//    
-//    offset = min(offset, linelen);
-//    
-//    // make sure the CR/LF is always fetched in one go
-//    if (linelen - (offset + len) < 2 && len > 2)
-//        len -= 2;
-//
-//    // make sure we don't overflow caller's buffer
-//    linelen = min(len, linelen - offset);
-//
-//    lineptr += offset;
-//
-//    memcpy(buf, lineptr, linelen);
-//
-//    if (fileoff)
-//        *fileoff = lineBufferByte[lineno];// + offset;
-//
-//    return linelen;
-//}
-//
-//size_t TextDocument::GetLine(size_t lineno, char* buf, size_t len, size_t* fileoff)
-//{
-//    return GetLine(lineno, 0, buf, len, fileoff);
-//}
-
-//size_t TextDocument::GetData(size_t offset, char* buf, size_t len)
-//{
-//    memcpy(buf, docBuffer + offset, len);
-//    return len;
-//}
 
 const uint32_t TextDocument::GetFileFormat() const
 {

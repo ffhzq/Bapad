@@ -28,11 +28,11 @@ public:
 
     size_t LineNumFromOffset(size_t offset);
 
-    bool  LineInfoFromOffset(size_t offset_chars, size_t * lineNo, size_t * lineoffChars, size_t * linelenChars, size_t * lineoffBytes, size_t * linelenBytes);
-    bool  LineInfoFromLineNumber(size_t lineno, size_t * lineoffChars, size_t * linelenChars, size_t * lineoffBytes, size_t * linelenBytes);
+    bool  LineInfoFromOffset(size_t offset_chars, size_t* lineNo, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);
+    bool  LineInfoFromLineNumber(size_t lineno, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);
 
-    TextIterator IterateLineByLineNumber(size_t lineno, size_t * linestart = 0, size_t * linelen = 0);
-    TextIterator IterateLineByOffset(size_t offset_chars, size_t * lineno, size_t * linestart = 0);
+    TextIterator IterateLineByLineNumber(size_t lineno, size_t* linestart = 0, size_t* linelen = 0);
+    TextIterator IterateLineByOffset(size_t offset_chars, size_t* lineno, size_t* linestart = 0);
 
     const uint32_t  GetFileFormat() const;
     const size_t    GetLineCount() const;
@@ -41,11 +41,11 @@ public:
 
 private:
     bool            InitLineBuffer();
-    int        DetectFileFormat();
-    size_t          GetUTF32Char(size_t offset, size_t lenBytes, char32_t& pch32);
+    int     DetectFileFormat();
+    size_t  GetUTF32Char(size_t offset, size_t lenBytes, char32_t& pch32);
     size_t          GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t& bufLen);
     size_t      rawdata_to_utf16(BYTE* rawdata, size_t rawlen, WCHAR* utf16str, size_t& utf16len);
-    char*       docBuffer;
+    char* docBuffer;
 
     size_t      lengthByChars;
     size_t      lengthByBytes;
@@ -53,8 +53,8 @@ private:
     int         fileFormat;
     size_t      headerSize;
 
-    size_t*     byteOffsetLineBuffer;
-    size_t*     charOffsetLineBuffer;
+    size_t* byteOffsetLineBuffer;
+    size_t* charOffsetLineBuffer;
 
     size_t      LineCount;
 
@@ -131,49 +131,3 @@ struct _BOM_LOOKUP
     ULONG  headerLength;
     int    type;
 };
-
-
-/*
-enum class BOM : uint32_t
-{                           //BOMHeaderLength
-    ASCII = 0,              //0
-    UTF8 = 0xBFBBEF,        //3
-    UTF16LE = 0xFEFF,       //2
-    UTF16BE = 0xFFFE,       //2
-    UTF32LE = 0x0000FEFF,   //4
-    UTF32BE = 0xFFFE0000    //4
-};
-
-struct BOMLookup
-{
-public:
-    BOM    bom;
-    //bytes
-    size_t headerLength;
-
-    BOMLookup(BOM _bom, size_t _headerLength)
-        : bom(_bom), headerLength(_headerLength)
-    {
-
-    }
-};
-
-
-class BOMLookupList
-{
-public:
-    BOMLookupList() {}
-    static const std::vector<BOMLookup>& GetInstances() {
-        static std::vector<BOMLookup> instances = std::vector<BOMLookup>(
-                {
-                    BOMLookup(BOM::UTF32LE,4),
-                    BOMLookup(BOM::UTF32BE,4),
-                    BOMLookup(BOM::UTF8,3),
-                    BOMLookup(BOM::UTF16LE,2),
-                    BOMLookup(BOM::UTF16BE,2),
-                    BOMLookup(BOM::ASCII,0)
-                });
-
-        return instances;
-    }
-};*/
