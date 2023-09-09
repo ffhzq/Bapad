@@ -208,39 +208,38 @@ size_t TextDocument::GetUTF32Char(size_t offset, size_t lenBytes, char32_t & pch
 
 size_t TextDocument::GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t & bufLen)
 {
-    //Byte* rawData = reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
-    //size_t  len;
+    Byte* rawData = reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
+    size_t  len;
 
     if (offset >= lengthByBytes)
     {
         bufLen = 0;
         return 0;
     }
-    size_t chars_copied = 0;
-    size_t bytes_processed = 0;
-    while (lenBytes > 0 && bufLen > 0)
+
+    switch (fileFormat)
     {
-        BYTE   rawdata[0x100];
-        size_t rawlen = min(lenBytes, 0x100);
+        // convert from ANSI->UNICODE
+    case BCP_ASCII:
+        return AsciiToUTF16((UTF8*)rawData, lenBytes, (UTF16*)buf, bufLen);
 
-        // get next block of data from the piece-table
-        //m_seq.render(offset + m_nHeaderSize, rawdata, rawlen);
+    case BCP_UTF8:
+        return UTF8ToUTF16((UTF8*)rawData, lenBytes, (UTF16*)buf, bufLen);
 
-        // convert to UTF-16 
-        size_t tmplen = bufLen;
-        rawlen = rawdata_to_utf16(rawdata, rawlen, buf, tmplen);
+        // already unicode, do a straight memory copy
+    case BCP_UTF16:
+        return CopyUTF16((UTF16*)(rawData), lenBytes / sizeof(wchar_t), (UTF16*)buf, bufLen);
 
-        lenBytes -= rawlen;
-        offset += rawlen;
-        bytes_processed += rawlen;
+        // need to convert from big-endian to little-endian
+    case BCP_UTF16BE:
+        return SwapUTF16((UTF16*)(rawData), lenBytes / sizeof(wchar_t), (UTF16*)buf, bufLen);
 
-        buf += tmplen;
-        bufLen -= tmplen;
-        chars_copied += tmplen;
+        // error! we should *never* reach this point
+    default:
+        bufLen = 0;
+        return 0;
     }
-
-    bufLen = chars_copied;
-    return bytes_processed;
+    
 }
 
 const uint32_t TextDocument::GetFileFormat() const
@@ -413,7 +412,7 @@ size_t      TextDocument::rawdata_to_utf16(BYTE* rawdata, size_t rawlen, WCHAR* 
 {
     switch (fileFormat)
     {
-        // convert from ANSI->UNICODE
+    // convert from ANSI->UNICODE
     case BCP_ASCII:
         return AsciiToUTF16(rawdata, rawlen, (UTF16*)utf16str, utf16len);
 
@@ -429,10 +428,9 @@ size_t      TextDocument::rawdata_to_utf16(BYTE* rawdata, size_t rawlen, WCHAR* 
     case BCP_UTF16BE:
         rawlen /= sizeof(TCHAR);
         return SwapUTF16((UTF16*)rawdata, rawlen, (UTF16*)utf16str, utf16len) * sizeof(TCHAR);
-
-        // error! we should *never* reach this point
     default:
         utf16len = 0;
         return 0;
+
     }
 }

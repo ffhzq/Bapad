@@ -10,7 +10,7 @@ size_t UTF8ToUTF32(UTF8* utf8Str, size_t utf8Len, UTF32& pch32)
 	if (utf8Str == 0 || utf8Len <= 0 || pch32 == 0)
 		return 0;
 
-	UTF32 ch = *utf8Str++;//todo: ++?
+	UTF32 ch = *utf8Str;//todo: ++?
 
 	const char ASCII_MAX = 0x80 - 1;
 	if (ch <= ASCII_MAX)
