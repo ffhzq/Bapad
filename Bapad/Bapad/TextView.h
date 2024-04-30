@@ -17,33 +17,9 @@ public:
 	TextView(HWND hwnd);
 	~TextView();
 
-	//处理消息
-	LONG OnPaint();
-	LONG OnSetFont(HFONT hFont);
-	LONG OnSize(UINT nFlags, int width, int height);
-	LONG OnVScroll(UINT nSBCode, UINT nPos);
-	LONG OnHScroll(UINT nSBCode, UINT nPos);
-	LONG OnMouseWheel(int nDelta);
-	LONG OnTimer(UINT nTimer);
+	LONG WINAPI WndProc(UINT msg, WPARAM wParam, LPARAM lParam);
 
-	//鼠标
-	LONG OnMouseActivate(HWND hwndTop, UINT nHitTest, UINT nMessage);
-	LONG OnLButtonDown(UINT nFlags, int x, int y);
-	LONG OnLButtonUp(UINT nFlags, int x, int y);
-	LONG OnMouseMove(UINT nFlags, int x, int y);
 
-	LONG OnSetFocus(HWND hwndOld);
-	LONG OnKillFocus(HWND hwndNew);
-
-	//用户操作
-
-	LONG OpenFile(WCHAR* szFileName);
-	LONG ClearFile();
-
-	LONG AddFont(HFONT);
-	LONG SetFont(HFONT, size_t idx);
-	LONG SetLineSpacing(int nAbove, int nBelow);
-	COLORREF SetColour(UINT idx, COLORREF rgbColour);
 
 private:
 
@@ -122,4 +98,35 @@ private:
 	int		scrollCounter;
 	
 	TextDocument* pTextDoc;
+
+
+	//处理消息
+	LONG OnPaint();
+	LONG OnSetFont(HFONT hFont);
+	LONG OnSize(UINT nFlags, int width, int height);
+	LONG OnVScroll(UINT nSBCode, UINT nPos);
+	LONG OnHScroll(UINT nSBCode, UINT nPos);
+	LONG OnMouseWheel(int nDelta);
+	LONG OnTimer(UINT nTimer);
+
+	//鼠标
+	LONG OnMouseActivate(HWND hwndTop, UINT nHitTest, UINT nMessage);
+	LONG OnLButtonDown(UINT nFlags, int x, int y);
+	LONG OnLButtonUp(UINT nFlags, int x, int y);
+	LONG OnMouseMove(UINT nFlags, int x, int y);
+
+	LONG OnSetFocus(HWND hwndOld);
+	LONG OnKillFocus(HWND hwndNew);
+
+	//用户操作
+
+	LONG OpenFile(WCHAR* szFileName);
+	LONG ClearFile();
+
+	LONG AddFont(HFONT);
+	LONG SetFont(HFONT, size_t idx);
+	LONG SetLineSpacing(int nAbove, int nBelow);
+	LONG SetLongLine(int nLength);
+	COLORREF SetColour(UINT idx, COLORREF rgbColour);
+
 };

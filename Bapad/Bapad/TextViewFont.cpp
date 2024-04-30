@@ -126,6 +126,8 @@ LONG TextView::SetLineSpacing(int nAbove, int nBelow)
 	return TRUE;
 }
 
+
+
 int TextView::TabWidth()
 {
 	return tabWidthChars * fontWidth;

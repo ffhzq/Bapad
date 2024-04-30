@@ -26,13 +26,13 @@ public:
     bool    Initialize(HANDLE hFile);
     bool    Clear();
 
-    size_t LineNumFromOffset(size_t offset);
+    size_t  LineNumFromOffset(size_t offset);
 
-    bool  LineInfoFromOffset(size_t offset_chars, size_t* lineNo, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);
-    bool  LineInfoFromLineNumber(size_t lineno, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);
+    bool    LineInfoFromOffset(size_t offset_chars, size_t* lineNo, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);
+    bool    LineInfoFromLineNumber(size_t lineno, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);
 
-    TextIterator IterateLineByLineNumber(size_t lineno, size_t* linestart = 0, size_t* linelen = 0);
-    TextIterator IterateLineByOffset(size_t offset_chars, size_t* lineno, size_t* linestart = 0);
+    TextIterator    IterateLineByLineNumber(size_t lineno, size_t* linestart = 0, size_t* linelen = 0);
+    TextIterator    IterateLineByOffset(size_t offset_chars, size_t* lineno, size_t* linestart = 0);
 
     const uint32_t  GetFileFormat() const;
     const size_t    GetLineCount() const;
@@ -40,23 +40,23 @@ public:
     const size_t    GetDocLength() const;
 
 private:
-    bool            InitLineBuffer();
-    int     DetectFileFormat();
+    bool    InitLineBuffer();
+    int DetectFileFormat();
     size_t  GetUTF32Char(size_t offset, size_t lenBytes, char32_t& pch32);
-    size_t          GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t& bufLen);
-    size_t      rawdata_to_utf16(BYTE* rawdata, size_t rawlen, WCHAR* utf16str, size_t& utf16len);
-    char* docBuffer;
+    size_t  GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t& bufLen);
+    size_t  rawdata_to_utf16(BYTE* rawdata, size_t rawlen, WCHAR* utf16str, size_t& utf16len);
 
-    size_t      lengthByChars;
-    size_t      lengthByBytes;
+    char*   docBuffer;// raw txt data
+    size_t  lengthByChars;//
+    size_t  lengthByBytes;// size of txt data
 
-    int         fileFormat;
-    size_t      headerSize;
+    int fileFormat;
+    size_t  headerSize;
 
     size_t* byteOffsetLineBuffer;
     size_t* charOffsetLineBuffer;
 
-    size_t      LineCount;
+    size_t  LineCount;
 
 
 
@@ -67,8 +67,8 @@ class TextIterator
 {
 private:
     TextDocument* textDoc;
-    size_t offsetBytes;
-    size_t lengthBytes;
+    size_t  offsetBytes;
+    size_t  lengthBytes;
 public:
     TextIterator()
         : textDoc(nullptr), offsetBytes(0), lengthBytes(0)

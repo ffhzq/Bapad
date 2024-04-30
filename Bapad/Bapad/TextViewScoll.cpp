@@ -43,13 +43,13 @@ bool TextView::PinToBottomCorner()
 {
 	bool repos = false;
 
-	if (hScrollPos > longestLine - windowColumns)//(hScrollPos + windowColumns > longestLine)
+	if (hScrollPos > longestLine - windowColumns)
 	{
 		hScrollPos = longestLine - windowColumns;
 		repos = true;
 	}
 
-	if (vScrollPos > lineCount - windowLines)//(vScrollPos + windowLines > lineCount)
+	if (vScrollPos > lineCount - windowLines)
 	{
 		vScrollPos = lineCount - windowLines;
 		repos = true;
