@@ -126,7 +126,7 @@ private:
 	LONG AddFont(HFONT);
 	LONG SetFont(HFONT, size_t idx);
 	LONG SetLineSpacing(int nAbove, int nBelow);
-	LONG SetLongLine(int nLength);
+	//LONG SetLongLine(int nLength);
 	COLORREF SetColour(UINT idx, COLORREF rgbColour);
 
 };

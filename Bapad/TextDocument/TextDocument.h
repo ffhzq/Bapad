@@ -43,12 +43,16 @@ private:
     bool    InitLineBuffer();
     int DetectFileFormat();
     size_t  GetUTF32Char(size_t offset, size_t lenBytes, char32_t& pch32);
+
+    // GetText: read 'lenBytes'or'bufLen'(use the smaller one) bytes wchar from the position (docBuffer+offset) to 'buf'
+    //
     size_t  GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t& bufLen);
+
     size_t  rawdata_to_utf16(BYTE* rawdata, size_t rawlen, WCHAR* utf16str, size_t& utf16len);
 
-    char*   docBuffer;// raw txt data
-    size_t  lengthByChars;//
-    size_t  lengthByBytes;// size of txt data
+    char*   docBuffer;// raw txt data TODO:should change to unsigned char? 
+    size_t  docLengthByChars;//
+    size_t  docLengthByBytes;// size of txt data
 
     int fileFormat;
     size_t  headerSize;

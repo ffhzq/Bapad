@@ -123,11 +123,11 @@ int TextView::BaTextOut(HDC hdc, int xpos, int ypos, WCHAR* szText, int nLen, in
 			RECT rect;
 
 			// get size of text
-			GetTextExtentPoint32(hdc, szText + lasti, i - lasti, &sz);
+			GetTextExtentPoint32W(hdc, szText + lasti, i - lasti, &sz);
 			SetRect(&rect, xpos, ypos, xpos + sz.cx, ypos + lineHeight);
 
 			// draw the text and erase it's background at the same time
-			ExtTextOut(hdc, xpos, ypos + yoff, ETO_OPAQUE, &rect, szText + lasti, i - lasti, 0);
+			ExtTextOutW(hdc, xpos, ypos + yoff, ETO_OPAQUE, &rect, szText + lasti, i - lasti, 0);
 
 			xpos += sz.cx;
 		}
@@ -186,7 +186,7 @@ LONG TextView::OnPaint()
 	// draw the display line-by-line
 	for (i = first; i <= last; i++)
 	{
-		PaintLine(ps.hdc, i);
+  		PaintLine(ps.hdc, i);
 	}
 
 	EndPaint(hWnd, &ps);
