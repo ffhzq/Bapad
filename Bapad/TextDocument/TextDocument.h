@@ -28,7 +28,7 @@ public:
 
     size_t  LineNumFromOffset(size_t offset);
 
-    bool    LineInfoFromOffset(size_t offset_chars, size_t* lineNo, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);
+    bool    LineInfoFromOffset(size_t offset_chars, size_t* lineNo, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);//定位对应offset所在的行并返回行号、字符偏移量、行字符数、字节偏移量、行字节数这些信息
     bool    LineInfoFromLineNumber(size_t lineno, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);
 
     TextIterator    IterateLineByLineNumber(size_t lineno, size_t* linestart = 0, size_t* linelen = 0);
@@ -72,7 +72,7 @@ class TextIterator
 private:
     TextDocument* textDoc;
     size_t  offsetBytes;
-    size_t  lengthBytes;
+    size_t  lengthBytes;//bytes remaining
 public:
     TextIterator()
         : textDoc(nullptr), offsetBytes(0), lengthBytes(0)

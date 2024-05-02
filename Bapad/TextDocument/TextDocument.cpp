@@ -55,8 +55,7 @@ bool TextDocument::Initialize(HANDLE hFile)//跨平台要改?
     }
     docLengthByBytes = TmpDocumentLength.QuadPart;
 
-    //if (GetFileSize(hFile, 0) != lengthByBytes)//todo
-        //abort();
+    //if (GetFileSize(hFile, 0) != docLengthByBytes)abort();
 
     // allocate new file-buffer
     const size_t bufferSize = docLengthByBytes;
@@ -83,10 +82,10 @@ bool TextDocument::InitLineBuffer()
 {
     const size_t bufLen = docLengthByBytes - headerSize;
     //NEED TO BE UPDATED 用std::vector 吗？
-    byteOffsetLineBuffer = new size_t[bufLen];
+    byteOffsetLineBuffer = new size_t[bufLen+1];
     if (byteOffsetLineBuffer == nullptr)
         return false;
-    charOffsetLineBuffer = new size_t[bufLen];
+    charOffsetLineBuffer = new size_t[bufLen+1];
     if (charOffsetLineBuffer == nullptr)
         return false;
 
@@ -94,7 +93,7 @@ bool TextDocument::InitLineBuffer()
 
     size_t offsetBytes = 0, offsetChars = 0;
     size_t lineStartBytes = 0, lineStartChars = 0;
-    for (; offsetBytes < bufLen;)
+    while (offsetBytes < bufLen)
     {
         char32_t ch32;
         size_t len = GetUTF32Char(offsetBytes, bufLen - offsetBytes, ch32);
@@ -128,7 +127,7 @@ bool TextDocument::InitLineBuffer()
 
             LineCount++;
         }
-        else if (ch32 == '\n')
+        else if (ch32 == '\n')// || ch32 == '\x0b' || ch32 == '\x0c' || ch32 == 0x0085 || ch32 == 0x2029 || ch32 == 0x2028)
         {
             if (LineCount >= bufLen)
             {
@@ -139,7 +138,6 @@ bool TextDocument::InitLineBuffer()
             charOffsetLineBuffer[LineCount] = lineStartChars;
             lineStartBytes = offsetBytes;
             lineStartChars = offsetChars;
-
             LineCount++;
         }
     }
@@ -194,7 +192,7 @@ size_t TextDocument::GetUTF32Char(size_t offset, size_t lenBytes, char32_t & pch
     Byte* rawdata;
 
     lenBytes = min(16, lenBytes);
-    rawdata= reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
+    rawdata=reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
     //m_seq.render(offset + m_nHeaderSize, rawdata, lenbytes);
 
 
@@ -205,18 +203,18 @@ size_t TextDocument::GetUTF32Char(size_t offset, size_t lenBytes, char32_t & pch
     switch (fileFormat)
     {
     case BCP_ASCII:
-        MultiByteToWideChar(CP_ACP, 0, (CCHAR*)rawdata, 1, &ch16, 1);
+        MultiByteToWideChar(CP_ACP, 0, reinterpret_cast<CCHAR*>(rawdata), 1, &ch16, 1);
         pch32 = ch16;
         return 1;
 
     case BCP_UTF16:
-        return UTF16ToUTF32(rawdata_w, lenBytes / 2, (UTF32*)(&pch32), ch32len) * sizeof(WCHAR);
+        return UTF16ToUTF32(rawdata_w, lenBytes / 2, reinterpret_cast<UTF32*>(&pch32), ch32len) * sizeof(WCHAR);
 
     case BCP_UTF16BE:
-        return UTF16BEToUTF32(rawdata_w, lenBytes / 2, (UTF32*)(&pch32), ch32len) * sizeof(WCHAR);
+        return UTF16BEToUTF32(rawdata_w, lenBytes / 2, reinterpret_cast<UTF32*>(&pch32), ch32len) * sizeof(WCHAR);
 
     case BCP_UTF8:
-        return UTF8ToUTF32(rawdata, lenBytes, (UTF32&)pch32);
+        return UTF8ToUTF32(rawdata, lenBytes, reinterpret_cast<UTF32&>(pch32));
 
     default:
         return 0;
@@ -245,11 +243,11 @@ size_t TextDocument::GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_
 
         // already unicode, do a straight memory copy
     case BCP_UTF16:
-        return CopyUTF16((UTF16*)(rawData), lenBytes / sizeof(wchar_t), (UTF16*)buf, bufLen);
+        return CopyUTF16((UTF16*)(rawData), lenBytes / sizeof(wchar_t), (UTF16*)buf, bufLen) * sizeof(WCHAR);
 
         // need to convert from big-endian to little-endian
     case BCP_UTF16BE:
-        return SwapUTF16((UTF16*)(rawData), lenBytes / sizeof(wchar_t), (UTF16*)buf, bufLen);
+        return SwapUTF16((UTF16*)(rawData), lenBytes / sizeof(wchar_t), (UTF16*)buf, bufLen) * sizeof(WCHAR);
 
         // error! we should *never* reach this point
     default:
