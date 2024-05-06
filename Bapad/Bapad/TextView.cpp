@@ -188,6 +188,7 @@ LONG WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
     default:
         break;
     }
+    return  DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
 HWND CreateTextView(HWND hwndParent)
