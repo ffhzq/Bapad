@@ -3,7 +3,7 @@
 
 //	TextView API declared here
 //
-ATOM RegisterTextView(HINSTANCE hInstance);
+BOOL RegisterTextView();
 HWND	 CreateTextView(HWND hwndParent);
 COLORREF RealizeColour(COLORREF col);
 

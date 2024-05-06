@@ -1,9 +1,6 @@
 #include "resource.h"
 #include "framework.h"
-#include <iostream>
-#include <string>
-#include <vector>
-#include <fstream>
+
 #include "TextView.h"
 
 /*
@@ -33,7 +30,7 @@ extern COLORREF g_rgbCustColours[];
 
 #define REGLOC _T("SOFTWARE\\ffhzq\\Bapad")
 
-const wchar_t ClassName[] = L"Bapad";
+const wchar_t CLASS_NAME[] = L"Bapad";
 
 
 
@@ -43,8 +40,8 @@ extern HFONT	g_hFont;
 
 
 // Forward declarations of functions included in this code module:
-ATOM                RegisterMainWindow(HINSTANCE hInstance);
-BOOL                InitInstance(HINSTANCE, int);
+void                RegisterMainWindow();
+BOOL                CreateMainWnd(int);
 LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 

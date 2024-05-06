@@ -202,22 +202,22 @@ HWND CreateTextView(HWND hwndParent)
         0);
 }
 
-ATOM RegisterTextView(HINSTANCE hInstance)
+BOOL RegisterTextView()
 {
     WNDCLASSEXW wcex{ 0 };
 
     wcex.cbSize = sizeof(WNDCLASSEX);
-    wcex.style = 0;
+    wcex.style = CS_DBLCLKS;// 0;
     wcex.lpfnWndProc = TextViewWndProc;
     wcex.cbClsExtra = 0;
     wcex.cbWndExtra = sizeof(TextView*);
-    wcex.hInstance = hInstance;
+    wcex.hInstance = GetModuleHandleW(0);
     wcex.hIcon = 0;
-    wcex.hCursor = 0;
+    wcex.hCursor = LoadCursorW(NULL, IDC_IBEAM);
     wcex.hbrBackground = (HBRUSH)(0);
     wcex.lpszMenuName = 0;
     wcex.lpszClassName = TEXTVIEW_CLASS;
     wcex.hIconSm = 0;
 
-    return RegisterClassExW(&wcex);
+    return RegisterClassExW(&wcex)? TRUE: FALSE;
 }

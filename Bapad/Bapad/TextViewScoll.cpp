@@ -4,7 +4,7 @@
 //	Set scrollbar positions and range
 //
 VOID TextView::SetupScrollbars()
-{//size_t to int ULONG
+{
 	SCROLLINFO si = { sizeof(si) };
 
 	si.fMask = SIF_PAGE | SIF_POS | SIF_RANGE | SIF_DISABLENOSCROLL;
