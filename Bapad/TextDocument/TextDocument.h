@@ -54,9 +54,9 @@ private:
 
     size_t  RawDataToUtf16(BYTE* rawdata, size_t rawlen, WCHAR* utf16str, size_t& utf16len);
 
-    ULONG	InsertRawText(ULONG offset_bytes, TCHAR* text, ULONG length);
-    ULONG	ReplaceRawText(ULONG offset_bytes, TCHAR* text, ULONG length, ULONG erase_len);
-    ULONG	EraseRawText(ULONG offset_bytes, ULONG length);
+    ULONG	InsertRawText(ULONG offsetBytes, WCHAR* text, ULONG textLength);
+    ULONG	ReplaceRawText(ULONG offsetBytes, WCHAR* text, ULONG textLength, ULONG eraseLen);
+    ULONG	EraseRawText(ULONG offsetBytes, ULONG textLength);
 
 
     char*   docBuffer;// raw txt data TODO:should change to unsigned char? 

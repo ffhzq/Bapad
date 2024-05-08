@@ -448,3 +448,29 @@ size_t TextDocument::RawDataToUtf16(BYTE* rawdata, size_t rawlen, WCHAR* utf16st
 
     }
 }
+
+ULONG TextDocument::InsertText(ULONG offsetChars, WCHAR* text, ULONG length)
+{
+    return 0; 
+}
+ULONG TextDocument::ReplaceText(ULONG offsetChars, WCHAR* text, ULONG length, ULONG eraseLen)
+{
+    return 0;
+}
+ULONG TextDocument::EraseText(ULONG offsetChars, ULONG length)
+{
+    return 0;
+}
+
+ULONG TextDocument::InsertRawText(ULONG offsetBytes, WCHAR* text, ULONG textLength)
+{
+    return 0;
+}
+ULONG TextDocument::ReplaceRawText(ULONG offsetBytes, WCHAR* text, ULONG textLength, ULONG eraseLen)
+{
+    return 0;
+}
+ULONG TextDocument::EraseRawText(ULONG offsetBytes, ULONG textLength)
+{
+    return 0;
+}
