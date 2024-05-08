@@ -253,6 +253,60 @@ size_t TextDocument::GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_
     
 }
 
+size_t TextDocument::RawDataToUTF16(BYTE* rawdata, size_t rawlen, WCHAR* utf16str, size_t& utf16len)
+{
+    switch (fileFormat)
+    {
+        // convert from ANSI->UNICODE
+    case BCP_ASCII:
+
+        return AsciiToUTF16(rawdata, rawlen, reinterpret_cast<UTF16*>(utf16str), utf16len);
+
+    case BCP_UTF8:
+        return UTF8ToUTF16(rawdata, rawlen, reinterpret_cast<UTF16*>(utf16str), utf16len);
+
+        // already unicode, do a straight memory copy
+    case BCP_UTF16:
+        rawlen /= sizeof(TCHAR);
+        return CopyUTF16(reinterpret_cast<UTF16*>(rawdata), rawlen, reinterpret_cast<UTF16*>(utf16str), utf16len) * sizeof(TCHAR);
+
+        // need to convert from big-endian to little-endian
+    case BCP_UTF16BE:
+        rawlen /= sizeof(TCHAR);
+        return SwapUTF16(reinterpret_cast<UTF16*>(rawdata), rawlen, reinterpret_cast<UTF16*>(utf16str), utf16len) * sizeof(TCHAR);
+    default:
+        utf16len = 0;
+        return 0;
+
+    }
+}
+
+size_t TextDocument::UTF16ToRawData(WCHAR* utf16Str, size_t utf16Len, BYTE* rawData, size_t& rawLen)
+{
+    switch (fileFormat)
+    {
+    case BCP_ASCII:
+        return UTF16ToAscii(reinterpret_cast<UTF16*>(utf16Str), utf16Len, rawData, rawLen);
+    case BCP_UTF8:
+        return UTF16ToUTF8(reinterpret_cast<UTF16*>(utf16Str), utf16Len, rawData, rawLen);
+    case BCP_UTF16:
+        rawLen /= sizeof(WCHAR);
+        utf16Len = CopyUTF16(reinterpret_cast<UTF16*>(utf16Str), utf16Len, reinterpret_cast<UTF16*>(rawData), rawLen);
+        rawLen *= sizeof(WCHAR);
+        return utf16Len;
+    case BCP_UTF16BE:
+        rawLen /= sizeof(WCHAR);
+        utf16Len = SwapUTF16(reinterpret_cast<UTF16*>(utf16Str), utf16Len, reinterpret_cast<UTF16*>(rawData), rawLen);
+        rawLen *= sizeof(WCHAR);
+        return utf16Len;
+    default:
+        rawLen = 0;
+        return 0;
+    }
+}
+
+
+
 const uint32_t TextDocument::GetFileFormat() const
 {
     return fileFormat;
@@ -420,58 +474,6 @@ TextIterator TextDocument::IterateLineByOffset(size_t offset_chars, size_t * lin
 }
 
 
-size_t TextDocument::RawDataToUtf16(BYTE* rawdata, size_t rawlen, WCHAR* utf16str, size_t& utf16len)
-{
-    switch (fileFormat)
-    {
-    // convert from ANSI->UNICODE
-    case BCP_ASCII:
-        
-        return AsciiToUTF16(rawdata, rawlen, reinterpret_cast<UTF16*>(utf16str), utf16len);
-
-    case BCP_UTF8:
-        return UTF8ToUTF16(rawdata, rawlen, reinterpret_cast<UTF16*>(utf16str), utf16len);
-
-        // already unicode, do a straight memory copy
-    case BCP_UTF16:
-        rawlen /= sizeof(TCHAR);
-        return CopyUTF16(reinterpret_cast<UTF16*>(rawdata), rawlen, reinterpret_cast<UTF16*>(utf16str), utf16len) * sizeof(TCHAR);
-
-        // need to convert from big-endian to little-endian
-    case BCP_UTF16BE:
-        rawlen /= sizeof(TCHAR);
-        return SwapUTF16(reinterpret_cast<UTF16*>(rawdata), rawlen, reinterpret_cast<UTF16*>(utf16str), utf16len) * sizeof(TCHAR);
-    default:
-        utf16len = 0;
-        return 0;
-
-    }
-}
-
-size_t TextDocument::Utf16ToRawData(UTF16 * utf16Str, size_t utf16Len, BYTE* rawData, size_t& rawLen)
-{
-    switch (fileFormat)
-    {
-    case BCP_ASCII:
-       return UTF16ToAscii(utf16Str, utf16Len, rawData, rawLen);
-    case BCP_UTF8:
-        return UTF16ToUTF8(utf16Str, utf16Len, rawData, rawLen);
-    case BCP_UTF16:
-        rawLen /= sizeof(WCHAR);
-        utf16Len = CopyUTF16(utf16Str, utf16Len, reinterpret_cast<UTF16*>(rawData), rawLen);
-        rawLen*= sizeof(WCHAR);
-        return utf16Len;
-    case BCP_UTF16BE:
-        rawLen /= sizeof(WCHAR);
-        utf16Len = SwapUTF16(utf16Str, utf16Len, reinterpret_cast<UTF16*>(rawData), rawLen);
-        rawLen *= sizeof(WCHAR);
-        return utf16Len;
-    default:
-        rawLen = 0;
-        return 0;
-    }
-}
-
 size_t TextDocument::InsertText(size_t offsetChars, WCHAR* text, size_t length)
 {
     size_t offsetBytes = CharOffsetToByteOffset(offsetChars);
@@ -497,7 +499,7 @@ size_t TextDocument::InsertTextRaw(size_t offsetBytes, WCHAR* text, size_t textL
     while (offsetBytes)
     {
         rawLen = bufLen;
-        processedChars = Utf16ToRawData(reinterpret_cast<UTF16*>(text), textLength, buf, bufLen);
+        processedChars = UTF16ToRawData(text, textLength, buf, bufLen);
 
         docBuffer.insert(docBuffer.begin() + offset, std::begin(buf), std::begin(buf)+bufLen);
 
@@ -524,7 +526,7 @@ size_t TextDocument::ReplaceTextRaw(size_t offsetBytes, WCHAR* text, size_t text
     while (offsetBytes)
     {
         rawLen = bufLen;
-        processedChars = Utf16ToRawData(reinterpret_cast<UTF16*>(text), textLength, buf, bufLen);
+        processedChars = UTF16ToRawData(text, textLength, buf, bufLen);
         
         insertIter=docBuffer.insert(insertIter, std::begin(buf), std::begin(buf) + bufLen);
 
