@@ -1,21 +1,20 @@
 #include "pch.h"
 #include "FormatConversion.h"
 
-size_t UTF8ToUTF32(UTF8* utf8Str, size_t utf8Len, UTF32& pch32)
+size_t UTF8ToUTF32(UTF8* utf8Str, size_t utf8Len, UTF32* pch32)
 {
 	static ULONG nonshortest[] = { 0, 0x80, 0x800, 0x10000, 0xffffffff, 0xffffffff };
 	UTF32 val32 = 0;
 	int trailing = 0;
+	UTF8 ch = *utf8Str;
+	utf8Str++;
 
 	if (utf8Str == 0 || utf8Len <= 0 || pch32 == 0)
 		return 0;
-
-	UTF32 ch = *utf8Str;//todo: ++?
-
 	const char ASCII_MAX = 0x80 - 1;
 	if (ch <= ASCII_MAX)
 	{
-		pch32 = ch;
+		*pch32 = ch;
 		return 1;
 	}
 	// LEAD-byte of 2-byte seq: 110xxxxx 10xxxxxx
@@ -53,24 +52,24 @@ size_t UTF8ToUTF32(UTF8* utf8Str, size_t utf8Len, UTF32& pch32)
 	// ILLEGAL continuation (trailing) byte by itself
 	else if ((ch & 0xC0) == 0x80)
 	{
-		pch32 = UNI_REPLACEMENT_CHAR;
+		*pch32 = UNI_REPLACEMENT_CHAR;// todo:修改成其他值比如-1？
 		return 1;
 	}
 	// any other ILLEGAL form.
 	else
 	{
-		pch32 = UNI_REPLACEMENT_CHAR;
+		*pch32 = UNI_REPLACEMENT_CHAR;
 		return 1;
 	}
 
-	size_t i = 0, len = 0;
+	size_t i = 0, len = 1;
 	// process trailing bytes
 	for (; i < trailing && len < utf8Len; i++)
 	{
 		ch = *utf8Str++;
 
 		// Valid trail-byte: 10xxxxxx
-		if ((ch & 0b11000000) == 0b10000000)
+		if ((ch&0xC0)==0x80)
 		{
 			val32 = (val32 << 6) + (ch & 0x7f);
 			len++;
@@ -78,16 +77,16 @@ size_t UTF8ToUTF32(UTF8* utf8Str, size_t utf8Len, UTF32& pch32)
 		// Anything else is an error
 		else
 		{
-			pch32 = UNI_REPLACEMENT_CHAR;
+			*pch32 = UNI_REPLACEMENT_CHAR;
 			return len;
 		}
 	}
 
 	// did we 
 	if (val32 < nonshortest[trailing] || i != trailing)
-		pch32 = UNI_REPLACEMENT_CHAR;
+		*pch32 = UNI_REPLACEMENT_CHAR;
 	else
-		pch32 = val32;
+		*pch32 = val32;
 
 	return len;
 }
@@ -167,7 +166,7 @@ size_t UTF8ToUTF16(UTF8* utf8Str, size_t utf8Len, UTF16* utf16Str, size_t& utf16
 	while (utf8Len > 0 && utf16Len > 0)
 	{
 		// convert to utf-32
-		len = UTF8ToUTF32(utf8Str, utf8Len, ch32);
+		len = UTF8ToUTF32(utf8Str, utf8Len, &ch32);
 		utf8Str += len;
 		utf8Len -= len;
 

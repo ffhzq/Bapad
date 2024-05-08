@@ -4,7 +4,7 @@
 //	Set scrollbar positions and range
 //
 VOID TextView::SetupScrollbars()
-{//size_t to int ULONG
+{
 	SCROLLINFO si = { sizeof(si) };
 
 	si.fMask = SIF_PAGE | SIF_POS | SIF_RANGE | SIF_DISABLENOSCROLL;
@@ -43,13 +43,13 @@ bool TextView::PinToBottomCorner()
 {
 	bool repos = false;
 
-	if (hScrollPos > longestLine - windowColumns)//(hScrollPos + windowColumns > longestLine)
+	if (hScrollPos > longestLine - windowColumns)
 	{
 		hScrollPos = longestLine - windowColumns;
 		repos = true;
 	}
 
-	if (vScrollPos > lineCount - windowLines)//(vScrollPos + windowLines > lineCount)
+	if (vScrollPos > lineCount - windowLines)
 	{
 		vScrollPos = lineCount - windowLines;
 		repos = true;

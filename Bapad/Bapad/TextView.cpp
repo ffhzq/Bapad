@@ -1,8 +1,8 @@
 #include "TextView.h"
 
 
-TextView::TextView(HWND hwnd) 
-    :  
+TextView::TextView(HWND hwnd)
+    :
     hWnd(hwnd),
     // Font-related data
     fontAttr(1),
@@ -42,7 +42,7 @@ TextView::TextView(HWND hwnd)
     OnSetFont((HFONT)GetStockObject(ANSI_FIXED_FONT));
 
     UpdateMetrics();
-	//SetupScrollbars();
+    //SetupScrollbars();
 }
 
 //
@@ -59,11 +59,11 @@ TextView::~TextView()
 
 VOID TextView::UpdateMetrics()
 {
-	RECT rect;
-	GetClientRect(hWnd, &rect);
+    RECT rect;
+    GetClientRect(hWnd, &rect);
 
-	OnSize(0, rect.right, rect.bottom);
-	RefreshWindow();
+    OnSize(0, rect.right, rect.bottom);
+    RefreshWindow();
 
     RepositionCaret();
 }
@@ -99,76 +99,96 @@ LRESULT CALLBACK TextViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
     {
         // First message received by any window - make a new TextView object
         // and store pointer to it in our extra-window-bytes
-        case WM_NCCREATE:
-            if ((ptv = new TextView(hWnd)) == 0)
-                return FALSE;
-            SetWindowLongPtrW(hWnd, 0, reinterpret_cast<LONG_PTR>(ptv));
-            return TRUE;
-            // Last message received by any window - delete the TextView object
-        case WM_NCDESTROY:
-            delete ptv;
-            break;
-        // Draw contents of TextView whenever window needs updating
-        case WM_PAINT:
-            return ptv->OnPaint();
-        // Set a new font 
-        case WM_SETFONT:
-            return ptv->OnSetFont((HFONT)wParam);
-
-        case WM_SIZE:
-            return ptv->OnSize(static_cast<UINT>(wParam), LOWORD(lParam), HIWORD(lParam));
-
-        case WM_VSCROLL:
-            return ptv->OnVScroll(LOWORD(wParam), HIWORD(wParam));
-
-        case WM_HSCROLL:
-            return ptv->OnHScroll(LOWORD(wParam), HIWORD(wParam));
-
-        case WM_MOUSEACTIVATE:
-            return ptv->OnMouseActivate((HWND)wParam, LOWORD(lParam), HIWORD(lParam));
-
-        case WM_MOUSEWHEEL:
-            return ptv->OnMouseWheel((short)HIWORD(wParam));
-            
-        case WM_SETFOCUS:
-            return ptv->OnSetFocus((HWND)wParam);
-
-        case WM_KILLFOCUS:
-            return ptv->OnKillFocus((HWND)wParam);
-
-        case WM_LBUTTONDOWN:
-            return ptv->OnLButtonDown(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
-
-        case WM_LBUTTONUP:
-            return ptv->OnLButtonUp(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
-
-        case WM_MOUSEMOVE:
-            return ptv->OnMouseMove(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
-
-        case WM_TIMER:
-            return ptv->OnTimer(wParam);
-
-        case TXM_OPENFILE:
-            return ptv->OpenFile(reinterpret_cast<wchar_t*>(lParam));
-
-        case TXM_CLEAR:
-            return ptv->ClearFile();
-
-        case TXM_SETLINESPACING:
-            return ptv->SetLineSpacing(wParam, lParam);
-
-        case TXM_ADDFONT:
-            return ptv->AddFont((HFONT)wParam);
-
-        case TXM_SETCOLOR:
-            return ptv->SetColour(wParam, lParam);
+    case WM_NCCREATE:
+        if ((ptv = new TextView(hWnd)) == 0)
+            return FALSE;
+        SetWindowLongPtrW(hWnd, 0, reinterpret_cast<LONG_PTR>(ptv));
+        return TRUE;
+        // Last message received by any window - delete the TextView object
+    case WM_NCDESTROY:
+        delete ptv;
+        SetWindowLongPtrW(hWnd, 0, 0);
+        break;
 
 
-        default:
-            return DefWindowProc(hWnd, message, wParam, lParam);
+    default:
+        if (ptv)
+            return ptv->WndProc(message, wParam, lParam);
+        else
+            return 0;//return DefWindowProc(hWnd, message, wParam, lParam);
     }
 
     return 0;
+}
+
+LONG WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    switch (msg)
+    {
+        // Draw contents of TextView whenever window needs updating
+    case WM_PAINT:
+        return OnPaint();
+        // Set a new font 
+    case WM_SETFONT:
+        return OnSetFont((HFONT)wParam);
+
+    case WM_SIZE:
+        return OnSize(static_cast<UINT>(wParam), LOWORD(lParam), HIWORD(lParam));
+
+    case WM_VSCROLL:
+        return OnVScroll(LOWORD(wParam), HIWORD(wParam));
+
+    case WM_HSCROLL:
+        return OnHScroll(LOWORD(wParam), HIWORD(wParam));
+
+    case WM_MOUSEACTIVATE:
+        return OnMouseActivate((HWND)wParam, LOWORD(lParam), HIWORD(lParam));
+
+    case WM_MOUSEWHEEL:
+        return OnMouseWheel((short)HIWORD(wParam));
+
+    case WM_SETFOCUS:
+        return OnSetFocus((HWND)wParam);
+
+    case WM_KILLFOCUS:
+        return OnKillFocus((HWND)wParam);
+
+    case WM_LBUTTONDOWN:
+        return OnLButtonDown(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+
+    case WM_LBUTTONUP:
+        return OnLButtonUp(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+
+    case WM_MOUSEMOVE:
+        return OnMouseMove(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+
+    case WM_TIMER:
+        return OnTimer(wParam);
+
+    case TXM_OPENFILE:
+        return OpenFile(reinterpret_cast<wchar_t*>(lParam));
+
+    case TXM_CLEAR:
+        return ClearFile();
+
+    case TXM_SETLINESPACING:
+        return SetLineSpacing(wParam, lParam);
+
+    case TXM_ADDFONT:
+        return AddFont((HFONT)wParam);
+
+    case TXM_SETCOLOR:
+        return SetColour(wParam, lParam);
+
+
+
+    case TXM_GETFORMAT:
+        return pTextDoc->GetFileFormat();
+
+    default:
+        break;
+    }
+    return  DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
 HWND CreateTextView(HWND hwndParent)
@@ -183,22 +203,22 @@ HWND CreateTextView(HWND hwndParent)
         0);
 }
 
-ATOM RegisterTextView(HINSTANCE hInstance)
+BOOL RegisterTextView()
 {
-    WNDCLASSEXW wcex{0};
+    WNDCLASSEXW wcex{ 0 };
 
     wcex.cbSize = sizeof(WNDCLASSEX);
-    wcex.style = 0;
+    wcex.style = CS_DBLCLKS;// 0;
     wcex.lpfnWndProc = TextViewWndProc;
     wcex.cbClsExtra = 0;
     wcex.cbWndExtra = sizeof(TextView*);
-    wcex.hInstance = hInstance;
+    wcex.hInstance = GetModuleHandleW(0);
     wcex.hIcon = 0;
-    wcex.hCursor = 0;
+    wcex.hCursor = LoadCursorW(NULL, IDC_IBEAM);
     wcex.hbrBackground = (HBRUSH)(0);
     wcex.lpszMenuName = 0;
     wcex.lpszClassName = TEXTVIEW_CLASS;
     wcex.hIconSm = 0;
 
-    return RegisterClassExW(&wcex);
+    return RegisterClassExW(&wcex)? TRUE: FALSE;
 }

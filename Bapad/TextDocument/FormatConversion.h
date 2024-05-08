@@ -51,29 +51,24 @@ typedef unsigned char	UTF8;	// typically 8 bits
     }
 
 
-    size_t      UTF8ToUTF32(UTF8* utf8Str, size_t utf8Len, UTF32& pch32);
-    size_t      UTF32ToUTF8(UTF32 ch32, UTF8* utf8Str, size_t &utf8Len);
+    size_t  UTF8ToUTF32(UTF8* utf8Str, size_t utf8Len, UTF32 * pch32);
+    size_t  UTF32ToUTF8(UTF32 ch32, UTF8* utf8Str, size_t &utf8Len);
 
 
 
-    size_t      UTF8ToUTF16(UTF8* utf8Str, size_t utf8Len, UTF16* utf16Str, size_t& utf16Len);
-    size_t      UTF16ToUTF8(UTF16* utf16Str, size_t utf16Len, UTF8* utf8Str, size_t& utf8Len);
+    size_t  UTF8ToUTF16(UTF8* utf8Str, size_t utf8Len, UTF16* utf16Str, size_t& utf16Len);
+    size_t  UTF16ToUTF8(UTF16* utf16Str, size_t utf16Len, UTF8* utf8Str, size_t& utf8Len);
 
 
-    size_t    UTF16ToUTF32(UTF16* utf16Str, size_t utf16Len, UTF32* utf32Str, size_t& utf32Len);
-    size_t    UTF32ToUTF16(UTF32* utf32Str, size_t utf32Len, UTF16* utf16Str, size_t& utf16Len);
-    size_t    UTF16BEToUTF32(UTF16* utf16Str, size_t utf16Len, UTF32* utf32Str, size_t& utf32Len);
+    size_t  UTF16ToUTF32(UTF16* utf16Str, size_t utf16Len, UTF32* utf32Str, size_t& utf32Len);
+    size_t  UTF32ToUTF16(UTF32* utf32Str, size_t utf32Len, UTF16* utf16Str, size_t& utf16Len);
+    size_t  UTF16BEToUTF32(UTF16* utf16Str, size_t utf16Len, UTF32* utf32Str, size_t& utf32Len);
 
 
 
-    size_t      AsciiToUTF16(UTF8* asciiStr, size_t asciiLen, UTF16* utf16Str, size_t& utf16Len);
-    size_t      UTF16ToAscii(UTF16* utf16Str, size_t utf16Len, UTF8* asciiStr, size_t &asciiLen);
+    size_t  AsciiToUTF16(UTF8* asciiStr, size_t asciiLen, UTF16* utf16Str, size_t& utf16Len);
+    size_t  UTF16ToAscii(UTF16* utf16Str, size_t utf16Len, UTF8* asciiStr, size_t &asciiLen);
     
 
-    size_t	   CopyUTF16(UTF16* src, size_t srcLen, UTF16* dest, size_t& destLen);
-    size_t	   SwapUTF16(UTF16* src, size_t srcLen, UTF16* dest, size_t& destLen);
-
-
-
-
-
+    size_t  CopyUTF16(UTF16* src, size_t srcLen, UTF16* dest, size_t& destLen);
+    size_t  SwapUTF16(UTF16* src, size_t srcLen, UTF16* dest, size_t& destLen);

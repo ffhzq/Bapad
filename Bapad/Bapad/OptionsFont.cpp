@@ -146,39 +146,6 @@ void FillFontComboList(HWND hwndCombo)
 	SendMessage(hwndCombo, CB_SETCURSEL, 0, 0);
 }
 
-/*
-//
-//	Could be used to fill a ListView with a list
-//	of file-types and their associated icons
-//
-void FillFileTypeList(HWND hwnd)
-{
-	LVITEM lvi = { LVIF_TEXT|LVIF_IMAGE };
-	SHFILEINFO shfi = { 0 };
-	HIMAGELIST hImgList;
-	int i;
-
-	char *lookup[] =
-	{
-		".asm", ".c", ".cpp", ".cs", ".js", 0
-	};
-
-	for(i = 0; lookup[i]; i++)
-	{
-		ZeroMemory(&shfi, sizeof(shfi));
-		hImgList = (HIMAGELIST)SHGetFileInfo(lookup[i], FILE_ATTRIBUTE_NORMAL, &shfi, sizeof(shfi),
-			SHGFI_TYPENAME|SHGFI_ICON |SHGFI_USEFILEATTRIBUTES|SHGFI_SMALLICON|SHGFI_SYSICONINDEX);
-
-		ListView_SetImageList(hwnd, hImgList, LVSIL_SMALL);
-
-		lvi.iItem		= 0;
-		lvi.iSubItem	= 0;
-		lvi.pszText		= shfi.szTypeName;//lookup[i];
-		lvi.iImage		= shfi.iIcon;
-
-		ListView_InsertItem(hwnd, &lvi);
-	}
-}*/
 
 void SetComboItemHeight(HWND hwndCombo, int nMinHeight)
 {

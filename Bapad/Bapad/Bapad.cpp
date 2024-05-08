@@ -16,75 +16,36 @@ HINSTANCE hInst;// current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 
+
 WCHAR szFileName[MAX_PATH];
 WCHAR szFileTitle[MAX_PATH];
 
 
-int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-    _In_opt_ HINSTANCE hPrevInstance,
-    _In_ LPWSTR    lpCmdLine,
-    _In_ int       nCmdShow)
-{
-    UNREFERENCED_PARAMETER(hPrevInstance);
-    UNREFERENCED_PARAMETER(lpCmdLine);
 
-    // TODO: Place code here.
-    //MessageBox(NULL, L"Goodbye, cruel world!", L"Note", MB_OK);
-
-    // Initialize global strings
-    LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_BAPAD, szWindowClass, MAX_LOADSTRING);
-    RegisterMainWindow(hInstance);
-    RegisterTextView(hInstance);
-
-    // Perform application initialization:
-    if (!InitInstance(hInstance, nCmdShow))
-    {
-        return FALSE;
-    }
-
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_BAPAD));
-
-    MSG msg;
-
-    // Main message loop:
-    while (GetMessage(&msg, nullptr, 0, 0))
-    {
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
-        {
-            TranslateMessage(&msg);
-            DispatchMessageW(&msg);
-        }
-    }
-
-    return (int)msg.wParam;
-}
-
-ATOM RegisterMainWindow(HINSTANCE hInstance)
+void RegisterMainWindow()
 {
     WNDCLASSEXW wcex{ 0 };
-
+    HINSTANCE hInst = GetModuleHandleW(0);
     wcex.cbSize = sizeof(WNDCLASSEX);
-    wcex.style = CS_HREDRAW | CS_VREDRAW;
+    wcex.style = CS_OWNDC;//CS_HREDRAW | CS_VREDRAW;
     wcex.lpfnWndProc = WndProc;
     wcex.cbClsExtra = 0;
     wcex.cbWndExtra = 0;
-    wcex.hInstance = hInstance;
-    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_BAPAD));
-    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wcex.hInstance = hInst;
+    wcex.hIcon = LoadIconW(hInst, MAKEINTRESOURCE(IDI_BAPAD));
+    wcex.hCursor = LoadCursorW(nullptr, IDC_ARROW);
+    wcex.hbrBackground = (HBRUSH)0;// (COLOR_WINDOW + 1);
     wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_BAPAD);
     wcex.lpszClassName = szWindowClass;
     wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
-    return RegisterClassExW(&wcex);
+    RegisterClassExW(&wcex);
 }
 
-BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
+BOOL CreateMainWnd(int nCmdShow)
 {
-    hInst = hInstance; // Store instance handle in our global variable
-    g_hwndMain = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+    g_hwndMain = CreateWindowExW(0, CLASS_NAME, CLASS_NAME, WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, nullptr, nullptr, GetModuleHandleW(0), nullptr);
 
     if (!g_hwndMain)
     {
@@ -92,92 +53,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     }
 
     ShowWindow(g_hwndMain, nCmdShow);
-    UpdateWindow(g_hwndMain);
-
     return TRUE;
 }
 
-LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    static int width = 0, height = 0;
 
-    switch (message)
-    {
-        case WM_CREATE:
-            g_hwndTextView = CreateTextView(hWnd);
-
-            // automatically create new document when we start
-            PostMessageW(hWnd, WM_COMMAND, IDM_FILE_NEW, 0);
-
-            // tell windows that we can handle drag+drop'd files
-            DragAcceptFiles(hWnd, TRUE);
-            break;
-
-        case WM_DROPFILES:
-            HandleDropFiles(hWnd, (HDROP)wParam);
-            break;
-
-        case WM_COMMAND:
-        {
-            int wmId = LOWORD(wParam);
-            // Parse the menu selections:
-            switch (wmId)
-            {
-                case IDM_FILE_NEW:
-                {
-                    wchar_t a[] = L"Untitled";
-                    SetWindowFileName(hWnd, a);
-                    TextView_Clear(g_hwndTextView);
-
-                    break;
-                }
-                // get a filename to open
-                case IDM_FILE_OPEN:
-                    if (ShowOpenFileDlg(hWnd, szFileName, szFileTitle))
-                    {
-                        DoOpenFile(hWnd, szFileName, szFileTitle);
-                    }
-                    break;
-                case IDM_VIEW_FONT:
-                    ShowProperties(hWnd);
-                    break;
-                case IDM_FILE_EXIT:
-                    DestroyWindow(hWnd);
-                    break;
-
-                case IDM_HELP_ABOUT:
-                    ShowAboutDlg(hWnd);
-                    //DialogBoxW(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                    break;
-            }
-        }
-        break;
-
-
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            DeleteObject(g_hFont);
-            break;
-        case WM_SETFOCUS:
-            SetFocus(g_hwndTextView);
-            break;
-
-        case WM_CLOSE:
-            DestroyWindow(hWnd);
-            break;
-
-        case WM_SIZE:
-            width = (short)LOWORD(lParam);
-            height = (short)HIWORD(lParam);
-
-            MoveWindow(g_hwndTextView, 0, 0, width, height, TRUE);
-            break;
-
-        default:
-            return DefWindowProc(hWnd, message, wParam, lParam);
-    }
-    return 0;
-}
 
 
 
@@ -188,16 +67,16 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     UNREFERENCED_PARAMETER(lParam);
     switch (message)
     {
-        case WM_INITDIALOG:
-            return (INT_PTR)TRUE;
+    case WM_INITDIALOG:
+        return (INT_PTR)TRUE;
 
-        case WM_COMMAND:
-            if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-            {
-                EndDialog(hDlg, LOWORD(wParam));
-                return (INT_PTR)TRUE;
-            }
-            break;
+    case WM_COMMAND:
+        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+        {
+            EndDialog(hDlg, LOWORD(wParam));
+            return (INT_PTR)TRUE;
+        }
+        break;
     }
     return (INT_PTR)FALSE;
 }
@@ -233,17 +112,17 @@ BOOL ShowOpenFileDlg(HWND hwnd, wchar_t* pstrFileName, wchar_t* pstrTitleName)
 void ShowAboutDlg(HWND hwndParent)
 {
     MessageBoxW(hwndParent,
-        ClassName,//+ L"\r\n\r\n",
-        ClassName,
+        CLASS_NAME,//+ L"\r\n\r\n",
+        CLASS_NAME,
         MB_OK | MB_ICONINFORMATION
     );
 }
 
 void SetWindowFileName(HWND hwnd, wchar_t* szFileName)
 {
-    wchar_t ach[MAX_PATH + sizeof(ClassName) + 4];
+    wchar_t ach[MAX_PATH + sizeof(CLASS_NAME) + 4];
 
-    wsprintf(ach, _T("%s - %s"), szFileName, ClassName);
+    wsprintf(ach, _T("%s - %s"), szFileName, CLASS_NAME);
     SetWindowTextW(hwnd, ach);
 }
 
@@ -268,7 +147,7 @@ BOOL DoOpenFile(HWND hwnd, WCHAR* szFileName, WCHAR* szFileTitle)
     }
     else
     {
-        MessageBoxW(hwnd, _T("Error opening file"), ClassName, MB_ICONEXCLAMATION);
+        MessageBoxW(hwnd, _T("Error opening file"), CLASS_NAME, MB_ICONEXCLAMATION);
         return FALSE;
     }
 }
@@ -292,4 +171,132 @@ void HandleDropFiles(HWND hwnd, HDROP hDrop)
     }
 
     DragFinish(hDrop);
+}
+
+
+UINT CommandHandler(HWND hWnd, UINT nCtrlId, UINT nCtrlCode, HWND hwndFrom)
+{
+
+    switch (nCtrlId)
+    {
+    case IDM_FILE_NEW:
+    {
+        wchar_t a[] = L"Untitled";
+        SetWindowFileName(hWnd, a);
+        TextView_Clear(g_hwndTextView);
+
+        break;
+    }
+    // get a filename to open
+    case IDM_FILE_OPEN:
+        if (ShowOpenFileDlg(hWnd, szFileName, szFileTitle))
+        {
+            DoOpenFile(hWnd, szFileName, szFileTitle);
+        }
+        break;
+    //case IDM_VIEW_FONT:
+        //ShowProperties(hWnd);
+        //break;
+    case IDM_FILE_EXIT:
+        DestroyWindow(hWnd);
+        break;
+
+    case IDM_HELP_ABOUT:
+        ShowAboutDlg(hWnd);
+        break;
+
+    default:break;
+    }
+    return 0;
+}
+
+
+
+int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
+    _In_opt_ HINSTANCE hPrevInstance,
+    _In_ LPWSTR    lpCmdLine,
+    _In_ int       nCmdShow)
+{
+    UNREFERENCED_PARAMETER(hPrevInstance);
+    UNREFERENCED_PARAMETER(lpCmdLine);
+
+
+    // Initialize global strings
+    LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDC_BAPAD, szWindowClass, MAX_LOADSTRING);
+
+    RegisterMainWindow();
+    RegisterTextView();
+
+    // Perform application initialization:
+    if (!CreateMainWnd(nCmdShow))
+    {
+        return FALSE;
+    }
+
+    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_BAPAD));
+
+    MSG msg;
+
+    // Main message loop:
+    while (GetMessage(&msg, nullptr, 0, 0))
+    {
+        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+        {
+            TranslateMessage(&msg);
+            DispatchMessageW(&msg);
+        }
+    }
+
+    return (int)msg.wParam;
+}
+
+
+
+LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    static int width = 0, height = 0;
+
+    switch (message)
+    {
+    case WM_CREATE:
+        g_hwndTextView = CreateTextView(hWnd);
+
+        // automatically create new document when we start
+        PostMessageW(hWnd, WM_COMMAND, IDM_FILE_NEW, 0);
+
+        // tell windows that we can handle drag+drop'd files
+        DragAcceptFiles(hWnd, TRUE);
+        break;
+
+    case WM_DROPFILES:
+        HandleDropFiles(hWnd, (HDROP)wParam);
+        break;
+
+    case WM_COMMAND:return CommandHandler(hWnd, LOWORD(wParam), HIWORD(wParam), (HWND)lParam);        break;
+
+
+    case WM_DESTROY:
+        PostQuitMessage(0);
+        DeleteObject(g_hFont);
+        break;
+    case WM_SETFOCUS:
+        SetFocus(g_hwndTextView);
+        break;
+
+    case WM_CLOSE:
+        DestroyWindow(hWnd);
+        break;
+
+    case WM_SIZE:
+        width = (short)LOWORD(lParam);
+        height = (short)HIWORD(lParam);
+
+        MoveWindow(g_hwndTextView, 0, 0, width, height, TRUE);
+        break;
+
+    default:
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+    return 0;
 }

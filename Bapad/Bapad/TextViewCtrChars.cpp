@@ -74,7 +74,7 @@ int TextView::PaintCtrlChar(HDC hdc, int xpos, int ypos, ULONG64 chValue, FONT* 
 
 	// paint the text and the second "black" block at the same time
 	InflateRect(&rect, -1, 1);
-	ExtTextOutW(hdc, xpos + 1, ypos + yoff, ETO_OPAQUE | ETO_CLIPPED, &rect, str, wcslen(str), 0);
+	//ExtTextOutW(hdc, xpos + 1, ypos + yoff, ETO_OPAQUE | ETO_CLIPPED, &rect, str, wcslen(str), 0);
 
 	// restore device context
 	SetTextColor(hdc, fg);

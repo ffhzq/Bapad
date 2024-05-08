@@ -3,7 +3,7 @@
 
 //	TextView API declared here
 //
-ATOM RegisterTextView(HINSTANCE hInstance);
+BOOL RegisterTextView();
 HWND	 CreateTextView(HWND hwndParent);
 COLORREF RealizeColour(COLORREF col);
 
@@ -24,6 +24,39 @@ COLORREF RealizeColour(COLORREF col);
 #define TXM_SETLONGLINE			 (TXM_BASE + 10)
 #define TXM_SETLINEIMAGE		 (TXM_BASE + 11)
 #define TXM_GETFORMAT			 (TXM_BASE + 12)
+
+//
+//	TextView Macros defined here
+//
+#define TEXTVIEW_CLASS L"TextView32"
+
+//
+//	TextView colours
+//
+#define TXC_FOREGROUND			0			// normal foreground colour
+#define TXC_BACKGROUND			1			// normal background colour
+#define TXC_HIGHLIGHTTEXT		2			// normal text highlight colour
+#define TXC_HIGHLIGHT			3			// normal background highlight colour
+#define TXC_HIGHLIGHTTEXT2		4			// inactive text highlight colour
+#define TXC_HIGHLIGHT2			5			// inactive background highlight colour
+#define TXC_SELMARGIN1			6			// selection margin colour#1
+#define TXC_SELMARGIN2			7			// selection margin colour#2
+#define TXC_LINENUMBERTEXT		8			// line number text
+#define TXC_LINENUMBER			9			// line number background
+#define TXC_LONGLINETEXT		10			// long-line text
+#define TXC_LONGLINE			11			// long-line background
+#define TXC_CURRENTLINETEXT		12			// active line text
+#define TXC_CURRENTLINE			13			// active line background
+
+const size_t TXC_MAX_COLOURS = 6;			// keep this updated!
+
+#define SYSCOL(COLOR_IDX)   ( 0x80000000 | COLOR_IDX)
+#define SYSCOLIDX(COLREF)   (~0x80000000 & COLREF)
+
+
+#define REALIZE_SYSCOL(col) (RealizeColour(col))
+
+
 
 //
 //	TextView Message Macros defined here
@@ -64,34 +97,3 @@ COLORREF RealizeColour(COLORREF col);
 
 #define TextView_GetFormat(hwndTV) \
 	SendMessage((hwndTV), TXM_GETFORMAT, 0, 0)
-
-//
-//	TextView Macros defined here
-//
-#define TEXTVIEW_CLASS L"TextView32"
-
-//
-//	TextView colours
-//
-#define TXC_FOREGROUND			0			// normal foreground colour
-#define TXC_BACKGROUND			1			// normal background colour
-#define TXC_HIGHLIGHTTEXT		2			// normal text highlight colour
-#define TXC_HIGHLIGHT			3			// normal background highlight colour
-#define TXC_HIGHLIGHTTEXT2		4			// inactive text highlight colour
-#define TXC_HIGHLIGHT2			5			// inactive background highlight colour
-#define TXC_SELMARGIN1			6			// selection margin colour#1
-#define TXC_SELMARGIN2			7			// selection margin colour#2
-#define TXC_LINENUMBERTEXT		8			// line number text
-#define TXC_LINENUMBER			9			// line number background
-#define TXC_LONGLINETEXT		10			// long-line text
-#define TXC_LONGLINE			11			// long-line background
-#define TXC_CURRENTLINETEXT		12			// active line text
-#define TXC_CURRENTLINE			13			// active line background
-
-const size_t TXC_MAX_COLOURS = 6;			// keep this updated!
-
-#define SYSCOL(COLOR_IDX)   ( 0x80000000 | COLOR_IDX)
-#define SYSCOLIDX(COLREF)   (~0x80000000 & COLREF)
-
-
-#define REALIZE_SYSCOL(col) (RealizeColour(col))

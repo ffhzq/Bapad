@@ -105,7 +105,7 @@ void SaveRegSettings()
 	HKEY hKey, hColKey;
 
 	// open registry location for writing
-	RegCreateKeyEx(HKEY_CURRENT_USER, REGLOC, 0, 0, 0, KEY_WRITE, 0, &hKey, 0);
+	RegCreateKeyExW(HKEY_CURRENT_USER, REGLOC, 0, 0, 0, KEY_WRITE, 0, &hKey, 0);
 
 	WriteSettingInt(hKey, _T("FontSize"), g_nFontSize);
 	WriteSettingInt(hKey, _T("FontBold"), g_fFontBold);
