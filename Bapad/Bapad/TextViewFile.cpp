@@ -33,8 +33,8 @@ LONG TextView::ClearFile()
 	if(pTextDoc)
 		pTextDoc->Clear();
 
-	lineCount   = pTextDoc->GetLineCount();
-	longestLine = pTextDoc->GetLongestLine(4);
+	lineCount = 0;//pTextDoc->GetLineCount();
+	longestLine = 0;//pTextDoc->GetLongestLine(4);
 
 	vScrollPos  = 0;
 	hScrollPos  = 0;

@@ -17,7 +17,7 @@ struct _BOM_LOOKUP BOMLOOK[] =
 
 TextDocument::TextDocument()
     : 
-    docBuffer(std::vector<unsigned char>('\0')),
+    docBuffer(),
     byteOffsetLineBuffer(nullptr),
     charOffsetLineBuffer(nullptr)
 {
@@ -309,8 +309,9 @@ bool TextDocument::Clear()
 {
     if (!docBuffer.empty())
     {
-        docBuffer.clear();
         docLengthByBytes = 0;
+        docBuffer.resize(0);
+        docBuffer.shrink_to_fit();
     }
     if (byteOffsetLineBuffer != nullptr)
     {
@@ -447,34 +448,103 @@ size_t TextDocument::RawDataToUtf16(BYTE* rawdata, size_t rawlen, WCHAR* utf16st
     }
 }
 
-ULONG TextDocument::InsertText(ULONG offsetChars, WCHAR* text, ULONG length)
+size_t TextDocument::Utf16ToRawData(UTF16 * utf16Str, size_t utf16Len, BYTE* rawData, size_t& rawLen)
+{
+    switch (fileFormat)
+    {
+    case BCP_ASCII:
+       return UTF16ToAscii(utf16Str, utf16Len, rawData, rawLen);
+    case BCP_UTF8:
+        return UTF16ToUTF8(utf16Str, utf16Len, rawData, rawLen);
+    case BCP_UTF16:
+        rawLen /= sizeof(WCHAR);
+        utf16Len = CopyUTF16(utf16Str, utf16Len, reinterpret_cast<UTF16*>(rawData), rawLen);
+        rawLen*= sizeof(WCHAR);
+        return utf16Len;
+    case BCP_UTF16BE:
+        rawLen /= sizeof(WCHAR);
+        utf16Len = SwapUTF16(utf16Str, utf16Len, reinterpret_cast<UTF16*>(rawData), rawLen);
+        rawLen *= sizeof(WCHAR);
+        return utf16Len;
+    default:
+        rawLen = 0;
+        return 0;
+    }
+}
+
+size_t TextDocument::InsertText(size_t offsetChars, WCHAR* text, size_t length)
 {
     return 0; 
 }
-ULONG TextDocument::ReplaceText(ULONG offsetChars, WCHAR* text, ULONG length, ULONG eraseLen)
+size_t TextDocument::ReplaceText(size_t offsetChars, WCHAR* text, size_t length, size_t eraseLen)
 {
     return 0;
 }
-ULONG TextDocument::EraseText(ULONG offsetChars, ULONG length)
+size_t TextDocument::EraseText(size_t offsetChars, size_t length)
 {
     return 0;
 }
 
-ULONG TextDocument::InsertRawText(ULONG offsetBytes, WCHAR* text, ULONG textLength)
+size_t TextDocument::InsertRawText(size_t offsetBytes, WCHAR* text, size_t textLength)
 {
-    return 0;
-}
-ULONG TextDocument::ReplaceRawText(ULONG offsetBytes, WCHAR* text, ULONG textLength, ULONG eraseLen)
-{
-    return 0;
-}
-ULONG TextDocument::EraseRawText(ULONG offsetBytes, ULONG textLength)
-{
+    const size_t LEN = 0x100;
+    unsigned char buf[LEN];
+    size_t processedChars=0, rawLen=0, offset=offsetBytes+headerSize, bufLen = LEN;
+    docBuffer.reserve((docBuffer.size() + textLength * sizeof(WCHAR)) * 1.5);
+    while (offsetBytes)
+    {
+        rawLen = bufLen;
+        processedChars = Utf16ToRawData(reinterpret_cast<UTF16*>(text), textLength, buf, bufLen);
 
-    return 0;
+        docBuffer.insert(docBuffer.begin() + offset, std::begin(buf), std::begin(buf)+bufLen);
+
+        text += processedChars;
+        textLength -= processedChars;
+        rawLen += bufLen;
+        offset += bufLen;
+    }
+    docBuffer.shrink_to_fit();
+    docLengthByBytes = docBuffer.size();
+    return rawLen;
+
+}
+size_t TextDocument::ReplaceRawText(size_t offsetBytes, WCHAR* text, size_t textLength, size_t eraseLen)
+{
+    const size_t LEN = 0x100;
+    unsigned char buf[LEN];
+    size_t processedChars = 0, rawLen = 0, offset = offsetBytes + headerSize, bufLen = LEN;
+    docBuffer.reserve((docBuffer.size() - eraseLen + textLength * sizeof(WCHAR)) * 1.5);
+    size_t eraseBytes = CharOffsetToByteOffset(offsetBytes, eraseLen);
+    auto beginIter = docBuffer.begin() + offsetBytes, endIter = beginIter + eraseBytes;
+    docBuffer.erase(beginIter, endIter);
+    auto insertIter = docBuffer.begin() + offsetBytes;
+    while (offsetBytes)
+    {
+        rawLen = bufLen;
+        processedChars = Utf16ToRawData(reinterpret_cast<UTF16*>(text), textLength, buf, bufLen);
+        
+        insertIter=docBuffer.insert(insertIter, std::begin(buf), std::begin(buf) + bufLen);
+
+        text += processedChars;
+        textLength -= processedChars;
+        rawLen += bufLen;
+        offset += bufLen;
+    }
+    docBuffer.shrink_to_fit();
+    docLengthByBytes = docBuffer.size();
+    return rawLen;
+    
+
+}
+size_t TextDocument::EraseRawText(size_t offsetBytes, size_t textLength)
+{
+    size_t eraseBytes = CharOffsetToByteOffset(offsetBytes, textLength);
+    auto beginIter = docBuffer.begin() + offsetBytes, endIter = beginIter + eraseBytes;
+    docBuffer.erase(beginIter, endIter);
+    return textLength;
 }
 
-size_t TextDocument::CharOffsetToByteOffset(ULONG offsetBytes, ULONG charCount)
+size_t TextDocument::CharOffsetToByteOffset(size_t offsetBytes, size_t charCount)
 {
     switch (fileFormat)
     {

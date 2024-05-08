@@ -34,9 +34,9 @@ public:
     TextIterator    IterateLineByLineNumber(size_t lineno, size_t* linestart = 0, size_t* linelen = 0);
     TextIterator    IterateLineByOffset(size_t offset_chars, size_t* lineno, size_t* linestart = 0);
 
-    ULONG	InsertText(ULONG offsetChars, WCHAR* text, ULONG length);
-    ULONG	ReplaceText(ULONG offsetChars, WCHAR* text, ULONG length, ULONG eraseLen);
-    ULONG	EraseText(ULONG offsetChars, ULONG length);
+    size_t	InsertText(size_t offsetChars, WCHAR* text, size_t length);
+    size_t	ReplaceText(size_t offsetChars, WCHAR* text, size_t length, size_t eraseLen);
+    size_t	EraseText(size_t offsetChars, size_t length);
 
     const uint32_t  GetFileFormat() const;
     const size_t    GetLineCount() const;
@@ -53,12 +53,12 @@ private:
     size_t  GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t& bufLen);
 
     size_t  RawDataToUtf16(BYTE* rawdata, size_t rawlen, WCHAR* utf16str, size_t& utf16len);
+    size_t  Utf16ToRawData(UTF16 * utf16Str, size_t utf16Len, BYTE* rawData, size_t& rawLen);
+    size_t	InsertRawText(size_t offsetBytes, WCHAR* text, size_t textLength);
+    size_t	ReplaceRawText(size_t offsetBytes, WCHAR* text, size_t textLength, size_t eraseLen);
+    size_t	EraseRawText(size_t offsetBytes, size_t textLength);
 
-    ULONG	InsertRawText(ULONG offsetBytes, WCHAR* text, ULONG textLength);
-    ULONG	ReplaceRawText(ULONG offsetBytes, WCHAR* text, ULONG textLength, ULONG eraseLen);
-    ULONG	EraseRawText(ULONG offsetBytes, ULONG textLength);
-
-    size_t CharOffsetToByteOffset(ULONG offsetBytes, ULONG charCount);
+    size_t CharOffsetToByteOffset(size_t offsetBytes, size_t charCount);
 
     std::vector<unsigned char> docBuffer;// raw txt data TODO:should change to unsigned char? 
     size_t  docLengthByChars;//
