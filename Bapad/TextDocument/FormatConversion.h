@@ -51,7 +51,7 @@ typedef unsigned char	UTF8;	// typically 8 bits
     }
 
 
-    size_t  UTF8ToUTF32(UTF8* utf8Str, size_t utf8Len, UTF32& pch32);
+    size_t  UTF8ToUTF32(UTF8* utf8Str, size_t utf8Len, UTF32 * pch32);
     size_t  UTF32ToUTF8(UTF32 ch32, UTF8* utf8Str, size_t &utf8Len);
 
 

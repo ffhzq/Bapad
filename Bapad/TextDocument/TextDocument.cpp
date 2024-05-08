@@ -5,6 +5,7 @@
 struct _BOM_LOOKUP BOMLOOK[] =
 {
     // define longest headers first
+    //bom, headerlen, encoding form
     { 0x0000FEFF, 4, BCP_UTF32    },
     { 0xFFFE0000, 4, BCP_UTF32BE  },
     { 0xBFBBEF,	  3, BCP_UTF8	  },
@@ -61,7 +62,7 @@ bool TextDocument::Initialize(HANDLE hFile)//跨平台要改?
     const size_t bufferSize = docLengthByBytes;
     if ((docBuffer = new char[bufferSize]) == 0)
         return false;
-
+    memset(docBuffer, 0, sizeof(char) * bufferSize);
     ULONG numOfBytesRead = 0;
     // read entire file into memory
     ReadFile(hFile, docBuffer, static_cast<DWORD>(docLengthByBytes), &numOfBytesRead, NULL);
@@ -193,10 +194,7 @@ size_t TextDocument::GetUTF32Char(size_t offset, size_t lenBytes, char32_t & pch
 
     lenBytes = min(16, lenBytes);
     rawdata=reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
-    //m_seq.render(offset + m_nHeaderSize, rawdata, lenbytes);
-
-
-    UTF16* rawdata_w = (UTF16*)rawdata;//(WCHAR*)(buffer + offset + m_nHeaderSize);
+    UTF16* rawdata_w = (UTF16*)rawdata;
     WCHAR     ch16;
     size_t   ch32len = 1;
 
@@ -214,7 +212,7 @@ size_t TextDocument::GetUTF32Char(size_t offset, size_t lenBytes, char32_t & pch
         return UTF16BEToUTF32(rawdata_w, lenBytes / 2, reinterpret_cast<UTF32*>(&pch32), ch32len) * sizeof(WCHAR);
 
     case BCP_UTF8:
-        return UTF8ToUTF32(rawdata, lenBytes, reinterpret_cast<UTF32&>(pch32));
+        return UTF8ToUTF32(rawdata, lenBytes, reinterpret_cast<UTF32*>(&pch32));
 
     default:
         return 0;
