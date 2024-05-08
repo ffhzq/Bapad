@@ -44,9 +44,9 @@ public:
     const size_t    GetDocLength() const;
 
 private:
-    bool    InitLineBuffer();
+    bool InitLineBuffer();
     int DetectFileFormat();
-    size_t  GetUTF32Char(size_t offset, size_t lenBytes, char32_t& pch32);
+    size_t GetUTF32Char(size_t offset, size_t lenBytes, char32_t& pch32);
 
     // GetText: read 'lenBytes'or'bufLen'(use the smaller one) bytes wchar from the position (docBuffer+offset) to 'buf'
     //
@@ -58,8 +58,9 @@ private:
     ULONG	ReplaceRawText(ULONG offsetBytes, WCHAR* text, ULONG textLength, ULONG eraseLen);
     ULONG	EraseRawText(ULONG offsetBytes, ULONG textLength);
 
+    size_t CharOffsetToByteOffset(ULONG offsetBytes, ULONG charCount);
 
-    char*   docBuffer;// raw txt data TODO:should change to unsigned char? 
+    std::vector<unsigned char> docBuffer;// raw txt data TODO:should change to unsigned char? 
     size_t  docLengthByChars;//
     size_t  docLengthByBytes;// size of txt data
 

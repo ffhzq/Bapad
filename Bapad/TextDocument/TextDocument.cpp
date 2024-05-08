@@ -17,7 +17,7 @@ struct _BOM_LOOKUP BOMLOOK[] =
 
 TextDocument::TextDocument()
     : 
-    docBuffer(nullptr),
+    docBuffer(std::vector<unsigned char>('\0')),
     byteOffsetLineBuffer(nullptr),
     charOffsetLineBuffer(nullptr)
 {
@@ -60,12 +60,10 @@ bool TextDocument::Initialize(HANDLE hFile)//跨平台要改?
 
     // allocate new file-buffer
     const size_t bufferSize = docLengthByBytes;
-    if ((docBuffer = new char[bufferSize]) == 0)
-        return false;
-    memset(docBuffer, 0, sizeof(char) * bufferSize);
+    docBuffer = std::move(std::vector<unsigned char>(bufferSize, 0));
     ULONG numOfBytesRead = 0;
     // read entire file into memory
-    ReadFile(hFile, docBuffer, static_cast<DWORD>(docLengthByBytes), &numOfBytesRead, NULL);
+    ReadFile(hFile, &docBuffer[0], static_cast<DWORD>(docLengthByBytes), &numOfBytesRead, NULL);
 
 
     fileFormat = DetectFileFormat();
@@ -170,7 +168,7 @@ int TextDocument::DetectFileFormat()
     for (auto i : BOMLOOK)
     {
         if (docLengthByBytes >= i.headerLength
-            && memcmp(docBuffer, &i.bom, i.headerLength) == 0)
+            && memcmp(&docBuffer[0], &i.bom, i.headerLength) == 0)
         {
             headerSize = i.headerLength;
             res = i.type;
@@ -193,7 +191,7 @@ size_t TextDocument::GetUTF32Char(size_t offset, size_t lenBytes, char32_t & pch
     Byte* rawdata;
 
     lenBytes = min(16, lenBytes);
-    rawdata=reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
+    rawdata=reinterpret_cast<Byte*>(&docBuffer[0] + offset + headerSize);
     UTF16* rawdata_w = (UTF16*)rawdata;
     WCHAR     ch16;
     size_t   ch32len = 1;
@@ -221,7 +219,7 @@ size_t TextDocument::GetUTF32Char(size_t offset, size_t lenBytes, char32_t & pch
 
 size_t TextDocument::GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t & bufLen)
 {
-    Byte* rawData = reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
+    Byte* rawData = reinterpret_cast<Byte*>(&docBuffer[0] + offset + headerSize);
     //size_t  len;
 
     if (offset >= docLengthByBytes)
@@ -269,7 +267,8 @@ const size_t TextDocument::GetLongestLine(int tabwidth = 4) const
 {
     size_t longest = 0;
     size_t xpos = 0;
-    char* bufPtr = (char*)(docBuffer + headerSize);
+    if (docBuffer.empty())return 0;
+    char* bufPtr = (char*)(&docBuffer[0] + headerSize);
 
 
     for (size_t i = 0; i < docLengthByBytes; i++)
@@ -308,10 +307,9 @@ const size_t TextDocument::GetDocLength() const
 
 bool TextDocument::Clear()
 {
-    if (docBuffer != nullptr)
+    if (!docBuffer.empty())
     {
-        delete[] docBuffer;
-        docBuffer = nullptr;
+        docBuffer.clear();
         docLengthByBytes = 0;
     }
     if (byteOffsetLineBuffer != nullptr)
@@ -472,5 +470,34 @@ ULONG TextDocument::ReplaceRawText(ULONG offsetBytes, WCHAR* text, ULONG textLen
 }
 ULONG TextDocument::EraseRawText(ULONG offsetBytes, ULONG textLength)
 {
+
     return 0;
+}
+
+size_t TextDocument::CharOffsetToByteOffset(ULONG offsetBytes, ULONG charCount)
+{
+    switch (fileFormat)
+    {
+    case BCP_ASCII:
+        return charCount;
+    case BCP_UTF16:case BCP_UTF16BE:
+        return charCount * sizeof(WCHAR);
+
+    default:
+        break;
+    }
+    // case UTF-8
+    size_t start = offsetBytes;
+    while (charCount && offsetBytes < docLengthByBytes)//todo: +headrsize ?
+    {
+        const size_t bufLen = 0x100;
+        WCHAR buf[bufLen];
+        size_t charLen = min(charCount, bufLen);//因为底层默认输入为UTF-16所以直接定义WCHAR数组
+        size_t byteLen = GetText(offsetBytes, docLengthByBytes - offsetBytes, buf, charLen);
+        charCount -= charLen;
+        offsetBytes += byteLen;
+
+    }
+    return offsetBytes - start;
+
 }
