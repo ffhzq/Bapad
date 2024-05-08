@@ -54,12 +54,12 @@ private:
 
     size_t  RawDataToUtf16(BYTE* rawdata, size_t rawlen, WCHAR* utf16str, size_t& utf16len);
     size_t  Utf16ToRawData(UTF16 * utf16Str, size_t utf16Len, BYTE* rawData, size_t& rawLen);
-    size_t	InsertRawText(size_t offsetBytes, WCHAR* text, size_t textLength);
-    size_t	ReplaceRawText(size_t offsetBytes, WCHAR* text, size_t textLength, size_t eraseLen);
-    size_t	EraseRawText(size_t offsetBytes, size_t textLength);
+    size_t	InsertTextRaw(size_t offsetBytes, WCHAR* text, size_t textLength);
+    size_t	ReplaceTextRaw(size_t offsetBytes, WCHAR* text, size_t textLength, size_t eraseLen);
+    size_t	EraseTextRaw(size_t offsetBytes, size_t textLength);
 
-    size_t CharOffsetToByteOffset(size_t offsetBytes, size_t charCount);
-
+    size_t CharOffsetToByteOffsetAt(size_t offsetBytes, size_t charCount);
+    size_t CharOffsetToByteOffset(size_t offsetChars);
     std::vector<unsigned char> docBuffer;// raw txt data TODO:should change to unsigned char? 
     size_t  docLengthByChars;//
     size_t  docLengthByBytes;// size of txt data

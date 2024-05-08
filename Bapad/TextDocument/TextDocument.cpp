@@ -474,18 +474,21 @@ size_t TextDocument::Utf16ToRawData(UTF16 * utf16Str, size_t utf16Len, BYTE* raw
 
 size_t TextDocument::InsertText(size_t offsetChars, WCHAR* text, size_t length)
 {
-    return 0; 
+    size_t offsetBytes = CharOffsetToByteOffset(offsetChars);
+    return InsertTextRaw(offsetBytes,text,length); 
 }
 size_t TextDocument::ReplaceText(size_t offsetChars, WCHAR* text, size_t length, size_t eraseLen)
 {
-    return 0;
+    size_t offsetBytes = CharOffsetToByteOffset(offsetChars);
+    return ReplaceTextRaw(offsetBytes,text,length,eraseLen);
 }
 size_t TextDocument::EraseText(size_t offsetChars, size_t length)
 {
-    return 0;
+    size_t offsetBytes = CharOffsetToByteOffset(offsetChars);
+    return EraseTextRaw(offsetBytes,length);
 }
 
-size_t TextDocument::InsertRawText(size_t offsetBytes, WCHAR* text, size_t textLength)
+size_t TextDocument::InsertTextRaw(size_t offsetBytes, WCHAR* text, size_t textLength)
 {
     const size_t LEN = 0x100;
     unsigned char buf[LEN];
@@ -508,13 +511,13 @@ size_t TextDocument::InsertRawText(size_t offsetBytes, WCHAR* text, size_t textL
     return rawLen;
 
 }
-size_t TextDocument::ReplaceRawText(size_t offsetBytes, WCHAR* text, size_t textLength, size_t eraseLen)
+size_t TextDocument::ReplaceTextRaw(size_t offsetBytes, WCHAR* text, size_t textLength, size_t eraseLen)
 {
     const size_t LEN = 0x100;
     unsigned char buf[LEN];
     size_t processedChars = 0, rawLen = 0, offset = offsetBytes + headerSize, bufLen = LEN;
     docBuffer.reserve((docBuffer.size() - eraseLen + textLength * sizeof(WCHAR)) * 1.5);
-    size_t eraseBytes = CharOffsetToByteOffset(offsetBytes, eraseLen);
+    size_t eraseBytes = CharOffsetToByteOffsetAt(offsetBytes, eraseLen);
     auto beginIter = docBuffer.begin() + offsetBytes, endIter = beginIter + eraseBytes;
     docBuffer.erase(beginIter, endIter);
     auto insertIter = docBuffer.begin() + offsetBytes;
@@ -536,15 +539,15 @@ size_t TextDocument::ReplaceRawText(size_t offsetBytes, WCHAR* text, size_t text
     
 
 }
-size_t TextDocument::EraseRawText(size_t offsetBytes, size_t textLength)
+size_t TextDocument::EraseTextRaw(size_t offsetBytes, size_t textLength)
 {
-    size_t eraseBytes = CharOffsetToByteOffset(offsetBytes, textLength);
+    size_t eraseBytes = CharOffsetToByteOffsetAt(offsetBytes, textLength);
     auto beginIter = docBuffer.begin() + offsetBytes, endIter = beginIter + eraseBytes;
     docBuffer.erase(beginIter, endIter);
     return textLength;
 }
 
-size_t TextDocument::CharOffsetToByteOffset(size_t offsetBytes, size_t charCount)
+size_t TextDocument::CharOffsetToByteOffsetAt(size_t offsetBytes, size_t charCount)
 {
     switch (fileFormat)
     {
@@ -570,4 +573,30 @@ size_t TextDocument::CharOffsetToByteOffset(size_t offsetBytes, size_t charCount
     }
     return offsetBytes - start;
 
+}
+
+size_t TextDocument::CharOffsetToByteOffset(size_t offsetChars)
+{
+    switch (fileFormat)
+    {
+    case BCP_ASCII:
+        return offsetChars;
+    case BCP_UTF16:case BCP_UTF16BE:
+        return offsetChars * sizeof(WCHAR);
+
+    default:
+        break;
+    }
+    // case UTF-8 ....
+    size_t lineOffChars;
+    size_t lineOffBytes;
+    if (LineInfoFromOffset(offsetChars, 0, &lineOffChars, 0, &lineOffBytes, 0))
+    {
+        return CharOffsetToByteOffsetAt(lineOffBytes, offsetChars - lineOffChars)
+            + lineOffBytes;
+    }
+    else
+    {
+        return 0;
+    }
 }
