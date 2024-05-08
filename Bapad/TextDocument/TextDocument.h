@@ -34,6 +34,10 @@ public:
     TextIterator    IterateLineByLineNumber(size_t lineno, size_t* linestart = 0, size_t* linelen = 0);
     TextIterator    IterateLineByOffset(size_t offset_chars, size_t* lineno, size_t* linestart = 0);
 
+    ULONG	InsertText(ULONG offsetChars, WCHAR* text, ULONG length);
+    ULONG	ReplaceText(ULONG offsetChars, WCHAR* text, ULONG length, ULONG eraseLen);
+    ULONG	EraseText(ULONG offsetChars, ULONG length);
+
     const uint32_t  GetFileFormat() const;
     const size_t    GetLineCount() const;
     const size_t    GetLongestLine(int tabwidth) const;
@@ -48,7 +52,12 @@ private:
     //
     size_t  GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t& bufLen);
 
-    size_t  rawdata_to_utf16(BYTE* rawdata, size_t rawlen, WCHAR* utf16str, size_t& utf16len);
+    size_t  RawDataToUtf16(BYTE* rawdata, size_t rawlen, WCHAR* utf16str, size_t& utf16len);
+
+    ULONG	InsertRawText(ULONG offset_bytes, TCHAR* text, ULONG length);
+    ULONG	ReplaceRawText(ULONG offset_bytes, TCHAR* text, ULONG length, ULONG erase_len);
+    ULONG	EraseRawText(ULONG offset_bytes, ULONG length);
+
 
     char*   docBuffer;// raw txt data TODO:should change to unsigned char? 
     size_t  docLengthByChars;//
@@ -60,7 +69,7 @@ private:
     size_t* byteOffsetLineBuffer;
     size_t* charOffsetLineBuffer;
 
-    size_t  LineCount;
+    size_t  lineCount;
 
 
 

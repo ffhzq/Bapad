@@ -80,6 +80,9 @@
     <ClCompile Include="TextViewScoll.cpp">
       <Filter>TextView\Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TextViewInput.cpp">
+      <Filter>TextView\Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Bapad.rc">

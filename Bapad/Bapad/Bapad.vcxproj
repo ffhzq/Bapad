@@ -158,6 +158,7 @@
     <ClCompile Include="TextViewCtrChars.cpp" />
     <ClCompile Include="TextViewFile.cpp" />
     <ClCompile Include="TextViewFont.cpp" />
+    <ClCompile Include="TextViewInput.cpp" />
     <ClCompile Include="TextViewMouse.cpp" />
     <ClCompile Include="TextViewPaint.cpp" />
     <ClCompile Include="TextViewScoll.cpp" />

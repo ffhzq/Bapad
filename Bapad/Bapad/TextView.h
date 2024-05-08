@@ -129,4 +129,8 @@ private:
 	//LONG SetLongLine(int nLength);
 	COLORREF SetColour(UINT idx, COLORREF rgbColour);
 
+	//input
+	LONG OnChar(UINT nChar, UINT nFlags);
+	ULONG EnterText(WCHAR * inputText, ULONG inputTextLength);
+
 };

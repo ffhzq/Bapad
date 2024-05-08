@@ -23,7 +23,7 @@ TextDocument::TextDocument()
 {
     docLengthByBytes = 0;
     docLengthByChars = 0;
-    LineCount = 0;
+    lineCount = 0;
 
     fileFormat = BCP_ASCII;
     headerSize = 0;
@@ -90,7 +90,7 @@ bool TextDocument::InitLineBuffer()
     if (charOffsetLineBuffer == nullptr)
         return false;
 
-    LineCount = 0;
+    lineCount = 0;
 
     size_t offsetBytes = 0, offsetChars = 0;
     size_t lineStartBytes = 0, lineStartChars = 0;
@@ -104,13 +104,13 @@ bool TextDocument::InitLineBuffer()
         //TODO:判断语句的变量类型不同,需要验证
         if (ch32 == '\r')
         {
-            if (LineCount >= bufLen)
+            if (lineCount >= bufLen)
             {
                 return false;
             }
             //记录行起始位置
-            byteOffsetLineBuffer[LineCount] = lineStartBytes;
-            charOffsetLineBuffer[LineCount] = lineStartChars;
+            byteOffsetLineBuffer[lineCount] = lineStartBytes;
+            charOffsetLineBuffer[lineCount] = lineStartChars;
             lineStartBytes = offsetBytes;
             lineStartChars = offsetChars;
 
@@ -126,39 +126,39 @@ bool TextDocument::InitLineBuffer()
                 lineStartChars = offsetChars;
             }
 
-            LineCount++;
+            lineCount++;
         }
         else if (ch32 == '\n')// || ch32 == '\x0b' || ch32 == '\x0c' || ch32 == 0x0085 || ch32 == 0x2029 || ch32 == 0x2028)
         {
-            if (LineCount >= bufLen)
+            if (lineCount >= bufLen)
             {
                 return false;
             }
             //记录行起始位置
-            byteOffsetLineBuffer[LineCount] = lineStartBytes;
-            charOffsetLineBuffer[LineCount] = lineStartChars;
+            byteOffsetLineBuffer[lineCount] = lineStartBytes;
+            charOffsetLineBuffer[lineCount] = lineStartChars;
             lineStartBytes = offsetBytes;
             lineStartChars = offsetChars;
-            LineCount++;
+            lineCount++;
         }
     }
-    if (LineCount >= bufLen)
+    if (lineCount >= bufLen)
     {
         return false;
     }
     if (bufLen > 0)
     {
-        byteOffsetLineBuffer[LineCount] = lineStartBytes;
-        charOffsetLineBuffer[LineCount] = lineStartChars;
-        LineCount++;
+        byteOffsetLineBuffer[lineCount] = lineStartBytes;
+        charOffsetLineBuffer[lineCount] = lineStartChars;
+        lineCount++;
     }
     //SIZE_MAX
-    if (LineCount >= bufLen)
+    if (lineCount >= bufLen)
     {
         return false;
     }
-    byteOffsetLineBuffer[LineCount] = bufLen;
-    charOffsetLineBuffer[LineCount] = offsetChars;
+    byteOffsetLineBuffer[lineCount] = bufLen;
+    charOffsetLineBuffer[lineCount] = offsetChars;
 
     
     return true;
@@ -262,7 +262,7 @@ const uint32_t TextDocument::GetFileFormat() const
 
 const size_t TextDocument::GetLineCount() const
 {
-    return LineCount;
+    return lineCount;
 }
 
 const size_t TextDocument::GetLongestLine(int tabwidth = 4) const
@@ -324,7 +324,7 @@ bool TextDocument::Clear()
         delete[] charOffsetLineBuffer;
         charOffsetLineBuffer = nullptr;
     }
-    LineCount = 0;
+    lineCount = 0;
     return true;
 }
 
@@ -339,10 +339,10 @@ size_t TextDocument::LineNumFromOffset(size_t offset)
 bool TextDocument::LineInfoFromOffset(size_t offset_chars, size_t * lineNo, size_t * lineoffChars, size_t * linelenChars, size_t * lineoffBytes, size_t * linelenBytes)
 {
     size_t low = 0;
-    size_t high = LineCount - 1;
+    size_t high = lineCount - 1;
     size_t line = 0;
 
-    if (LineCount == 0)
+    if (lineCount == 0)
     {
         if (lineNo != nullptr)          *lineNo = 0;
         if (lineoffChars != nullptr)    *lineoffChars = 0;
@@ -382,7 +382,7 @@ bool TextDocument::LineInfoFromOffset(size_t offset_chars, size_t * lineNo, size
 
 bool TextDocument::LineInfoFromLineNumber(size_t lineno, size_t * lineoffChars, size_t * linelenChars, size_t * lineoffBytes, size_t * linelenBytes)
 {
-    if (lineno < LineCount)
+    if (lineno < lineCount)
     {
         if (linelenChars != nullptr) *linelenChars = charOffsetLineBuffer[lineno + 1] - charOffsetLineBuffer[lineno];
         if (lineoffChars != nullptr) *lineoffChars = charOffsetLineBuffer[lineno];
@@ -421,7 +421,7 @@ TextIterator TextDocument::IterateLineByOffset(size_t offset_chars, size_t * lin
 }
 
 
-size_t TextDocument::rawdata_to_utf16(BYTE* rawdata, size_t rawlen, WCHAR* utf16str, size_t& utf16len)
+size_t TextDocument::RawDataToUtf16(BYTE* rawdata, size_t rawlen, WCHAR* utf16str, size_t& utf16len)
 {
     switch (fileFormat)
     {
