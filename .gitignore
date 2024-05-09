@@ -33,3 +33,5 @@
 *.VC.db-*
 *.VC.opendb
 *.VC.VC.opendb
+
+packages/
