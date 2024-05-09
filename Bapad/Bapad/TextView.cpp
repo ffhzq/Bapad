@@ -171,6 +171,9 @@ LONG WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
     case TXM_CLEAR:
         return ClearFile();
 
+    case WM_CHAR:
+        OnChar(wParam, lParam);
+
     case TXM_SETLINESPACING:
         return SetLineSpacing(wParam, lParam);
 

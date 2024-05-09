@@ -81,10 +81,13 @@ private:
 	ULONG64		windowColumns;
 
 	// Display related data
-	int		tabWidthChars;
+	int tabWidthChars;
 	size_t	selectionStart;
 	size_t	selectionEnd;
 	size_t	cursorOffset;
+	size_t caretPosX;
+	size_t anchorPosX;
+	size_t currentLine;
 
 	COLORREF rgbColourList[TXC_MAX_COLOURS];
 
@@ -132,5 +135,6 @@ private:
 	//input
 	LONG OnChar(UINT nChar, UINT nFlags);
 	ULONG EnterText(WCHAR * inputText, ULONG inputTextLength);
-
+	ULONG NotifyParent(UINT nNotifyCode, NMHDR* optional = 0);
+	void Smeg(BOOL fAdvancing);
 };

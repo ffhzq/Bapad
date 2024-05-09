@@ -22,29 +22,30 @@ public:
     //TextDocument& operator=(TextDocument& a) = delete;
 
 
-    bool    Initialize(wchar_t* filename);
-    bool    Initialize(HANDLE hFile);
-    bool    Clear();
+    bool Initialize(wchar_t* filename);
+    bool Initialize(HANDLE hFile);
+    bool Clear();
+    bool ReCalculateLineBuffer();
+    size_t LineNumFromOffset(size_t offset);
 
-    size_t  LineNumFromOffset(size_t offset);
+    bool LineInfoFromOffset(size_t offset_chars, size_t* lineNo, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);//定位对应offset所在的行并返回行号、字符偏移量、行字符数、字节偏移量、行字节数这些信息
+    bool LineInfoFromLineNumber(size_t lineno, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);
 
-    bool    LineInfoFromOffset(size_t offset_chars, size_t* lineNo, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);//定位对应offset所在的行并返回行号、字符偏移量、行字符数、字节偏移量、行字节数这些信息
-    bool    LineInfoFromLineNumber(size_t lineno, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);
-
-    TextIterator    IterateLineByLineNumber(size_t lineno, size_t* linestart = 0, size_t* linelen = 0);
-    TextIterator    IterateLineByOffset(size_t offset_chars, size_t* lineno, size_t* linestart = 0);
+    TextIterator IterateLineByLineNumber(size_t lineno, size_t* linestart = 0, size_t* linelen = 0);
+    TextIterator IterateLineByOffset(size_t offset_chars, size_t* lineno, size_t* linestart = 0);
 
     size_t	InsertText(size_t offsetChars, WCHAR* text, size_t length);
     size_t	ReplaceText(size_t offsetChars, WCHAR* text, size_t length, size_t eraseLen);
     size_t	EraseText(size_t offsetChars, size_t length);
 
-    const uint32_t  GetFileFormat() const;
-    const size_t    GetLineCount() const;
-    const size_t    GetLongestLine(int tabwidth) const;
-    const size_t    GetDocLength() const;
+    const uint32_t GetFileFormat() const;
+    const size_t GetLineCount() const;
+    const size_t GetLongestLine(int tabwidth) const;
+    const size_t GetDocLength() const;
 
 private:
     bool InitLineBuffer();
+    bool ReleaseLineBuffer();
     int DetectFileFormat();
     size_t GetUTF32Char(size_t offset, size_t lenBytes, char32_t& pch32);
 

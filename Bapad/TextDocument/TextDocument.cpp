@@ -367,16 +367,7 @@ bool TextDocument::Clear()
         docBuffer.resize(0);
         docBuffer.shrink_to_fit();
     }
-    if (byteOffsetLineBuffer != nullptr)
-    {
-        delete[] byteOffsetLineBuffer;
-        byteOffsetLineBuffer = nullptr;
-    }
-    if (charOffsetLineBuffer != nullptr)
-    {
-        delete[] charOffsetLineBuffer;
-        charOffsetLineBuffer = nullptr;
-    }
+    ReleaseLineBuffer();
     lineCount = 0;
     return true;
 }
@@ -496,7 +487,7 @@ size_t TextDocument::InsertTextRaw(size_t offsetBytes, WCHAR* text, size_t textL
     unsigned char buf[LEN];
     size_t processedChars=0, rawLen=0, offset=offsetBytes+headerSize, bufLen = LEN;
     docBuffer.reserve((docBuffer.size() + textLength * sizeof(WCHAR)) * 1.5);
-    while (offsetBytes)
+    while (textLength)
     {
         rawLen = bufLen;
         processedChars = UTF16ToRawData(text, textLength, buf, bufLen);
@@ -523,7 +514,7 @@ size_t TextDocument::ReplaceTextRaw(size_t offsetBytes, WCHAR* text, size_t text
     auto beginIter = docBuffer.begin() + offsetBytes, endIter = beginIter + eraseBytes;
     docBuffer.erase(beginIter, endIter);
     auto insertIter = docBuffer.begin() + offsetBytes;
-    while (offsetBytes)
+    while (textLength)
     {
         rawLen = bufLen;
         processedChars = UTF16ToRawData(text, textLength, buf, bufLen);
@@ -601,4 +592,25 @@ size_t TextDocument::CharOffsetToByteOffset(size_t offsetChars)
     {
         return 0;
     }
+}
+
+bool TextDocument::ReCalculateLineBuffer()
+{
+    ReleaseLineBuffer();
+    InitLineBuffer();
+    return true;
+}
+bool TextDocument::ReleaseLineBuffer()
+{
+    if (byteOffsetLineBuffer != nullptr)
+    {
+        delete[] byteOffsetLineBuffer;
+        byteOffsetLineBuffer = nullptr;
+    }
+    if (charOffsetLineBuffer != nullptr)
+    {
+        delete[] charOffsetLineBuffer;
+        charOffsetLineBuffer = nullptr;
+    }
+    return true;
 }

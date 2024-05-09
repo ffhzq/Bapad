@@ -205,7 +205,8 @@ UINT CommandHandler(HWND hWnd, UINT nCtrlId, UINT nCtrlCode, HWND hwndFrom)
         ShowAboutDlg(hWnd);
         break;
 
-    default:break;
+    default:
+        break;
     }
     return 0;
 }
@@ -273,7 +274,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         HandleDropFiles(hWnd, (HDROP)wParam);
         break;
 
-    case WM_COMMAND:return CommandHandler(hWnd, LOWORD(wParam), HIWORD(wParam), (HWND)lParam);        break;
+    case WM_COMMAND:
+        return CommandHandler(hWnd, LOWORD(wParam), HIWORD(wParam), (HWND)lParam);
+        break;
 
 
     case WM_DESTROY:
