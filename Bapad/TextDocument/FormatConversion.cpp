@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "FormatConversion.h"
+#include "MyException.h"
+#include <stdexcept>
 
 size_t UTF8ToUTF32(UTF8* utf8Str, size_t utf8Len, UTF32* pch32)
 {
@@ -52,7 +54,7 @@ size_t UTF8ToUTF32(UTF8* utf8Str, size_t utf8Len, UTF32* pch32)
 	// ILLEGAL continuation (trailing) byte by itself
 	else if ((ch & 0xC0) == 0x80)
 	{
-		*pch32 = UNI_REPLACEMENT_CHAR;// todo:修改成其他值比如-1？
+		*pch32 = UNI_REPLACEMENT_CHAR;
 		return 1;
 	}
 	// any other ILLEGAL form.
@@ -90,7 +92,7 @@ size_t UTF8ToUTF32(UTF8* utf8Str, size_t utf8Len, UTF32* pch32)
 
 	return len;
 }
-size_t  UTF32ToUTF8(UTF32 ch32, UTF8* utf8Str, size_t &utf8Len)
+size_t UTF32ToUTF8(UTF32 ch32, UTF8* utf8Str, size_t &utf8Len)
 {
 	size_t len = 0;
 
@@ -148,6 +150,11 @@ size_t  UTF32ToUTF8(UTF32 ch32, UTF8* utf8Str, size_t &utf8Len)
 size_t AsciiToUTF16(UTF8* asciiStr, size_t asciiLen, UTF16* utf16Str, size_t& utf16Len)
 {
 	size_t len = min(utf16Len, asciiLen);
+	if (len > static_cast<size_t>((std::numeric_limits<int>::max)()))
+	{
+		throw std::overflow_error(
+			"Input ascii string too long, size_t doesn't fit into int.");
+	}
 	int lenInt = static_cast<int>(len);
 	MultiByteToWideChar(CP_ACP, 0, (CCHAR*)asciiStr, lenInt, (WCHAR *)utf16Str, lenInt);
 	utf16Len = len;
@@ -245,7 +252,7 @@ size_t UTF16ToUTF32(UTF16* utf16Str, size_t utf16Len, UTF32* utf32Str, size_t& u
 	return utf16Str - utf16start;
 }
 
-size_t    UTF32ToUTF16(UTF32* utf32Str, size_t utf32Len, UTF16* utf16Str, size_t &utf16Len)
+size_t UTF32ToUTF16(UTF32* utf32Str, size_t utf32Len, UTF16* utf16Str, size_t &utf16Len)
 {
 	UTF16* utf16start = utf16Str;
 	UTF32* utf32start = utf32Str;
@@ -345,7 +352,7 @@ size_t UTF16BEToUTF32(UTF16* utf16Str, size_t utf16Len, UTF32* utf32Str, size_t&
 	return utf16Str - utf16start;
 }
 
-size_t	UTF16ToUTF8(UTF16* utf16Str, size_t utf16Len, UTF8* utf8Str, size_t& utf8Len)
+size_t UTF16ToUTF8(UTF16* utf16Str, size_t utf16Len, UTF8* utf8Str, size_t& utf8Len)
 {
 	UTF16* utf16start = utf16Str;
 	UTF8* utf8start = utf8Str;
@@ -373,11 +380,24 @@ size_t	UTF16ToUTF8(UTF16* utf16Str, size_t utf16Len, UTF8* utf8Str, size_t& utf8
 
 
 
-size_t    UTF16ToAscii(UTF16* utf16Str, size_t utf16Len, UTF8* asciiStr, size_t& asciiLen) {
+size_t UTF16ToAscii(UTF16* utf16Str, size_t utf16Len, UTF8* asciiStr, size_t& asciiLen) {
 
 	size_t len = min(utf16Len, asciiLen);
+	if (len > static_cast<size_t>((std::numeric_limits<int>::max)()))
+	{
+		throw std::overflow_error(
+			"Input UTF16 string too long, size_t doesn't fit into int.");
+	}
+	int lenInt = static_cast<int>(len);
 
-	WideCharToMultiByte(CP_ACP, 0, (LPCWCH)utf16Str, len, (LPSTR)asciiStr, asciiLen, 0, 0);
-	asciiLen = len;
-	return len;
+	if (asciiLen > static_cast<size_t>((std::numeric_limits<int>::max)()))
+	{
+		throw std::overflow_error(
+			"Input UTF16 string too long, size_t doesn't fit into int.");
+	}
+	int receiveLenInt = static_cast<int>(asciiLen);
+
+	WideCharToMultiByte(CP_ACP, 0, (LPCWCH)utf16Str, lenInt, (LPSTR)asciiStr, receiveLenInt, 0, 0);
+	asciiLen = lenInt;
+	return lenInt;
 }

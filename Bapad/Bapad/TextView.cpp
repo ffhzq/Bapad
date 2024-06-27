@@ -174,8 +174,7 @@ LONG WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_CHAR:
         OnChar(wParam, lParam);
 
-    case TXM_SETLINESPACING:
-        return SetLineSpacing(wParam, lParam);
+    //case TXM_SETLINESPACING:return SetLineSpacing(wParam, lParam);
 
     case TXM_ADDFONT:
         return AddFont((HFONT)wParam);

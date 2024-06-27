@@ -43,7 +43,7 @@ bool TextDocument::Initialize(wchar_t* filename)//跨平台要改
     return Initialize(hFile);
 }
 
-bool TextDocument::Initialize(HANDLE hFile)//跨平台要改?
+bool TextDocument::Initialize(HANDLE hFile)
 {
     //PLARGE_INTEGER Represents a 64-bit signed integer value
     LARGE_INTEGER TmpDocumentLength = { 0 };
@@ -63,8 +63,12 @@ bool TextDocument::Initialize(HANDLE hFile)//跨平台要改?
     docBuffer = std::move(std::vector<unsigned char>(bufferSize, 0));
     ULONG numOfBytesRead = 0;
     // read entire file into memory
-    ReadFile(hFile, &docBuffer[0], static_cast<DWORD>(docLengthByBytes), &numOfBytesRead, NULL);
+    BOOL READ_RETVAL = ReadFile(hFile, &docBuffer[0], static_cast<DWORD>(docLengthByBytes), &numOfBytesRead, NULL);
 
+    if (READ_RETVAL == FALSE)
+    {
+        abort();
+    }
 
     fileFormat = DetectFileFormat();
 
@@ -486,7 +490,8 @@ size_t TextDocument::InsertTextRaw(size_t offsetBytes, WCHAR* text, size_t textL
     const size_t LEN = 0x100;
     unsigned char buf[LEN];
     size_t processedChars=0, rawLen=0, offset=offsetBytes+headerSize, bufLen = LEN;
-    docBuffer.reserve((docBuffer.size() + textLength * sizeof(WCHAR)) * 1.5);
+    size_t newLen = static_cast<size_t>((docBuffer.size() + textLength * sizeof(WCHAR)) * 1.5);
+    docBuffer.reserve(newLen);
     while (textLength)
     {
         rawLen = bufLen;
@@ -509,7 +514,8 @@ size_t TextDocument::ReplaceTextRaw(size_t offsetBytes, WCHAR* text, size_t text
     const size_t LEN = 0x100;
     unsigned char buf[LEN];
     size_t processedChars = 0, rawLen = 0, offset = offsetBytes + headerSize, bufLen = LEN;
-    docBuffer.reserve((docBuffer.size() - eraseLen + textLength * sizeof(WCHAR)) * 1.5);
+    size_t newLen = static_cast<size_t>((docBuffer.size() - eraseLen + textLength * sizeof(WCHAR)) * 1.5);
+    docBuffer.reserve(newLen);
     size_t eraseBytes = CharOffsetToByteOffsetAt(offsetBytes, eraseLen);
     auto beginIter = docBuffer.begin() + offsetBytes, endIter = beginIter + eraseBytes;
     docBuffer.erase(beginIter, endIter);
