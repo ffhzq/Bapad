@@ -58,7 +58,8 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 
 
 	RECT client = {0};
-	GetClientRect(hWnd, &client);
+	RECT  rect = {};
+	
 
 	// nothing to do?
 	if (start == finish)
@@ -87,13 +88,24 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 	if (!itor || start >= finish)
 		return 0;
 
+	ypos = (lineNo - vScrollPos) * lineHeight;
+	GetClientRect(hWnd, &client);
 
+	while (itor && offChars < finish)
+	{
+		SetRect(&client, 0, ypos, client.right, ypos + lineHeight);
+		rect.left -= hScrollPos * fontWidth;
+		InvalidateRect(hWnd, &rect, FALSE);
+		itor = pTextDoc->IterateLineByLineNumber(++lineNo, &offChars, &lenChars);
+		ypos += lineHeight;
+	}
+
+
+
+	
+	/*	
 	HDC hdc = GetDC(hWnd);
 	SelectObject(hdc, fontAttr[0].hFont);
-
-
-	ypos = (lineNo - vScrollPos) * lineHeight;
-
 	// selection starts midline...
 	if (offChars < start)
 	{
@@ -166,7 +178,7 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 	InvalidateRect(hWnd, &rect, FALSE);
 
 	ReleaseDC(hWnd, hdc);
-
+	*/
 	return 0;
 }
 

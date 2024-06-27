@@ -119,6 +119,7 @@ public:
     {
         if (textDoc)
         {
+            memset(buf, 0, bufLen * sizeof(wchar_t));
             // get text from the TextDocument at the specified byte-offset
             size_t len = textDoc->GetText(offsetBytes, lengthBytes, buf, bufLen);
 

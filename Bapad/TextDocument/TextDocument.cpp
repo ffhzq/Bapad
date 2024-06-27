@@ -84,7 +84,6 @@ bool TextDocument::Initialize(HANDLE hFile)
 bool TextDocument::InitLineBuffer()
 {
     const size_t bufLen = docLengthByBytes - headerSize;
-    //NEED TO BE UPDATED ÓÃstd::vector Âð£¿
     byteOffsetLineBuffer = new size_t[bufLen+1];
     if (byteOffsetLineBuffer == nullptr)
         return false;
@@ -154,8 +153,8 @@ bool TextDocument::InitLineBuffer()
         charOffsetLineBuffer[lineCount] = lineStartChars;
         lineCount++;
     }
-    //SIZE_MAX
-    if (lineCount >= bufLen)
+
+    if (lineCount > bufLen)
     {
         return false;
     }
@@ -222,7 +221,7 @@ size_t TextDocument::GetUTF32Char(size_t offset, size_t lenBytes, char32_t & pch
 }
 
 size_t TextDocument::GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t & bufLen)
-{
+   {
     Byte* rawData = reinterpret_cast<Byte*>(&docBuffer[0] + offset + headerSize);
     //size_t  len;
 
@@ -459,8 +458,8 @@ TextIterator TextDocument::IterateLineByLineNumber(size_t lineno, size_t * lines
 
 TextIterator TextDocument::IterateLineByOffset(size_t offset_chars, size_t * lineno, size_t * linestart)
 {
-    size_t offset_bytes;
-    size_t length_bytes;
+    size_t offset_bytes=0;
+    size_t length_bytes=0;
 
     if (!LineInfoFromOffset(offset_chars, lineno, linestart, nullptr, &offset_bytes, &length_bytes))
         return TextIterator();

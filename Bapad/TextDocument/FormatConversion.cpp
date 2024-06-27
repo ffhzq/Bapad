@@ -90,6 +90,11 @@ size_t UTF8ToUTF32(UTF8* utf8Str, size_t utf8Len, UTF32* pch32)
 	else
 		*pch32 = val32;
 
+	if (utf8Len!=0&&len == 0)
+	{
+		throw MyException("Invalid UTF-8 sequence", -1, MyException::ConversionType::FromUtf8ToUtf32);
+	}
+
 	return len;
 }
 size_t UTF32ToUTF8(UTF32 ch32, UTF8* utf8Str, size_t &utf8Len)
@@ -141,7 +146,9 @@ size_t UTF32ToUTF8(UTF32 ch32, UTF8* utf8Str, size_t &utf8Len)
 	}
 
 	// 5/6 byte sequences never occur because we limit using UNI_MAX_LEGAL_UTF32
-
+	if (len == 0) {
+		throw MyException("Invalid UTF-32 character", -1, MyException::ConversionType::FromUtf32ToUtf8);
+	}
 	return len;
 }
 
@@ -156,8 +163,12 @@ size_t AsciiToUTF16(UTF8* asciiStr, size_t asciiLen, UTF16* utf16Str, size_t& ut
 			"Input ascii string too long, size_t doesn't fit into int.");
 	}
 	int lenInt = static_cast<int>(len);
-	MultiByteToWideChar(CP_ACP, 0, (CCHAR*)asciiStr, lenInt, (WCHAR *)utf16Str, lenInt);
+	int retVal=MultiByteToWideChar(CP_ACP, 0, (CCHAR*)asciiStr, lenInt, (WCHAR *)utf16Str, lenInt);
 	utf16Len = len;
+	if (retVal == 0)
+	{
+		        throw MyException("Invalid ASCII character", GetLastError(), MyException::ConversionType::FromAsciiToUtf16);
+	}
 	return len;
 }
 
@@ -185,6 +196,12 @@ size_t UTF8ToUTF16(UTF8* utf8Str, size_t utf8Len, UTF16* utf16Str, size_t& utf16
 	}
 
 	utf16Len = utf16Str - utf16start;
+	if (utf8Str - utf8start!=0&&utf16Len == 0)
+	{
+		        throw MyException("Invalid UTF-8 character", -1, MyException::ConversionType::FromUtf8ToUtf16);
+    
+	}
+
 	return utf8Str - utf8start;
 }
 
@@ -197,6 +214,10 @@ size_t CopyUTF16(UTF16* src, size_t srcLen, UTF16* dest, size_t & destLen)
 	memcpy(dest, src, len * sizeof(UTF16));
 
 	destLen = len;
+	if (srcLen != 0 && len == 0)
+	{
+		throw MyException("Invalid UTF-16 character", -1, MyException::ConversionType::CopyUtf16);
+	}
 	return len;
 }
 
@@ -208,6 +229,10 @@ size_t SwapUTF16(UTF16* src, size_t srcLen, UTF16* dest, size_t & destLen)
 		dest[i] = SwapWord(src[i]);
 
 	destLen = len;
+	if (srcLen!=0 && len == 0)
+	{
+		throw MyException("Invalid UTF-16 character", -1, MyException::ConversionType::SwapUtf16);
+	}
 	return len;
 }
 
@@ -247,8 +272,13 @@ size_t UTF16ToUTF32(UTF16* utf16Str, size_t utf16Len, UTF32* utf32Str, size_t& u
 		utf16Str++;
 		utf16Len--;
 	}
-
+	
 	utf32Len = utf32Str - utf32start;
+	if (utf16Len!=0 && utf32Len == 0)
+	{
+		        throw MyException("Invalid UTF-16 character", -1, MyException::ConversionType::FromUtf16ToUtf32);
+    
+	}
 	return utf16Str - utf16start;
 }
 
@@ -308,6 +338,12 @@ size_t UTF32ToUTF16(UTF32* utf32Str, size_t utf32Len, UTF16* utf16Str, size_t &u
 	}
 
 	utf16Len = utf16Str - utf16start;
+	if (utf32Str - utf32start !=0&&utf16Len == 0)
+	{
+		                throw MyException("Invalid UTF-32 character", -1, MyException::ConversionType::FromUtf32ToUtf16);
+    
+    
+	}
 	return utf32Str - utf32start;
 }
 
@@ -349,6 +385,12 @@ size_t UTF16BEToUTF32(UTF16* utf16Str, size_t utf16Len, UTF32* utf32Str, size_t&
 	}
 
 	utf32Len = utf32Str - utf32start;
+	if (utf16Str - utf16start!=0&&utf32Len == 0)
+	{
+		                throw MyException("Invalid UTF-16 character", -1, MyException::ConversionType::FromUtf16BEToUtf32);
+    
+    
+	}
 	return utf16Str - utf16start;
 }
 
@@ -375,6 +417,11 @@ size_t UTF16ToUTF8(UTF16* utf16Str, size_t utf16Len, UTF8* utf8Str, size_t& utf8
 	}
 
 	utf8Len = utf8Str - utf8start;
+	if (utf16Str - utf16start!=0&&utf8Len == 0)
+	{
+		        throw MyException("Invalid UTF-16 character", -1, MyException::ConversionType::FromUtf16ToUtf8);
+    
+	}
 	return utf16Str - utf16start;
 }
 
@@ -397,7 +444,11 @@ size_t UTF16ToAscii(UTF16* utf16Str, size_t utf16Len, UTF8* asciiStr, size_t& as
 	}
 	int receiveLenInt = static_cast<int>(asciiLen);
 
-	WideCharToMultiByte(CP_ACP, 0, (LPCWCH)utf16Str, lenInt, (LPSTR)asciiStr, receiveLenInt, 0, 0);
+	int retVal=WideCharToMultiByte(CP_ACP, 0, (LPCWCH)utf16Str, lenInt, (LPSTR)asciiStr, receiveLenInt, 0, 0);
 	asciiLen = lenInt;
+	if (retVal == 0)
+	{
+		throw MyException("Invalid UTF-16 character", GetLastError(), MyException::ConversionType::FromUtf16ToAscii);
+	}
 	return lenInt;
 }
