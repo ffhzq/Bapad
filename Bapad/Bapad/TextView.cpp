@@ -225,3 +225,39 @@ BOOL RegisterTextView()
 
     return RegisterClassExW(&wcex)? TRUE: FALSE;
 }
+
+VOID TextView::UpdateCaretXY(int xpos, ULONG lineno)
+{
+    bool visible = false;
+
+    // convert x-coord to window-relative
+    xpos -= hScrollPos * fontWidth;
+    
+
+    // only show caret if it is visible within viewport
+    if (lineno >= vScrollPos && lineno <= vScrollPos + windowLines)
+    {
+        if (xpos >= 0)
+            visible = true;
+    }
+
+    // hide caret if it was previously visible
+    if (visible == false && hideCaret == false)
+    {
+        hideCaret = true;
+        HideCaret(hWnd);
+    }
+    // show caret if it was previously hidden
+    else if (visible == true && hideCaret == true)
+    {
+        hideCaret = false;
+        ShowCaret(hWnd);
+    }
+
+    // set caret position if within window viewport
+    if (hideCaret == false)
+    {
+        SetCaretPos(xpos, (lineno - vScrollPos) * lineHeight);
+    }
+
+}

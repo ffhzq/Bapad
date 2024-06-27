@@ -67,5 +67,39 @@ void TextView::Smeg(BOOL fAdvancing)
 
 	anchorPosX = caretPosX;
 	//ScrollToPosition(caretPosX, currentLine);
-	RepositionCaret();
+	//RepositionCaret();
 }
+
+/*
+VOID TextView::UpdateCaretOffset(ULONG offset, BOOL fTrailing, int* outx = 0, ULONG* outlineno = 0)
+{
+	size_t lineno = 0;
+	int xpos = 0;
+	size_t off_chars;
+	USPDATA* uspData;
+
+	// get line information from cursor-offset
+	if (pTextDoc->LineInfoFromOffset(offset, &lineno, &off_chars, 0, 0, 0))
+	{
+		// locate the USPDATA for this line
+		if ((uspData = GetUspData(NULL, lineno)) != 0)
+		{
+			// convert character-offset to x-coordinate
+			off_chars = cursorOffset - off_chars;
+
+			if (fTrailing && off_chars > 0)
+				ScriptCPtoX(off_chars - 1, TRUE, off_chars, uspData, &xpos);
+			//UspOffsetToX(uspData, off_chars - 1, TRUE, &xpos);
+			else
+				ScriptCPtoX(off_chars, FALSE, off_chars, uspData, &xpos);
+			//UspOffsetToX(uspData, off_chars, FALSE, &xpos);
+
+		// update caret position
+			UpdateCaretXY(xpos, lineno);
+		}
+	}
+
+	if (outx)	  *outx = xpos;
+	if (outlineno) *outlineno = lineno;
+}
+*/
