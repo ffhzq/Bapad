@@ -165,7 +165,7 @@ size_t AsciiToUTF16(UTF8* asciiStr, size_t asciiLen, UTF16* utf16Str, size_t& ut
 	int lenInt = static_cast<int>(len);
 	int retVal=MultiByteToWideChar(CP_ACP, 0, (CCHAR*)asciiStr, lenInt, (WCHAR *)utf16Str, lenInt);
 	utf16Len = len;
-	if (retVal == 0)
+	if (lenInt!=0 && retVal == 0)
 	{
 		        throw MyException("Invalid ASCII character", GetLastError(), MyException::ConversionType::FromAsciiToUtf16);
 	}
