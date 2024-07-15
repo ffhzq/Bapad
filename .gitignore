@@ -34,4 +34,5 @@
 *.VC.opendb
 *.VC.VC.opendb
 
+#Google Test dependencies
 packages/
