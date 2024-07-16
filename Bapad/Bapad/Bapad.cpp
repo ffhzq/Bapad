@@ -4,13 +4,11 @@
 #include "framework.h"
 #include "Bapad.h"
 
-HWND		g_hwndMain;
-HWND		g_hwndTextView;
-HFONT		g_hFont;
+HWND g_hwndMain;
+HWND g_hwndTextView;
+HFONT g_hFont;
 
-void ShowProperties(HWND hwndParent);
-void LoadRegSettings();
-void SaveRegSettings();
+
 
 HINSTANCE hInst;// current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
