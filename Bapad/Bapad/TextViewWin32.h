@@ -30,6 +30,20 @@ COLORREF RealizeColour(COLORREF col);
 //
 #define TEXTVIEW_CLASS L"TextView32"
 
+
+//
+//	TextView Notification Messages defined here - 
+//	sent via the WM_NOTIFY message
+//
+#define TVN_BASE				(WM_USER)
+#define TVN_CURSOR_CHANGE		(TVN_BASE + 0)
+#define TVN_SELECTION_CHANGE	(TVN_BASE + 1)
+#define TVN_EDITMODE_CHANGE		(TVN_BASE + 2)
+#define TVN_CHANGED				(TVN_BASE + 3)
+
+
+
+
 //
 //	TextView colours
 //

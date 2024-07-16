@@ -210,13 +210,7 @@ void TextView::PaintLine(HDC hdc, ULONG64 nLineNo)
 	rect.right = (long)(rect.right);
 	rect.bottom = (long)(rect.top + lineHeight);
 
-	//
-	//	do things like margins, line numbers etc. here
-	//
-
-	//
 	//	check we have data to draw on this line
-	//
 	if (nLineNo >= lineCount)
 	{
 		SetBkColor(hdc, GetColour(TXC_BACKGROUND));
@@ -256,7 +250,7 @@ void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect)
 	//
 
 	size_t	len = 0;
-	while ((len = itor.GetText(buff,TEXTBUFSIZE))  > 0)
+	while ((len = itor.GetText(buff,TEXTBUFSIZE)) > 0)
 	{
 		//
 		//	Apply text attributes - 

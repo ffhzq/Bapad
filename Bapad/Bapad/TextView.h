@@ -2,6 +2,7 @@
 #include "..\TextDocument\TextDocument.h"
 #include "FontStruct.h"
 #include "TextViewWin32.h"
+#include "usp10.h"
 
 //#define LONGEST_LINE 0x100
 
@@ -81,10 +82,13 @@ private:
 	ULONG64		windowColumns;
 
 	// Display related data
-	int		tabWidthChars;
+	int tabWidthChars;
 	size_t	selectionStart;
 	size_t	selectionEnd;
 	size_t	cursorOffset;
+	size_t caretPosX;
+	size_t anchorPosX;
+	size_t currentLine;
 
 	COLORREF rgbColourList[TXC_MAX_COLOURS];
 
@@ -93,10 +97,10 @@ private:
 
 
 	// Runtime related data
-	bool	mouseDown;
-	UINT_PTR	scrollTimer;
-	int		scrollCounter;
-	
+	bool mouseDown;
+	UINT_PTR scrollTimer;
+	int scrollCounter;
+	bool hideCaret;
 	TextDocument* pTextDoc;
 
 
@@ -132,5 +136,8 @@ private:
 	//input
 	LONG OnChar(UINT nChar, UINT nFlags);
 	ULONG EnterText(WCHAR * inputText, ULONG inputTextLength);
-
+	ULONG NotifyParent(UINT nNotifyCode, NMHDR* optional = 0);
+	void Smeg(BOOL fAdvancing);
+	VOID UpdateCaretXY(int xpos, ULONG lineno);
+	VOID UpdateCaretOffset(ULONG offset, BOOL fTrailing, int* outx = 0, ULONG* outlineno = 0);
 };
