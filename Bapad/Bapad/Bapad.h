@@ -1,5 +1,5 @@
-#include "resource.h"
 #include "framework.h"
+#include "resource.h"
 #include "TextView.h"
 
 
@@ -8,28 +8,12 @@
 
 // Global Variables:
 
-
-extern LONG		g_nFontSize;
-extern BOOL		g_fFontBold;
-extern TCHAR	g_szFontName[];
-extern LONG		g_nFontSmoothing;
-
-extern LONG		g_nPaddingAbove;
-extern LONG		g_nPaddingBelow;
-extern LONG		g_fPaddingFlags;
-extern COLORREF g_rgbColourList[];
-extern COLORREF g_rgbCustColours[];
-
-
 #define COURIERNEW	1
 #define LUCIDACONS	2
 
 #define REGLOC _T("SOFTWARE\\ffhzq\\Bapad")
 
 const wchar_t CLASS_NAME[] = L"Bapad";
-
-
-
 extern HWND		g_hwndMain;
 extern HWND		g_hwndTextView;
 extern HFONT	g_hFont;

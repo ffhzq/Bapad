@@ -1,6 +1,6 @@
 #pragma once
-#include <stdint.h>
 #include <stdexcept>
+#include <stdint.h>
 #include <string>
 class MyException : public std::runtime_error {
 public:

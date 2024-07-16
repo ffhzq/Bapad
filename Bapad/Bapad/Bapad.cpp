@@ -1,8 +1,8 @@
 // Bapad.cpp : Defines the entry point for the application.
 //
 
-#include "framework.h"
 #include "Bapad.h"
+#include "framework.h"
 
 HWND g_hwndMain;
 HWND g_hwndTextView;
@@ -192,9 +192,9 @@ UINT CommandHandler(HWND hWnd, UINT nCtrlId, UINT nCtrlCode, HWND hwndFrom)
             DoOpenFile(hWnd, szFileName, szFileTitle);
         }
         break;
-    //case IDM_VIEW_FONT:
-        //ShowProperties(hWnd);
-        //break;
+        //case IDM_VIEW_FONT:
+            //ShowProperties(hWnd);
+            //break;
     case IDM_FILE_EXIT:
         DestroyWindow(hWnd);
         break;
@@ -223,7 +223,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_BAPAD, szWindowClass, MAX_LOADSTRING);
-    
+
     RegisterMainWindow();
     RegisterTextView();
 

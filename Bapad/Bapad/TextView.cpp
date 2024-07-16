@@ -121,7 +121,7 @@ LRESULT CALLBACK TextViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
     return 0;
 }
 
-LONG WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
+LRESULT WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch (msg)
     {
@@ -174,7 +174,7 @@ LONG WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_CHAR:
         OnChar(wParam, lParam);
 
-    //case TXM_SETLINESPACING:return SetLineSpacing(wParam, lParam);
+        //case TXM_SETLINESPACING:return SetLineSpacing(wParam, lParam);
 
     case TXM_ADDFONT:
         return AddFont((HFONT)wParam);
@@ -190,7 +190,7 @@ LONG WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
     default:
         break;
     }
-    return  DefWindowProcW(hWnd, msg, wParam, lParam);
+    return DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
 HWND CreateTextView(HWND hwndParent)
@@ -222,7 +222,7 @@ BOOL RegisterTextView()
     wcex.lpszClassName = TEXTVIEW_CLASS;
     wcex.hIconSm = 0;
 
-    return RegisterClassExW(&wcex)? TRUE: FALSE;
+    return RegisterClassExW(&wcex) ? TRUE : FALSE;
 }
 
 VOID TextView::UpdateCaretXY(int xpos, ULONG lineno)
@@ -231,7 +231,7 @@ VOID TextView::UpdateCaretXY(int xpos, ULONG lineno)
 
     // convert x-coord to window-relative
     xpos -= hScrollPos * fontWidth;
-    
+
 
     // only show caret if it is visible within viewport
     if (lineno >= vScrollPos && lineno <= vScrollPos + windowLines)
