@@ -151,9 +151,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Bapad.cpp" />
-    <ClCompile Include="Options.cpp" />
-    <ClCompile Include="OptionsFont.cpp" />
-    <ClCompile Include="OptionsMisc.cpp" />
     <ClCompile Include="TextView.cpp" />
     <ClCompile Include="TextViewCtrChars.cpp" />
     <ClCompile Include="TextViewFile.cpp" />

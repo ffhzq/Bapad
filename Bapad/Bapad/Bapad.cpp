@@ -223,7 +223,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // Initialize global strings
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_BAPAD, szWindowClass, MAX_LOADSTRING);
-
+    
     RegisterMainWindow();
     RegisterTextView();
 
