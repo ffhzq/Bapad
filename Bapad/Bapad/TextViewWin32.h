@@ -1,5 +1,5 @@
 #pragma once
-//#include "../TextDocument/pch.h"
+#include <CommCtrl.h>
 
 //	TextView API declared here
 //
@@ -75,39 +75,65 @@ const size_t TXC_MAX_COLOURS = 6;			// keep this updated!
 //
 //	TextView Message Macros defined here
 //
-#define TextView_OpenFile(hwndTV, szFile)	\
-	SendMessage((hwndTV), TXM_OPENFILE, 0, (LPARAM)(szFile))
-
-#define TextView_Clear(hwndTV)	\
-	SendMessage((hwndTV), TXM_CLEAR, 0, 0)
-
-#define TextView_SetLineSpacing(hwndTV, nAbove, nBelow) \
-	SendMessage((hwndTV), TXM_SETLINESPACING, (int)(nAbove), (int)(nBelow))
-
-#define TextView_AddFont(hwndTV, hFont) \
-	SendMessage((hwndTV), TXM_ADDFONT, (WPARAM)(HFONT)(g_hwndTextView), 0)
-
-#define TextView_SetColor(hwndTV, nIdx, rgbColor) \
-	SendMessage((hwndTV), TXM_SETCOLOR, (WPARAM)(nIdx), (LPARAM)(rgbColor))
+auto inline TextView_OpenFile(HWND hwndTV, wchar_t* szFile)
+{
+	return SendMessageW((hwndTV), TXM_OPENFILE, 0, (LPARAM)(szFile));
+}
 
 
-#define TextView_SetStyle(hwndTV, uMask, uStyles) \
-	SendMessage((hwndTV), TXM_SETSTYLE, (WPARAM)(uMask), (LPARAM)(uStyles))
+auto inline TextView_Clear(HWND hwndTV)
+{
+	return SendMessageW((hwndTV), TXM_CLEAR, 0, 0);
+}
 
-#define TextView_SetStyleBool(hwndTV, uStyle, fBoolean) \
-	SendMessage((hwndTV), TXM_SETSTYLE, (WPARAM)(uStyle), (LPARAM)(fBoolean ? uStyle : 0))
+auto inline TextView_SetLineSpacing(HWND hwndTV, int nAbove, int nBelow)
+{
+	return SendMessageW((hwndTV), TXM_SETLINESPACING, (int)(nAbove), (int)(nBelow));
+}
 
-#define TextView_SetCaretWidth(hwndTV, nWidth) \
-	SendMessage((hwndTV), TXM_SETCARETWIDTH, (WPARAM)(nWidth), 0)
 
-#define TextView_SetImageList(hwndTV, hImgList) \
-	SendMessage((hwndTV), TXM_SETIMAGELIST, (WPARAM)(HIMAGELIST)(hImgList), 0)
+auto inline TextView_AddFont(HWND hwndTV, HFONT hFont, HWND g_hwndTextView)
+{
+	return SendMessageW((hwndTV), TXM_ADDFONT, (WPARAM)(HFONT)(g_hwndTextView), 0);
+}
 
-#define TextView_SetLongLine(hwndTV, nLength) \
-	SendMessage((hwndTV), TXM_SETLONGLINE, (WPARAM)(0), (LPARAM)(nLength))
+auto inline TextView_SetColor(HWND hwndTV, WPARAM nIdx, LPARAM rgbColor)
+{
+	return SendMessageW((hwndTV), TXM_SETCOLOR, (WPARAM)(nIdx), (LPARAM)(rgbColor));
+}
 
-#define TextView_SetLineImage(hwndTV, nLineNo, nImageIdx) \
-	SendMessage((hwndTV), TXM_SETLINEIMAGE, (WPARAM)(ULONG)(nLineNo), (LPARAM)(ULONG)nImageIdx)
 
-#define TextView_GetFormat(hwndTV) \
-	SendMessage((hwndTV), TXM_GETFORMAT, 0, 0)
+auto inline TextView_SetStyle(HWND hwndTV, WPARAM uMask, LPARAM uStyles)
+{
+	return SendMessageW((hwndTV), TXM_SETSTYLE, (WPARAM)(uMask), (LPARAM)(uStyles));
+}
+
+auto inline TextView_SetStyleBool(HWND hwndTV, WPARAM uStyle, LPARAM fBoolean)
+{
+	return SendMessageW((hwndTV), TXM_SETSTYLE, (WPARAM)(uStyle), (LPARAM)(fBoolean ? uStyle : 0));
+}
+
+auto inline TextView_SetCaretWidth(HWND hwndTV, WPARAM nWidth)
+{
+	return SendMessageW((hwndTV), TXM_SETCARETWIDTH, (WPARAM)(nWidth), 0);
+}
+
+auto inline TextView_SetImageList(HWND hwndTV, HIMAGELIST hImgList)
+{
+	return SendMessageW((hwndTV), TXM_SETIMAGELIST, (WPARAM)(HIMAGELIST)(hImgList), 0);
+}
+
+auto inline TextView_SetLongLine(HWND hwndTV, LPARAM nLength)
+{
+	return SendMessageW((hwndTV), TXM_SETLONGLINE, (WPARAM)(0), (LPARAM)(nLength));
+}
+
+auto inline TextView_SetLineImage(HWND hwndTV, ULONG nLineNo, ULONG nImageIdx)
+{
+	return SendMessageW((hwndTV), TXM_SETLINEIMAGE, (WPARAM)(ULONG)(nLineNo), (LPARAM)(ULONG)nImageIdx);
+}
+
+auto inline TextView_GetFormat(HWND hwndTV)
+{
+	return SendMessageW((hwndTV), TXM_GETFORMAT, 0, 0);
+}

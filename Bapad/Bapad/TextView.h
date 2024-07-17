@@ -6,138 +6,138 @@
 
 //#define LONGEST_LINE 0x100
 
-const int	LONGEST_LINE = 0x100;
-const int	TEXTBUFSIZE	= 32;
-const int	MAX_FONTS = 32;
+const int LONGEST_LINE = 0x100;
+const int TEXTBUFSIZE = 32;
+const int MAX_FONTS = 32;
 
 
 class TextView
 {
 public:
 
-	TextView(HWND hwnd);
-	~TextView();
+    TextView(HWND hwnd);
+    ~TextView();
 
-	LONG WINAPI WndProc(UINT msg, WPARAM wParam, LPARAM lParam);
+    LRESULT WINAPI WndProc(UINT msg, WPARAM wParam, LPARAM lParam);
 
 
 
 private:
 
-	void	PaintLine(HDC hdc, ULONG64 nLineNo);
-	void	PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect);
-	
-	size_t	ApplyTextAttributes(size_t nLineNo, size_t offset, WCHAR* szText, int nTextLen, ATTR* attr);
-	int		BaTextOut(HDC hdc, int xpos, int ypos, WCHAR* szText, int nLen, int nTabOrigin, ATTR* attr);
+    void	PaintLine(HDC hdc, ULONG64 nLineNo);
+    void	PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect);
 
-	int		PaintCtrlChar(HDC hdc, int xpos, int ypos, ULONG64 chValue, FONT* fa);
-	void	InitCtrlCharFontAttr(HDC hdc, FONT* fa);
+    size_t	ApplyTextAttributes(size_t nLineNo, size_t offset, WCHAR* szText, int nTextLen, ATTR* attr);
+    int		BaTextOut(HDC hdc, int xpos, int ypos, WCHAR* szText, int nLen, int nTabOrigin, ATTR* attr);
 
-	void	RefreshWindow();
-	LONG	InvalidateRange(size_t nStart, size_t nFinish);
+    int		PaintCtrlChar(HDC hdc, int xpos, int ypos, ULONG64 chValue, FONT* fa);
+    void	InitCtrlCharFontAttr(HDC hdc, FONT* fa);
 
-	int		GetCtrlCharWidth(HDC hdc, ULONG64 chValue, FONT* fa);
-	int		BaTextWidth(HDC hdc, WCHAR* buf, int len, int nTabOrigin);
-	int		TabWidth();
+    void	RefreshWindow();
+    LONG	InvalidateRange(size_t nStart, size_t nFinish);
 
-	BOOL	MouseCoordToFilePos(
-		LONGLONG mx,
-		LONGLONG my,
-		size_t& pnLineNo,
-		size_t& pnCharOffset,
-		size_t& pnFileOffset, 
-		LONGLONG& px);
-	ULONG  RepositionCaret();
+    int		GetCtrlCharWidth(HDC hdc, ULONG64 chValue, FONT* fa);
+    int		BaTextWidth(HDC hdc, WCHAR* buf, int len, int nTabOrigin);
+    int		TabWidth() const;
 
-
-	COLORREF GetColour(UINT idx);
-
-	VOID	SetupScrollbars();
-	VOID	UpdateMetrics();
-	VOID	RecalcLineHeight();
-	bool    PinToBottomCorner();
-
-	void	Scroll(LONG64 dx, LONG64 dy);
-	HRGN	ScrollRgn(LONG64 dx, LONG64 dy, bool fReturnUpdateRgn);
-
-	HWND	hWnd;
-
-	// Font-related data
-	std::vector<FONT> fontAttr;
-	HFONT	font;
-	int		fontWidth;
-	int		lineHeight;
-	int		maxAscent;	
-	int		heightAbove;
-	int		heightBelow;
-
-	// Scrollbar related data
-	ULONG64		vScrollPos;
-	ULONG64		vScrollMax;
-	LONGLONG	hScrollPos;
-	LONGLONG	hScrollMax;
-
-	size_t		longestLine;
-	ULONG64		windowLines;
-	ULONG64		windowColumns;
-
-	// Display related data
-	int tabWidthChars;
-	size_t	selectionStart;
-	size_t	selectionEnd;
-	size_t	cursorOffset;
-	size_t caretPosX;
-	size_t anchorPosX;
-	size_t currentLine;
-
-	COLORREF rgbColourList[TXC_MAX_COLOURS];
-
-	// File-related data
-	size_t	lineCount;
+    BOOL	MouseCoordToFilePos(
+        LONGLONG mx,
+        LONGLONG my,
+        size_t& pnLineNo,
+        size_t& pnCharOffset,
+        size_t& pnFileOffset,
+        LONGLONG& px);
+    ULONG  RepositionCaret();
 
 
-	// Runtime related data
-	bool mouseDown;
-	UINT_PTR scrollTimer;
-	int scrollCounter;
-	bool hideCaret;
-	TextDocument* pTextDoc;
+    COLORREF GetColour(UINT idx);
+
+    VOID	SetupScrollbars();
+    VOID	UpdateMetrics();
+    VOID	RecalculateLineHeight();
+    bool    PinToBottomCorner();
+
+    void	Scroll(LONG64 dx, LONG64 dy);
+    HRGN	ScrollRgn(LONG64 dx, LONG64 dy, bool fReturnUpdateRgn);
+
+    HWND	hWnd;
+
+    // Font-related data
+    std::vector<FONT> fontAttr;
+    HFONT	font;
+    int		fontWidth;
+    int		lineHeight;
+    int		maxAscent;
+    int		heightAbove;
+    int		heightBelow;
+
+    // Scrollbar related data
+    ULONG64		vScrollPos;
+    ULONG64		vScrollMax;
+    LONG64		hScrollPos;
+    LONG64		hScrollMax;
+
+    size_t		longestLine;
+    ULONG64		windowLines;
+    ULONG64		windowColumns;
+
+    // Display related data
+    int tabWidthChars;
+    size_t	selectionStart;
+    size_t	selectionEnd;
+    size_t	cursorOffset;
+    size_t caretPosX;
+    size_t anchorPosX;
+    size_t currentLine;
+
+    COLORREF rgbColourList[TXC_MAX_COLOURS];
+
+    // File-related data
+    size_t	lineCount;
 
 
-	//处理消息
-	LONG OnPaint();
-	LONG OnSetFont(HFONT hFont);
-	LONG OnSize(UINT nFlags, int width, int height);
-	LONG OnVScroll(UINT nSBCode, UINT nPos);
-	LONG OnHScroll(UINT nSBCode, UINT nPos);
-	LONG OnMouseWheel(int nDelta);
-	LONG OnTimer(UINT nTimer);
+    // Runtime related data
+    bool mouseDown;
+    UINT_PTR scrollTimer;
+    int scrollCounter;
+    bool hideCaret;
+    TextDocument* pTextDoc;
 
-	//鼠标
-	LONG OnMouseActivate(HWND hwndTop, UINT nHitTest, UINT nMessage);
-	LONG OnLButtonDown(UINT nFlags, int x, int y);
-	LONG OnLButtonUp(UINT nFlags, int x, int y);
-	LONG OnMouseMove(UINT nFlags, int x, int y);
 
-	LONG OnSetFocus(HWND hwndOld);
-	LONG OnKillFocus(HWND hwndNew);
+    //处理消息
+    LONG OnPaint();
+    LONG OnSetFont(HFONT hFont);
+    LONG OnSize(UINT nFlags, int width, int height);
+    LONG OnVScroll(UINT nSBCode, UINT nPos);
+    LONG OnHScroll(UINT nSBCode, UINT nPos);
+    LONG OnMouseWheel(int nDelta);
+    LONG OnTimer(UINT nTimer);
 
-	//用户操作
+    //鼠标
+    LONG OnMouseActivate(HWND hwndTop, UINT nHitTest, UINT nMessage);
+    LONG OnLButtonDown(UINT nFlags, int x, int y);
+    LONG OnLButtonUp(UINT nFlags, int x, int y);
+    LONG OnMouseMove(UINT nFlags, int x, int y);
 
-	LONG OpenFile(WCHAR* szFileName);
-	LONG ClearFile();
+    LONG OnSetFocus(HWND hwndOld);
+    LONG OnKillFocus(HWND hwndNew);
 
-	LONG AddFont(HFONT);
-	LONG SetFont(HFONT, size_t idx);
-	LONG SetLineSpacing(int nAbove, int nBelow);
-	//LONG SetLongLine(int nLength);
-	COLORREF SetColour(UINT idx, COLORREF rgbColour);
+    //用户操作
 
-	//input
-	LONG OnChar(UINT nChar, UINT nFlags);
-	ULONG EnterText(WCHAR * inputText, ULONG inputTextLength);
-	ULONG NotifyParent(UINT nNotifyCode, NMHDR* optional = 0);
-	void Smeg(BOOL fAdvancing);
-	VOID UpdateCaretXY(int xpos, ULONG lineno);
-	VOID UpdateCaretOffset(ULONG offset, BOOL fTrailing, int* outx = 0, ULONG* outlineno = 0);
+    LONG OpenFile(WCHAR* szFileName);
+    LONG ClearFile();
+
+    LONG AddFont(HFONT);
+    LONG SetFont(HFONT, size_t idx);
+    LONG SetLineSpacing(int nAbove, int nBelow);
+    //LONG SetLongLine(int nLength);
+    COLORREF SetColour(UINT idx, COLORREF rgbColour);
+
+    //input
+    LONG OnChar(UINT nChar, UINT nFlags);
+    ULONG EnterText(WCHAR* inputText, ULONG inputTextLength);
+    LRESULT NotifyParent(UINT nNotifyCode, NMHDR* optional = 0);
+    void Smeg(BOOL fAdvancing);
+    VOID UpdateCaretXY(int xpos, ULONG lineno);
+    VOID UpdateCaretOffset(ULONG offset, BOOL fTrailing, int* outx = 0, ULONG* outlineno = 0);
 };

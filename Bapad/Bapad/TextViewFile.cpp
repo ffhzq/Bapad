@@ -4,25 +4,25 @@
 //
 //	
 //
-LONG TextView::OpenFile(WCHAR *szFileName)
+LONG TextView::OpenFile(WCHAR* szFileName)
 {
-	ClearFile();
+    ClearFile();
 
-	if(pTextDoc->Initialize(szFileName))
-	{
-		lineCount   = pTextDoc->GetLineCount();
-		longestLine = pTextDoc->GetLongestLine(4);
+    if (pTextDoc->Initialize(szFileName))
+    {
+        lineCount = pTextDoc->GetLineCount();
+        longestLine = pTextDoc->GetLongestLine(4);
 
-		vScrollPos  = 0;
-		hScrollPos  = 0;
+        vScrollPos = 0;
+        hScrollPos = 0;
 
-		selectionStart = 0;
-		selectionEnd = 0;
-		UpdateMetrics();
-		return TRUE;
-	}
+        selectionStart = 0;
+        selectionEnd = 0;
+        UpdateMetrics();
+        return TRUE;
+    }
 
-	return FALSE;
+    return FALSE;
 }
 
 //
@@ -30,16 +30,16 @@ LONG TextView::OpenFile(WCHAR *szFileName)
 //
 LONG TextView::ClearFile()
 {
-	if(pTextDoc)
-		pTextDoc->Clear();
+    if (pTextDoc)
+        pTextDoc->Clear();
 
-	lineCount = 0;//pTextDoc->GetLineCount();
-	longestLine = 0;//pTextDoc->GetLongestLine(4);
+    lineCount = 0;//pTextDoc->GetLineCount();
+    longestLine = 0;//pTextDoc->GetLongestLine(4);
 
-	vScrollPos  = 0;
-	hScrollPos  = 0;
+    vScrollPos = 0;
+    hScrollPos = 0;
 
-	UpdateMetrics();
+    UpdateMetrics();
 
-	return TRUE;
+    return TRUE;
 }
