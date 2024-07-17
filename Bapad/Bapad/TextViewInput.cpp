@@ -12,7 +12,7 @@ LONG TextView::OnChar(UINT nChar, UINT nFlags)
         PostMessageW(hWnd, WM_CHAR, '\n', 1);
     if (EnterText(&ch, 1))
     {
-        //NotifyParent(TVN_CHANGED);用于通知文件被修改了
+        NotifyParent(TVN_CHANGED);//用于通知文件被修改了
     }
     return 0;
 }
