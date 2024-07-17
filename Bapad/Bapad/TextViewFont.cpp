@@ -70,7 +70,7 @@ LONG TextView::SetFont(HFONT hFont, size_t idx)
 
     // get font settings
     font->hFont = hFont;
-    GetTextMetrics(hdc, &font->tm);
+    GetTextMetricsW(hdc, &font->tm);
 
     // pre-calc the control-characters for this font
     //InitCtrlCharFontAttr(hdc, font);
