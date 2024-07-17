@@ -8,9 +8,6 @@
 
 // Global Variables:
 
-#define COURIERNEW	1
-#define LUCIDACONS	2
-
 #define REGLOC _T("SOFTWARE\\ffhzq\\Bapad")
 
 const wchar_t CLASS_NAME[] = L"Bapad";
@@ -30,3 +27,4 @@ void ShowAboutDlg(HWND hWndParent);
 void SetWindowFileName(HWND hWnd, wchar_t* fileName);
 BOOL DoOpenFile(HWND hWnd, WCHAR* fileName, WCHAR* fileTitle);
 void HandleDropFiles(HWND hWnd, HDROP hDrop);
+UINT CommandHandler(HWND hWnd, UINT nCtrlId, UINT nCtrlCode, HWND hwndFrom);
