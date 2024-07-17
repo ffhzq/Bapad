@@ -39,7 +39,10 @@ TextView::TextView(HWND hwnd)
 
 
     // Set the default font
-    OnSetFont((HFONT)GetStockObject(ANSI_FIXED_FONT));
+    auto hFont = static_cast<HFONT>(GetStockObject(ANSI_FIXED_FONT));
+    if (hFont == nullptr)
+        hFont = static_cast<HFONT>(GetStockObject(SYSTEM_FONT));
+    OnSetFont(hFont);
 
     UpdateMetrics();
     //SetupScrollbars();
@@ -99,23 +102,23 @@ LRESULT CALLBACK TextViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
     {
         // First message received by any window - make a new TextView object
         // and store pointer to it in our extra-window-bytes
-    case WM_NCCREATE:
-        if ((ptv = new TextView(hWnd)) == 0)
-            return FALSE;
-        SetWindowLongPtrW(hWnd, 0, reinterpret_cast<LONG_PTR>(ptv));
-        return TRUE;
-        // Last message received by any window - delete the TextView object
-    case WM_NCDESTROY:
-        delete ptv;
-        SetWindowLongPtrW(hWnd, 0, 0);
-        break;
+        case WM_NCCREATE:
+            if ((ptv = new TextView(hWnd)) == 0)
+                return FALSE;
+            SetWindowLongPtrW(hWnd, 0, reinterpret_cast<LONG_PTR>(ptv));
+            return TRUE;
+            // Last message received by any window - delete the TextView object
+        case WM_NCDESTROY:
+            delete ptv;
+            SetWindowLongPtrW(hWnd, 0, 0);
+            break;
 
 
-    default:
-        if (ptv)
-            return ptv->WndProc(message, wParam, lParam);
-        else
-            return 0;//return DefWindowProc(hWnd, message, wParam, lParam);
+        default:
+            if (ptv)
+                return ptv->WndProc(message, wParam, lParam);
+            else
+                return 0;//return DefWindowProc(hWnd, message, wParam, lParam);
     }
 
     return 0;
@@ -126,69 +129,69 @@ LRESULT WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
     switch (msg)
     {
         // Draw contents of TextView whenever window needs updating
-    case WM_PAINT:
-        return OnPaint();
-        // Set a new font 
-    case WM_SETFONT:
-        return OnSetFont((HFONT)wParam);
+        case WM_PAINT:
+            return OnPaint();
+            // Set a new font 
+        case WM_SETFONT:
+            return OnSetFont((HFONT)wParam);
 
-    case WM_SIZE:
-        return OnSize(static_cast<UINT>(wParam), LOWORD(lParam), HIWORD(lParam));
+        case WM_SIZE:
+            return OnSize(static_cast<UINT>(wParam), LOWORD(lParam), HIWORD(lParam));
 
-    case WM_VSCROLL:
-        return OnVScroll(LOWORD(wParam), HIWORD(wParam));
+        case WM_VSCROLL:
+            return OnVScroll(LOWORD(wParam), HIWORD(wParam));
 
-    case WM_HSCROLL:
-        return OnHScroll(LOWORD(wParam), HIWORD(wParam));
+        case WM_HSCROLL:
+            return OnHScroll(LOWORD(wParam), HIWORD(wParam));
 
-    case WM_MOUSEACTIVATE:
-        return OnMouseActivate((HWND)wParam, LOWORD(lParam), HIWORD(lParam));
+        case WM_MOUSEACTIVATE:
+            return OnMouseActivate((HWND)wParam, LOWORD(lParam), HIWORD(lParam));
 
-    case WM_MOUSEWHEEL:
-        return OnMouseWheel((short)HIWORD(wParam));
+        case WM_MOUSEWHEEL:
+            return OnMouseWheel((short)HIWORD(wParam));
 
-    case WM_SETFOCUS:
-        return OnSetFocus((HWND)wParam);
+        case WM_SETFOCUS:
+            return OnSetFocus((HWND)wParam);
 
-    case WM_KILLFOCUS:
-        return OnKillFocus((HWND)wParam);
+        case WM_KILLFOCUS:
+            return OnKillFocus((HWND)wParam);
 
-    case WM_LBUTTONDOWN:
-        return OnLButtonDown(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+        case WM_LBUTTONDOWN:
+            return OnLButtonDown(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
 
-    case WM_LBUTTONUP:
-        return OnLButtonUp(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+        case WM_LBUTTONUP:
+            return OnLButtonUp(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
 
-    case WM_MOUSEMOVE:
-        return OnMouseMove(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
+        case WM_MOUSEMOVE:
+            return OnMouseMove(wParam, (short)LOWORD(lParam), (short)HIWORD(lParam));
 
-    case WM_TIMER:
-        return OnTimer(wParam);
+        case WM_TIMER:
+            return OnTimer(wParam);
 
-    case TXM_OPENFILE:
-        return OpenFile(reinterpret_cast<wchar_t*>(lParam));
+        case TXM_OPENFILE:
+            return OpenFile(reinterpret_cast<wchar_t*>(lParam));
 
-    case TXM_CLEAR:
-        return ClearFile();
+        case TXM_CLEAR:
+            return ClearFile();
 
-    case WM_CHAR:
-        OnChar(wParam, lParam);
+        case WM_CHAR:
+            OnChar(wParam, lParam);
 
-        //case TXM_SETLINESPACING:return SetLineSpacing(wParam, lParam);
+            //case TXM_SETLINESPACING:return SetLineSpacing(wParam, lParam);
 
-    case TXM_ADDFONT:
-        return AddFont((HFONT)wParam);
+        case TXM_ADDFONT:
+            return AddFont((HFONT)wParam);
 
-    case TXM_SETCOLOR:
-        return SetColour(wParam, lParam);
+        case TXM_SETCOLOR:
+            return SetColour(wParam, lParam);
 
 
 
-    case TXM_GETFORMAT:
-        return pTextDoc->GetFileFormat();
+        case TXM_GETFORMAT:
+            return pTextDoc->GetFileFormat();
 
-    default:
-        break;
+        default:
+            break;
     }
     return DefWindowProcW(hWnd, msg, wParam, lParam);
 }
