@@ -2,19 +2,6 @@
 #include "TextDocument.h"
 #include "formatConversion.h"
 
-struct _BOM_LOOKUP BOMLOOK[] =
-{
-    // define longest headers first
-    //bom, headerlen, encoding form
-    { 0x0000FEFF, 4, BCP_UTF32    },
-    { 0xFFFE0000, 4, BCP_UTF32BE  },
-    { 0xBFBBEF,	  3, BCP_UTF8	  },
-    { 0xFFFE,	  2, BCP_UTF16BE  },
-    { 0xFEFF,	  2, BCP_UTF16    },
-    { 0,          0, BCP_ASCII	  },
-};
-
-
 TextDocument::TextDocument()
     : 
     docBuffer(),
@@ -70,7 +57,7 @@ bool TextDocument::Initialize(HANDLE hFile)
         abort();
     }
 
-    fileFormat = DetectFileFormat();
+    fileFormat = DetectFileFormat(docBuffer.data(), docLengthByBytes, headerSize);
 
     // work out where each line of text starts
     if (!InitLineBuffer())
@@ -163,28 +150,6 @@ bool TextDocument::InitLineBuffer()
 
     
     return true;
-}
-
-int TextDocument::DetectFileFormat()
-{
-    int res=-1;
-    for (auto i : BOMLOOK)
-    {
-        if (docLengthByBytes >= i.headerLength
-            && memcmp(&docBuffer[0], &i.bom, i.headerLength) == 0)
-        {
-            headerSize = i.headerLength;
-            res = i.type;
-            break;
-        }
-    }
-    if (res == -1)
-    {
-        headerSize = 0;
-        res = BCP_ASCII;
-    }
-    return res;
-
 }
 
 size_t TextDocument::GetUTF32Char(size_t offset, size_t lenBytes, char32_t & pch32)

@@ -3,6 +3,42 @@
 #include "MyException.h"
 #include <stdexcept>
 
+struct _BOM_LOOKUP BOMLOOK[] =
+{
+	// define longest headers first
+	//bom, headerlen, encoding form
+	{ 0x0000FEFF, 4, BCP_UTF32    },
+	{ 0xFFFE0000, 4, BCP_UTF32BE  },
+	{ 0xBFBBEF,	  3, BCP_UTF8	  },
+	{ 0xFFFE,	  2, BCP_UTF16BE  },
+	{ 0xFEFF,	  2, BCP_UTF16    },
+	{ 0,          0, BCP_ASCII	  },
+};
+
+
+// 返回编码形式对应的宏定义编号
+int DetectFileFormat(const unsigned char* docBuffer, const size_t docLengthByBytes, size_t& headerSize)
+{
+	int res = -1;
+	for (auto i : BOMLOOK)
+	{
+		if (docLengthByBytes >= i.headerLength
+			&& memcmp(&docBuffer[0], &i.bom, i.headerLength) == 0)
+		{
+			headerSize = i.headerLength;
+			res = i.type;
+			break;
+		}
+	}
+	if (res == -1)
+	{
+		headerSize = 0;
+		res = BCP_ASCII;
+	}
+	return res;
+
+}
+
 size_t UTF8ToUTF32(UTF8* utf8Str, size_t utf8Len, UTF32* pch32)
 {
 	static ULONG nonshortest[] = { 0, 0x80, 0x800, 0x10000, 0xffffffff, 0xffffffff };
@@ -71,7 +107,7 @@ size_t UTF8ToUTF32(UTF8* utf8Str, size_t utf8Len, UTF32* pch32)
 		ch = *utf8Str++;
 
 		// Valid trail-byte: 10xxxxxx
-		if ((ch&0xC0)==0x80)
+		if ((ch & 0xC0) == 0x80)
 		{
 			val32 = (val32 << 6) + (ch & 0x7f);
 			len++;
@@ -90,14 +126,14 @@ size_t UTF8ToUTF32(UTF8* utf8Str, size_t utf8Len, UTF32* pch32)
 	else
 		*pch32 = val32;
 
-	if (utf8Len!=0&&len == 0)
+	if (utf8Len != 0 && len == 0)
 	{
 		throw MyException("Invalid UTF-8 sequence", -1, MyException::ConversionType::FromUtf8ToUtf32);
 	}
 
 	return len;
 }
-size_t UTF32ToUTF8(UTF32 ch32, UTF8* utf8Str, size_t &utf8Len)
+size_t UTF32ToUTF8(UTF32 ch32, UTF8* utf8Str, size_t& utf8Len)
 {
 	size_t len = 0;
 
@@ -146,7 +182,8 @@ size_t UTF32ToUTF8(UTF32 ch32, UTF8* utf8Str, size_t &utf8Len)
 	}
 
 	// 5/6 byte sequences never occur because we limit using UNI_MAX_LEGAL_UTF32
-	if (len == 0) {
+	if (len == 0)
+	{
 		throw MyException("Invalid UTF-32 character", -1, MyException::ConversionType::FromUtf32ToUtf8);
 	}
 	return len;
@@ -163,11 +200,11 @@ size_t AsciiToUTF16(UTF8* asciiStr, size_t asciiLen, UTF16* utf16Str, size_t& ut
 			"Input ascii string too long, size_t doesn't fit into int.");
 	}
 	int lenInt = static_cast<int>(len);
-	int retVal=MultiByteToWideChar(CP_ACP, 0, (CCHAR*)asciiStr, lenInt, (WCHAR *)utf16Str, lenInt);
+	int retVal = MultiByteToWideChar(CP_ACP, 0, (CCHAR*)asciiStr, lenInt, (WCHAR*)utf16Str, lenInt);
 	utf16Len = len;
-	if (lenInt!=0 && retVal == 0)
+	if (lenInt != 0 && retVal == 0)
 	{
-		        throw MyException("Invalid ASCII character", GetLastError(), MyException::ConversionType::FromAsciiToUtf16);
+		throw MyException("Invalid ASCII character", GetLastError(), MyException::ConversionType::FromAsciiToUtf16);
 	}
 	return len;
 }
@@ -196,10 +233,10 @@ size_t UTF8ToUTF16(UTF8* utf8Str, size_t utf8Len, UTF16* utf16Str, size_t& utf16
 	}
 
 	utf16Len = utf16Str - utf16start;
-	if (utf8Str - utf8start!=0&&utf16Len == 0)
+	if (utf8Str - utf8start != 0 && utf16Len == 0)
 	{
-		        throw MyException("Invalid UTF-8 character", -1, MyException::ConversionType::FromUtf8ToUtf16);
-    
+		throw MyException("Invalid UTF-8 character", -1, MyException::ConversionType::FromUtf8ToUtf16);
+
 	}
 
 	return utf8Str - utf8start;
@@ -208,7 +245,7 @@ size_t UTF8ToUTF16(UTF8* utf8Str, size_t utf8Len, UTF16* utf16Str, size_t& utf16
 
 
 
-size_t CopyUTF16(UTF16* src, size_t srcLen, UTF16* dest, size_t & destLen)
+size_t CopyUTF16(UTF16* src, size_t srcLen, UTF16* dest, size_t& destLen)
 {
 	size_t len = min(destLen, srcLen);
 	memcpy(dest, src, len * sizeof(UTF16));
@@ -221,7 +258,7 @@ size_t CopyUTF16(UTF16* src, size_t srcLen, UTF16* dest, size_t & destLen)
 	return len;
 }
 
-size_t SwapUTF16(UTF16* src, size_t srcLen, UTF16* dest, size_t & destLen)
+size_t SwapUTF16(UTF16* src, size_t srcLen, UTF16* dest, size_t& destLen)
 {
 	size_t len = min(destLen, srcLen);
 
@@ -229,7 +266,7 @@ size_t SwapUTF16(UTF16* src, size_t srcLen, UTF16* dest, size_t & destLen)
 		dest[i] = SwapWord(src[i]);
 
 	destLen = len;
-	if (srcLen!=0 && len == 0)
+	if (srcLen != 0 && len == 0)
 	{
 		throw MyException("Invalid UTF-16 character", -1, MyException::ConversionType::SwapUtf16);
 	}
@@ -272,17 +309,17 @@ size_t UTF16ToUTF32(UTF16* utf16Str, size_t utf16Len, UTF32* utf32Str, size_t& u
 		utf16Str++;
 		utf16Len--;
 	}
-	
+
 	utf32Len = utf32Str - utf32start;
-	if (utf16Len!=0 && utf32Len == 0)
+	if (utf16Len != 0 && utf32Len == 0)
 	{
-		        throw MyException("Invalid UTF-16 character", -1, MyException::ConversionType::FromUtf16ToUtf32);
-    
+		throw MyException("Invalid UTF-16 character", -1, MyException::ConversionType::FromUtf16ToUtf32);
+
 	}
 	return utf16Str - utf16start;
 }
 
-size_t UTF32ToUTF16(UTF32* utf32Str, size_t utf32Len, UTF16* utf16Str, size_t &utf16Len)
+size_t UTF32ToUTF16(UTF32* utf32Str, size_t utf32Len, UTF16* utf16Str, size_t& utf16Len)
 {
 	UTF16* utf16start = utf16Str;
 	UTF32* utf32start = utf32Str;
@@ -338,11 +375,11 @@ size_t UTF32ToUTF16(UTF32* utf32Str, size_t utf32Len, UTF16* utf16Str, size_t &u
 	}
 
 	utf16Len = utf16Str - utf16start;
-	if (utf32Str - utf32start !=0&&utf16Len == 0)
+	if (utf32Str - utf32start != 0 && utf16Len == 0)
 	{
-		                throw MyException("Invalid UTF-32 character", -1, MyException::ConversionType::FromUtf32ToUtf16);
-    
-    
+		throw MyException("Invalid UTF-32 character", -1, MyException::ConversionType::FromUtf32ToUtf16);
+
+
 	}
 	return utf32Str - utf32start;
 }
@@ -385,11 +422,11 @@ size_t UTF16BEToUTF32(UTF16* utf16Str, size_t utf16Len, UTF32* utf32Str, size_t&
 	}
 
 	utf32Len = utf32Str - utf32start;
-	if (utf16Str - utf16start!=0&&utf32Len == 0)
+	if (utf16Str - utf16start != 0 && utf32Len == 0)
 	{
-		                throw MyException("Invalid UTF-16 character", -1, MyException::ConversionType::FromUtf16BEToUtf32);
-    
-    
+		throw MyException("Invalid UTF-16 character", -1, MyException::ConversionType::FromUtf16BEToUtf32);
+
+
 	}
 	return utf16Str - utf16start;
 }
@@ -417,17 +454,18 @@ size_t UTF16ToUTF8(UTF16* utf16Str, size_t utf16Len, UTF8* utf8Str, size_t& utf8
 	}
 
 	utf8Len = utf8Str - utf8start;
-	if (utf16Str - utf16start!=0&&utf8Len == 0)
+	if (utf16Str - utf16start != 0 && utf8Len == 0)
 	{
-		        throw MyException("Invalid UTF-16 character", -1, MyException::ConversionType::FromUtf16ToUtf8);
-    
+		throw MyException("Invalid UTF-16 character", -1, MyException::ConversionType::FromUtf16ToUtf8);
+
 	}
 	return utf16Str - utf16start;
 }
 
 
 
-size_t UTF16ToAscii(UTF16* utf16Str, size_t utf16Len, UTF8* asciiStr, size_t& asciiLen) {
+size_t UTF16ToAscii(UTF16* utf16Str, size_t utf16Len, UTF8* asciiStr, size_t& asciiLen)
+{
 
 	size_t len = min(utf16Len, asciiLen);
 	if (len > static_cast<size_t>((std::numeric_limits<int>::max)()))
@@ -444,7 +482,7 @@ size_t UTF16ToAscii(UTF16* utf16Str, size_t utf16Len, UTF8* asciiStr, size_t& as
 	}
 	int receiveLenInt = static_cast<int>(asciiLen);
 
-	int retVal=WideCharToMultiByte(CP_ACP, 0, (LPCWCH)utf16Str, lenInt, (LPSTR)asciiStr, receiveLenInt, 0, 0);
+	int retVal = WideCharToMultiByte(CP_ACP, 0, (LPCWCH)utf16Str, lenInt, (LPSTR)asciiStr, receiveLenInt, 0, 0);
 	asciiLen = lenInt;
 	if (retVal == 0)
 	{
