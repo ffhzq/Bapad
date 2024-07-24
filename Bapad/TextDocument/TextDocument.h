@@ -1,14 +1,5 @@
 #include "pch.h"
 
-#define BCP_ASCII		0
-#define BCP_UTF8		1
-#define BCP_UTF16		2
-#define BCP_UTF16BE		3
-#define BCP_UTF32		4
-#define BCP_UTF32BE		5
-
-
-
 class TextIterator;
 
 class TextDocument
@@ -18,12 +9,8 @@ public:
     TextDocument();
     ~TextDocument();
 
-    //TextDocument(TextDocument &a) = delete;
-    //TextDocument& operator=(TextDocument& a) = delete;
-
-
     bool Initialize(wchar_t* filename);
-    bool Initialize(HANDLE hFile);
+    
     bool Clear();
     bool ReCalculateLineBuffer();
     size_t LineNumFromOffset(size_t offset);
@@ -44,13 +31,13 @@ public:
     const size_t GetDocLength() const;
 
 private:
+    bool Initialize(HANDLE hFile);
     bool InitLineBuffer();
     bool ReleaseLineBuffer();
-    int DetectFileFormat();
+
     size_t GetUTF32Char(size_t offset, size_t lenBytes, char32_t& pch32);
 
     // GetText: read 'lenBytes'or'bufLen'(use the smaller one) bytes wchar from the position (docBuffer+offset) to 'buf'
-    //
     size_t  GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t& bufLen);
 
     size_t  RawDataToUTF16(BYTE* rawdata, size_t rawlen, WCHAR* utf16str, size_t& utf16len);
@@ -62,7 +49,7 @@ private:
 
     size_t CharOffsetToByteOffsetAt(size_t offsetBytes, size_t charCount);
     size_t CharOffsetToByteOffset(size_t offsetChars);
-    std::vector<unsigned char> docBuffer;// raw txt data TODO:should change to unsigned char? 
+    std::vector<unsigned char> docBuffer;// raw txt data
     size_t  docLengthByChars;//
     size_t  docLengthByBytes;// size of txt data
 
@@ -141,10 +128,4 @@ public:
     }
 };
 
-//Byte Order Mark
-struct _BOM_LOOKUP
-{
-    DWORD  bom;
-    ULONG  headerLength;
-    int    type;
-};
+

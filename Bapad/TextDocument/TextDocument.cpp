@@ -2,19 +2,6 @@
 #include "formatConversion.h"
 #include "TextDocument.h"
 
-struct _BOM_LOOKUP BOMLOOK[] =
-{
-    // define longest headers first
-    //bom, headerlen, encoding form
-    { 0x0000FEFF, 4, BCP_UTF32    },
-    { 0xFFFE0000, 4, BCP_UTF32BE  },
-    { 0xBFBBEF,	  3, BCP_UTF8	  },
-    { 0xFFFE,	  2, BCP_UTF16BE  },
-    { 0xFEFF,	  2, BCP_UTF16    },
-    { 0,          0, BCP_ASCII	  },
-};
-
-
 TextDocument::TextDocument()
     :
     docBuffer(),
@@ -33,7 +20,7 @@ TextDocument::~TextDocument()
     Clear();
 }
 
-bool TextDocument::Initialize(wchar_t* filename)//¿çÆ½Ì¨Òª¸Ä
+bool TextDocument::Initialize(wchar_t* filename)//è·¨å¹³å°è¦æ”¹
 {
     HANDLE hFile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
 
@@ -70,7 +57,7 @@ bool TextDocument::Initialize(HANDLE hFile)
         abort();
     }
 
-    fileFormat = DetectFileFormat();
+    fileFormat = DetectFileFormat(docBuffer.data(), docLengthByBytes, headerSize);
 
     // work out where each line of text starts
     if (!InitLineBuffer())
@@ -102,25 +89,25 @@ bool TextDocument::InitLineBuffer()
         offsetBytes += len;
         offsetChars += 1;
 
-        //TODO:ÅÐ¶ÏÓï¾äµÄ±äÁ¿ÀàÐÍ²»Í¬,ÐèÒªÑéÖ¤
+        //TODO:åˆ¤æ–­è¯­å¥çš„å˜é‡ç±»åž‹ä¸åŒ,éœ€è¦éªŒè¯
         if (ch32 == '\r')
         {
             if (lineCount >= bufLen)
             {
                 return false;
             }
-            //¼ÇÂ¼ÐÐÆðÊ¼Î»ÖÃ
+            //è®°å½•è¡Œèµ·å§‹ä½ç½®
             byteOffsetLineBuffer[lineCount] = lineStartBytes;
             charOffsetLineBuffer[lineCount] = lineStartChars;
             lineStartBytes = offsetBytes;
             lineStartChars = offsetChars;
 
-            //ÕÒÏÂÒ»×Ö·û
+            //æ‰¾ä¸‹ä¸€å­—ç¬¦
             len = GetUTF32Char(offsetBytes, bufLen - offsetBytes, ch32);
             offsetBytes += len;
             offsetChars += 1;
 
-            //ÅÐ¶Ï"\r\n"×éºÍ
+            //åˆ¤æ–­"\r\n"ç»„å’Œ
             if (ch32 == '\n')
             {
                 lineStartBytes = offsetBytes;
@@ -135,7 +122,7 @@ bool TextDocument::InitLineBuffer()
             {
                 return false;
             }
-            //¼ÇÂ¼ÐÐÆðÊ¼Î»ÖÃ
+            //è®°å½•è¡Œèµ·å§‹ä½ç½®
             byteOffsetLineBuffer[lineCount] = lineStartBytes;
             charOffsetLineBuffer[lineCount] = lineStartChars;
             lineStartBytes = offsetBytes;
@@ -165,29 +152,8 @@ bool TextDocument::InitLineBuffer()
     return true;
 }
 
-int TextDocument::DetectFileFormat()
-{
-    int res = -1;
-    for (auto i : BOMLOOK)
-    {
-        if (docLengthByBytes >= i.headerLength
-            && memcmp(&docBuffer[0], &i.bom, i.headerLength) == 0)
-        {
-            headerSize = i.headerLength;
-            res = i.type;
-            break;
-        }
-    }
-    if (res == -1)
-    {
-        headerSize = 0;
-        res = BCP_ASCII;
-    }
-    return res;
 
-}
-
-size_t TextDocument::GetUTF32Char(size_t offset, size_t lenBytes, char32_t& pch32)
+size_t TextDocument::GetUTF32Char(size_t offset, size_t lenBytes, char32_t & pch32)
 {
     //Byte* rawData = reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
     //Word* rawDataW = reinterpret_cast<Word*>(docBuffer + offset + headerSize);
@@ -563,7 +529,7 @@ size_t TextDocument::CharOffsetToByteOffsetAt(size_t offsetBytes, size_t charCou
     {
         const size_t bufLen = 0x100;
         WCHAR buf[bufLen];
-        size_t charLen = min(charCount, bufLen);//ÒòÎªµ×²ãÄ¬ÈÏÊäÈëÎªUTF-16ËùÒÔÖ±½Ó¶¨ÒåWCHARÊý×é
+        size_t charLen = min(charCount, bufLen);//å› ä¸ºåº•å±‚é»˜è®¤è¾“å…¥ä¸ºUTF-16æ‰€ä»¥ç›´æŽ¥å®šä¹‰WCHARæ•°ç»„
         size_t byteLen = GetText(offsetBytes, docLengthByBytes - offsetBytes, buf, charLen);
         charCount -= charLen;
         offsetBytes += byteLen;
