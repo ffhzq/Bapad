@@ -5,188 +5,188 @@
 
 struct _BOM_LOOKUP BOMLOOK[] =
 {
-	// define longest headers first
-	//bom, headerlen, encoding form
-	{ 0x0000FEFF, 4, BCP_UTF32    },
-	{ 0xFFFE0000, 4, BCP_UTF32BE  },
-	{ 0xBFBBEF,	  3, BCP_UTF8	  },
-	{ 0xFFFE,	  2, BCP_UTF16BE  },
-	{ 0xFEFF,	  2, BCP_UTF16    },
-	{ 0,          0, BCP_ASCII	  },
+    // define longest headers first
+    //bom, headerlen, encoding form
+    { 0x0000FEFF, 4, BCP_UTF32    },
+    { 0xFFFE0000, 4, BCP_UTF32BE  },
+    { 0xBFBBEF,	  3, BCP_UTF8	  },
+    { 0xFFFE,	  2, BCP_UTF16BE  },
+    { 0xFEFF,	  2, BCP_UTF16    },
+    { 0,          0, BCP_ASCII	  },
 };
 
 
-// ���ر�����ʽ��Ӧ�ĺ궨����
+
 int DetectFileFormat(const unsigned char* docBuffer, const size_t docLengthByBytes, size_t& headerSize)
 {
-	int res = -1;
-	for (auto i : BOMLOOK)
-	{
-		if (docLengthByBytes >= i.headerLength
-			&& memcmp(&docBuffer[0], &i.bom, i.headerLength) == 0)
-		{
-			headerSize = i.headerLength;
-			res = i.type;
-			break;
-		}
-	}
-	if (res == -1)
-	{
-		headerSize = 0;
-		res = BCP_ASCII;
-	}
-	return res;
+    int res = -1;
+    for (auto i : BOMLOOK)
+    {
+        if (docLengthByBytes >= i.headerLength
+            && memcmp(&docBuffer[0], &i.bom, i.headerLength) == 0)
+        {
+            headerSize = i.headerLength;
+            res = i.type;
+            break;
+        }
+    }
+    if (res == -1)
+    {
+        headerSize = 0;
+        res = IsUTF8(docBuffer, docLengthByBytes) ? BCP_UTF8 : BCP_ASCII;
+    }
+    return res;
 
 }
 
 size_t UTF8ToUTF32(UTF8* utf8Str, size_t utf8Len, UTF32* pch32)
 {
-	static ULONG nonshortest[] = { 0, 0x80, 0x800, 0x10000, 0xffffffff, 0xffffffff };
-	UTF32 val32 = 0;
-	int trailing = 0;
-	UTF8 ch = *utf8Str;
-	utf8Str++;
+    static ULONG nonshortest[] = { 0, 0x80, 0x800, 0x10000, 0xffffffff, 0xffffffff };
+    UTF32 val32 = 0;
+    int trailing = 0;
+    UTF8 ch = *utf8Str;
+    utf8Str++;
 
-	if (utf8Str == 0 || utf8Len <= 0 || pch32 == 0)
-		return 0;
-	const char ASCII_MAX = 0x80 - 1;
-	if (ch <= ASCII_MAX)
-	{
-		*pch32 = ch;
-		return 1;
-	}
-	// LEAD-byte of 2-byte seq: 110xxxxx 10xxxxxx
-	else if ((ch & 0xE0) == 0xC0)
-	{
-		trailing = 1;
-		val32 = ch & 0x1F;
-	}
-	// LEAD-byte of 3-byte seq: 1110xxxx 10xxxxxx 10xxxxxx
-	else if ((ch & 0xF0) == 0xE0)
-	{
-		trailing = 2;
-		val32 = ch & 0x0F;
-	}
-	// LEAD-byte of 4-byte seq: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
-	else if ((ch & 0xF8) == 0xF0)
-	{
-		trailing = 3;
-		val32 = ch & 0x07;
-	}
-	// ILLEGAL 5-byte seq: 111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
-	else if ((ch & 0xFC) == 0xF8)
-	{
-		// range-checking the UTF32 result will catch this
-		trailing = 4;
-		val32 = ch & 0x03;
-	}
-	// ILLEGAL 6-byte seq: 1111110x 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
-	else if ((ch & 0xFE) == 0xFC)
-	{
-		// range-checking the UTF32 result will catch this
-		trailing = 5;
-		val32 = ch & 0x01;
-	}
-	// ILLEGAL continuation (trailing) byte by itself
-	else if ((ch & 0xC0) == 0x80)
-	{
-		*pch32 = UNI_REPLACEMENT_CHAR;
-		return 1;
-	}
-	// any other ILLEGAL form.
-	else
-	{
-		*pch32 = UNI_REPLACEMENT_CHAR;
-		return 1;
-	}
+    if (utf8Str == 0 || utf8Len <= 0 || pch32 == 0)
+        return 0;
+    const char ASCII_MAX = 0x80 - 1;
+    if (ch <= ASCII_MAX)
+    {
+        *pch32 = ch;
+        return 1;
+    }
+    // LEAD-byte of 2-byte seq: 110xxxxx 10xxxxxx
+    else if ((ch & 0xE0) == 0xC0)
+    {
+        trailing = 1;
+        val32 = ch & 0x1F;
+    }
+    // LEAD-byte of 3-byte seq: 1110xxxx 10xxxxxx 10xxxxxx
+    else if ((ch & 0xF0) == 0xE0)
+    {
+        trailing = 2;
+        val32 = ch & 0x0F;
+    }
+    // LEAD-byte of 4-byte seq: 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+    else if ((ch & 0xF8) == 0xF0)
+    {
+        trailing = 3;
+        val32 = ch & 0x07;
+    }
+    // ILLEGAL 5-byte seq: 111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
+    else if ((ch & 0xFC) == 0xF8)
+    {
+        // range-checking the UTF32 result will catch this
+        trailing = 4;
+        val32 = ch & 0x03;
+    }
+    // ILLEGAL 6-byte seq: 1111110x 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx
+    else if ((ch & 0xFE) == 0xFC)
+    {
+        // range-checking the UTF32 result will catch this
+        trailing = 5;
+        val32 = ch & 0x01;
+    }
+    // ILLEGAL continuation (trailing) byte by itself
+    else if ((ch & 0xC0) == 0x80)
+    {
+        *pch32 = UNI_REPLACEMENT_CHAR;
+        return 1;
+    }
+    // any other ILLEGAL form.
+    else
+    {
+        *pch32 = UNI_REPLACEMENT_CHAR;
+        return 1;
+    }
 
-	size_t i = 0, len = 1;
-	// process trailing bytes
-	for (; i < trailing && len < utf8Len; i++)
-	{
-		ch = *utf8Str++;
+    size_t i = 0, len = 1;
+    // process trailing bytes
+    for (; i < trailing && len < utf8Len; i++)
+    {
+        ch = *utf8Str++;
 
-		// Valid trail-byte: 10xxxxxx
-		if ((ch & 0xC0) == 0x80)
-		{
-			val32 = (val32 << 6) + (ch & 0x7f);
-			len++;
-		}
-		// Anything else is an error
-		else
-		{
-			*pch32 = UNI_REPLACEMENT_CHAR;
-			return len;
-		}
-	}
+        // Valid trail-byte: 10xxxxxx
+        if ((ch & 0xC0) == 0x80)
+        {
+            val32 = (val32 << 6) + (ch & 0x7f);
+            len++;
+        }
+        // Anything else is an error
+        else
+        {
+            *pch32 = UNI_REPLACEMENT_CHAR;
+            return len;
+        }
+    }
 
-	// did we 
-	if (val32 < nonshortest[trailing] || i != trailing)
-		*pch32 = UNI_REPLACEMENT_CHAR;
-	else
-		*pch32 = val32;
+    // did we 
+    if (val32 < nonshortest[trailing] || i != trailing)
+        *pch32 = UNI_REPLACEMENT_CHAR;
+    else
+        *pch32 = val32;
 
-	if (utf8Len != 0 && len == 0)
-	{
-		throw MyException("Invalid UTF-8 sequence", -1, MyException::ConversionType::FromUtf8ToUtf32);
-	}
+    if (utf8Len != 0 && len == 0)
+    {
+        throw MyException("Invalid UTF-8 sequence", -1, MyException::ConversionType::FromUtf8ToUtf32);
+    }
 
-	return len;
+    return len;
 }
 size_t UTF32ToUTF8(UTF32 ch32, UTF8* utf8Str, size_t& utf8Len)
 {
-	size_t len = 0;
+    size_t len = 0;
 
-	// validate parameters
-	if (utf8Str == 0 || utf8Len == 0)
-		return 0;
+    // validate parameters
+    if (utf8Str == 0 || utf8Len == 0)
+        return 0;
 
-	// ASCII is the easiest
-	if (ch32 < 0x80)
-	{
-		*utf8Str = (UTF8)ch32;
-		return 1;
-	}
+    // ASCII is the easiest
+    if (ch32 < 0x80)
+    {
+        *utf8Str = (UTF8)ch32;
+        return 1;
+    }
 
-	// make sure we have a legal utf32 char
-	if (ch32 > UNI_MAX_LEGAL_UTF32)
-		ch32 = UNI_REPLACEMENT_CHAR;
+    // make sure we have a legal utf32 char
+    if (ch32 > UNI_MAX_LEGAL_UTF32)
+        ch32 = UNI_REPLACEMENT_CHAR;
 
-	// cannot encode the surrogate range
-	if (ch32 >= UNI_SUR_HIGH_START && ch32 <= UNI_SUR_LOW_END)
-		ch32 = UNI_REPLACEMENT_CHAR;
+    // cannot encode the surrogate range
+    if (ch32 >= UNI_SUR_HIGH_START && ch32 <= UNI_SUR_LOW_END)
+        ch32 = UNI_REPLACEMENT_CHAR;
 
-	// 2-byte sequence
-	if (ch32 < 0x800 && utf8Len >= 2)
-	{
-		*utf8Str++ = (UTF8)((ch32 >> 6) | 0xC0);
-		*utf8Str++ = (UTF8)((ch32 & 0x3f) | 0x80);
-		len = 2;
-	}
-	// 3-byte sequence
-	else if (ch32 < 0x10000 && utf8Len >= 3)
-	{
-		*utf8Str++ = (UTF8)((ch32 >> 12) | 0xE0);
-		*utf8Str++ = (UTF8)((ch32 >> 6) & 0x3f | 0x80);
-		*utf8Str++ = (UTF8)((ch32 & 0x3f) | 0x80);
-		len = 3;
-	}
-	// 4-byte sequence
-	else if (ch32 <= UNI_MAX_LEGAL_UTF32 && utf8Len >= 4)
-	{
-		*utf8Str++ = (UTF8)((ch32 >> 18) | 0xF0);
-		*utf8Str++ = (UTF8)((ch32 >> 12) & 0x3f | 0x80);
-		*utf8Str++ = (UTF8)((ch32 >> 6) & 0x3f | 0x80);
-		*utf8Str++ = (UTF8)((ch32 & 0x3f) | 0x80);
-		len = 4;
-	}
+    // 2-byte sequence
+    if (ch32 < 0x800 && utf8Len >= 2)
+    {
+        *utf8Str++ = (UTF8)((ch32 >> 6) | 0xC0);
+        *utf8Str++ = (UTF8)((ch32 & 0x3f) | 0x80);
+        len = 2;
+    }
+    // 3-byte sequence
+    else if (ch32 < 0x10000 && utf8Len >= 3)
+    {
+        *utf8Str++ = (UTF8)((ch32 >> 12) | 0xE0);
+        *utf8Str++ = (UTF8)((ch32 >> 6) & 0x3f | 0x80);
+        *utf8Str++ = (UTF8)((ch32 & 0x3f) | 0x80);
+        len = 3;
+    }
+    // 4-byte sequence
+    else if (ch32 <= UNI_MAX_LEGAL_UTF32 && utf8Len >= 4)
+    {
+        *utf8Str++ = (UTF8)((ch32 >> 18) | 0xF0);
+        *utf8Str++ = (UTF8)((ch32 >> 12) & 0x3f | 0x80);
+        *utf8Str++ = (UTF8)((ch32 >> 6) & 0x3f | 0x80);
+        *utf8Str++ = (UTF8)((ch32 & 0x3f) | 0x80);
+        len = 4;
+    }
 
-	// 5/6 byte sequences never occur because we limit using UNI_MAX_LEGAL_UTF32
-	if (len == 0)
-	{
-		throw MyException("Invalid UTF-32 character", -1, MyException::ConversionType::FromUtf32ToUtf8);
-	}
-	return len;
+    // 5/6 byte sequences never occur because we limit using UNI_MAX_LEGAL_UTF32
+    if (len == 0)
+    {
+        throw MyException("Invalid UTF-32 character", -1, MyException::ConversionType::FromUtf32ToUtf8);
+    }
+    return len;
 }
 
 
@@ -488,4 +488,52 @@ size_t UTF16ToAscii(UTF16* utf16Str, size_t utf16Len, UTF8* asciiStr, size_t& as
         throw MyException("Invalid UTF-16 character", GetLastError(), MyException::ConversionType::FromUtf16ToAscii);
     }
     return lenInt;
+}
+
+bool IsUTF8(const unsigned char* buffer, size_t len)
+{
+ /*
+1byte :0xxxxxxx
+2bytes:110xxxxx 10xxxxxx
+3bytes:1110xxxx 10xxxxxx 10xxxxxx
+4bytes:11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
+*/
+      size_t i = 0;
+      while (i < len)
+      {
+          if (buffer[i] < 0x80)
+          {
+              i++;
+          }
+          else if ((buffer[i] & 0xE0) == 0xC0)
+          {
+              if (i + 1 >= len)
+                  return false;
+              if ((buffer[i + 1] & 0xC0) != 0x80)
+                  return false;
+              i += 2;
+          }
+          else if ((buffer[i] & 0xF0) == 0xE0)
+          {
+              if (i + 2 >= len)
+                  return false;
+              if ((buffer[i + 1] & 0xC0) != 0x80 || (buffer[i + 2] & 0xC0) != 0x80)
+                  return false;
+              i += 3;
+          }
+          else if ((buffer[i] & 0xF8) == 0xF0)
+          {
+              if (i + 3 >= len)
+                  return false;
+              if ((buffer[i + 1] & 0xC0) != 0x80 || (buffer[i + 2] & 0xC0) != 0x80 || (buffer[i + 3] & 0xC0) != 0x80)
+                  return false;
+              i += 4;
+          }
+          else
+          {
+              return false;
+          }
+      }
+      return true;
+
 }
