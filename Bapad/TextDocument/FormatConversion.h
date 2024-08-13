@@ -88,3 +88,5 @@ size_t  UTF16ToAscii(UTF16* utf16Str, size_t utf16Len, UTF8* asciiStr, size_t& a
 
 size_t  CopyUTF16(UTF16* src, size_t srcLen, UTF16* dest, size_t& destLen);
 size_t  SwapUTF16(UTF16* src, size_t srcLen, UTF16* dest, size_t& destLen);
+
+bool IsUTF8(const unsigned char* buffer, size_t len);
