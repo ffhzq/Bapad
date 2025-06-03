@@ -1,4 +1,4 @@
-#include "pch.h"
+﻿#include "pch.h"
 
 //unsigned,8 bits long,BYTE
 using Byte = unsigned char;
@@ -64,17 +64,11 @@ inline void BigToLittle32(char32_t& ch32)
 
 }
 
-inline void LittleToBig32(char32_t& ch32)
-{
-	unsigned char* data = reinterpret_cast<unsigned char*>(&ch32);
-	ch32 = (data[0] << 0) | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
-}
 
-inline void BigToLittle32(char32_t& ch32)
-{
-	unsigned char* data = reinterpret_cast<unsigned char*>(&ch32);
-	ch32 = (data[3] << 0) | (data[2] << 8) | (data[1] << 16) | (data[0] << 24);
-}
+size_t  UTF8ToUTF32(UTF8* utf8Str, size_t utf8Len, UTF32* pch32);
+size_t  UTF32ToUTF8(UTF32 ch32, UTF8* utf8Str, size_t& utf8Len);
+
+
 
 size_t  UTF8ToUTF16(UTF8* utf8Str, size_t utf8Len, UTF16* utf16Str, size_t& utf16Len);
 size_t  UTF16ToUTF8(UTF16* utf16Str, size_t utf16Len, UTF8* utf8Str, size_t& utf8Len);
