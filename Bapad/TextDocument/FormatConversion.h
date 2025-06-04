@@ -35,9 +35,9 @@ typedef unsigned char	UTF8;	// typically 8 bits
 //Byte Order Mark
 struct _BOM_LOOKUP
 {
-	DWORD  bom;
-	ULONG  headerLength;
-	int    type;
+    DWORD  bom;
+    ULONG  headerLength;
+    int    type;
 };
 
 int DetectFileFormat(const unsigned char* docBuffer, const size_t docLengthByBytes, size_t& headerSize);
