@@ -39,7 +39,7 @@ int DetectFileFormat(const unsigned char* docBuffer, const size_t docLengthByByt
 
 }
 
-size_t UTF8ToUTF32(UTF8* utf8Str, size_t utf8Len, UTF32* pch32)
+size_t UTF8ToUTF32(unsigned char* utf8Str, size_t utf8Len, unsigned long* pch32)
 {
     static ULONG nonshortest[] = { 0, 0x80, 0x800, 0x10000, 0xffffffff, 0xffffffff };
     UTF32 val32 = 0;
@@ -133,7 +133,7 @@ size_t UTF8ToUTF32(UTF8* utf8Str, size_t utf8Len, UTF32* pch32)
 
     return len;
 }
-size_t UTF32ToUTF8(UTF32 ch32, UTF8* utf8Str, size_t& utf8Len)
+size_t UTF32ToUTF8(unsigned long ch32, unsigned char* utf8Str, size_t& utf8Len)
 {
     size_t len = 0;
 
@@ -191,7 +191,7 @@ size_t UTF32ToUTF8(UTF32 ch32, UTF8* utf8Str, size_t& utf8Len)
 
 
 
-size_t AsciiToUTF16(UTF8* asciiStr, size_t asciiLen, UTF16* utf16Str, size_t& utf16Len)
+size_t AsciiToUTF16(unsigned char* asciiStr, size_t asciiLen, unsigned short* utf16Str, size_t& utf16Len)
 {
     size_t len = min(utf16Len, asciiLen);
     if (len > static_cast<size_t>((std::numeric_limits<int>::max)()))
@@ -209,7 +209,7 @@ size_t AsciiToUTF16(UTF8* asciiStr, size_t asciiLen, UTF16* utf16Str, size_t& ut
     return len;
 }
 
-size_t UTF8ToUTF16(UTF8* utf8Str, size_t utf8Len, UTF16* utf16Str, size_t& utf16Len)
+size_t UTF8ToUTF16(unsigned char* utf8Str, size_t utf8Len, unsigned short* utf16Str, size_t& utf16Len)
 {
     UTF16* utf16start = utf16Str;
     UTF8* utf8start = utf8Str;
@@ -245,7 +245,7 @@ size_t UTF8ToUTF16(UTF8* utf8Str, size_t utf8Len, UTF16* utf16Str, size_t& utf16
 
 
 
-size_t CopyUTF16(UTF16* src, size_t srcLen, UTF16* dest, size_t& destLen)
+size_t CopyUTF16(unsigned short* src, size_t srcLen, unsigned short* dest, size_t& destLen)
 {
     size_t len = min(destLen, srcLen);
     memcpy(dest, src, len * sizeof(UTF16));
@@ -258,7 +258,7 @@ size_t CopyUTF16(UTF16* src, size_t srcLen, UTF16* dest, size_t& destLen)
     return len;
 }
 
-size_t SwapUTF16(UTF16* src, size_t srcLen, UTF16* dest, size_t& destLen)
+size_t SwapUTF16(unsigned short* src, size_t srcLen, unsigned short* dest, size_t& destLen)
 {
     size_t len = min(destLen, srcLen);
 
@@ -273,7 +273,7 @@ size_t SwapUTF16(UTF16* src, size_t srcLen, UTF16* dest, size_t& destLen)
     return len;
 }
 
-size_t UTF16ToUTF32(UTF16* utf16Str, size_t utf16Len, UTF32* utf32Str, size_t& utf32Len)
+size_t UTF16ToUTF32(unsigned short* utf16Str, size_t utf16Len, unsigned long* utf32Str, size_t& utf32Len)
 {
     UTF16* utf16start = utf16Str;
     UTF32* utf32start = utf32Str;
@@ -319,7 +319,7 @@ size_t UTF16ToUTF32(UTF16* utf16Str, size_t utf16Len, UTF32* utf32Str, size_t& u
     return utf16Str - utf16start;
 }
 
-size_t UTF32ToUTF16(UTF32* utf32Str, size_t utf32Len, UTF16* utf16Str, size_t& utf16Len)
+size_t UTF32ToUTF16(unsigned long* utf32Str, size_t utf32Len, unsigned short* utf16Str, size_t& utf16Len)
 {
     UTF16* utf16start = utf16Str;
     UTF32* utf32start = utf32Str;
@@ -384,7 +384,7 @@ size_t UTF32ToUTF16(UTF32* utf32Str, size_t utf32Len, UTF16* utf16Str, size_t& u
     return utf32Str - utf32start;
 }
 
-size_t UTF16BEToUTF32(UTF16* utf16Str, size_t utf16Len, UTF32* utf32Str, size_t& utf32Len)
+size_t UTF16BEToUTF32(unsigned short* utf16Str, size_t utf16Len, unsigned long* utf32Str, size_t& utf32Len)
 {
     UTF16* utf16start = utf16Str;
     UTF32* utf32start = utf32Str;
@@ -431,7 +431,7 @@ size_t UTF16BEToUTF32(UTF16* utf16Str, size_t utf16Len, UTF32* utf32Str, size_t&
     return utf16Str - utf16start;
 }
 
-size_t UTF16ToUTF8(UTF16* utf16Str, size_t utf16Len, UTF8* utf8Str, size_t& utf8Len)
+size_t UTF16ToUTF8(unsigned short* utf16Str, size_t utf16Len, unsigned char* utf8Str, size_t& utf8Len)
 {
     UTF16* utf16start = utf16Str;
     UTF8* utf8start = utf8Str;
@@ -464,7 +464,7 @@ size_t UTF16ToUTF8(UTF16* utf16Str, size_t utf16Len, UTF8* utf8Str, size_t& utf8
 
 
 
-size_t UTF16ToAscii(UTF16* utf16Str, size_t utf16Len, UTF8* asciiStr, size_t& asciiLen)
+size_t UTF16ToAscii(unsigned short* utf16Str, size_t utf16Len, unsigned char* asciiStr, size_t& asciiLen)
 {
     size_t len = min(utf16Len, asciiLen);
     if (len > static_cast<size_t>((std::numeric_limits<int>::max)()))
