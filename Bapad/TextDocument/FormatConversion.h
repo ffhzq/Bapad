@@ -68,8 +68,6 @@ inline void BigToLittle32(char32_t& ch32)
 size_t  UTF8ToUTF32(unsigned char* utf8Str, size_t utf8Len, unsigned long* pch32);
 size_t  UTF32ToUTF8(unsigned long ch32, unsigned char* utf8Str, size_t& utf8Len);
 
-
-
 size_t  UTF8ToUTF16(unsigned char* utf8Str, size_t utf8Len, unsigned short* utf16Str, size_t& utf16Len);
 size_t  UTF16ToUTF8(unsigned short* utf16Str, size_t utf16Len, unsigned char* utf8Str, size_t& utf8Len);
 

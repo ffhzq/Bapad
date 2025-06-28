@@ -2,6 +2,7 @@
 #include <stdexcept>
 #include <stdint.h>
 #include <string>
+
 class MyException : public std::runtime_error {
 public:
     enum class ConversionType
@@ -39,14 +40,12 @@ MyException::MyException(const char* message, uint32_t errorCode, ConversionType
 
 {}
 
-
 MyException::MyException(const std::string message, uint32_t errorCode, ConversionType type)
     : std::runtime_error(message),
     _errorCode(errorCode),
     _conversionType(type)
 
 {}
-
 
 
 inline uint32_t MyException::ErrorCode() const
