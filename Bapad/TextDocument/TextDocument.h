@@ -16,17 +16,17 @@ public:
     bool ReCalculateLineBuffer();
     size_t LineNumFromOffset(size_t offset);
 
-    bool LineInfoFromOffset(size_t offset_chars, size_t* lineNo, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);//¶¨Î»¶ÔÓ¦offsetËùÔÚµÄĞĞ²¢·µ»ØĞĞºÅ¡¢×Ö·ûÆ«ÒÆÁ¿¡¢ĞĞ×Ö·ûÊı¡¢×Ö½ÚÆ«ÒÆÁ¿¡¢ĞĞ×Ö½ÚÊıÕâĞ©ĞÅÏ¢
+    bool LineInfoFromOffset(size_t offset_chars, size_t* lineNo, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);//å®šä½å¯¹åº”offsetæ‰€åœ¨çš„è¡Œå¹¶è¿”å›è¡Œå·ã€å­—ç¬¦åç§»é‡ã€è¡Œå­—ç¬¦æ•°ã€å­—èŠ‚åç§»é‡ã€è¡Œå­—èŠ‚æ•°è¿™äº›ä¿¡æ¯
     bool LineInfoFromLineNumber(size_t lineno, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);
 
     TextIterator IterateLineByLineNumber(size_t lineno, size_t* linestart = 0, size_t* linelen = 0);
     TextIterator IterateLineByOffset(size_t offset_chars, size_t* lineno, size_t* linestart = 0);
 
-    size_t	InsertText(size_t offsetChars, WCHAR* text, size_t length);
-    size_t	ReplaceText(size_t offsetChars, WCHAR* text, size_t length, size_t eraseLen);
+    size_t	InsertText(size_t offsetChars, wchar_t* text, size_t length);
+    size_t	ReplaceText(size_t offsetChars, wchar_t * text, size_t length, size_t eraseLen);
     size_t	EraseText(size_t offsetChars, size_t length);
 
-    const uint32_t GetFileFormat() const;
+    const int GetFileFormat() const;
     const size_t GetLineCount() const;
     const size_t GetLongestLine(int tabwidth) const;
     const size_t GetDocLength() const;
@@ -41,11 +41,11 @@ private:
     // GetText: read 'lenBytes'or'bufLen'(use the smaller one) bytes wchar from the position (docBuffer+offset) to 'buf'
     size_t  GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t& bufLen);
 
-    size_t  RawDataToUTF16(BYTE* rawdata, size_t rawlen, WCHAR* utf16str, size_t& utf16len);
-    size_t  UTF16ToRawData(WCHAR* utf16Str, size_t utf16Len, BYTE* rawData, size_t& rawLen);
+    size_t  RawDataToUTF16(unsigned char * rawdata, size_t rawlen, wchar_t * utf16str, size_t& utf16len);
+    size_t  UTF16ToRawData(wchar_t * utf16Str, size_t utf16Len, unsigned char * rawData, size_t& rawLen);
 
-    size_t	InsertTextRaw(size_t offsetBytes, WCHAR* text, size_t textLength);
-    size_t	ReplaceTextRaw(size_t offsetBytes, WCHAR* text, size_t textLength, size_t eraseLen);
+    size_t	InsertTextRaw(size_t offsetBytes, wchar_t * text, size_t textLength);
+    size_t	ReplaceTextRaw(size_t offsetBytes, wchar_t  * text, size_t textLength, size_t eraseLen);
     size_t	EraseTextRaw(size_t offsetBytes, size_t textLength);
 
     size_t CharOffsetToByteOffsetAt(size_t offsetBytes, size_t charCount);
