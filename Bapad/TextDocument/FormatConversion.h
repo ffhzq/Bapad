@@ -1,3 +1,4 @@
+#pragma once
 #include "pch.h"
 
 //unsigned,8 bits long,BYTE
