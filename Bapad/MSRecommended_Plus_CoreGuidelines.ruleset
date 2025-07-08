@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RuleSet Name="MSRecommended_Plus_CoreGuidelines" ToolsVersion="17.0">
+  <Include Path="cppcorecheckrules.ruleset" Action="Default" />
+  <Include Path="mixedrecommendedrules.ruleset" Action="Default" />
+  <Include Path="nativerecommendedrules.ruleset" Action="Default" />
+</RuleSet>
