@@ -36,3 +36,9 @@
 
 #Google Test dependencies
 packages/
+
+#VS Config
+*.vcxproj
+*.ruleset
+*.vcxproj.filters
+*.vcxproj.user
