@@ -19,14 +19,49 @@ TextDocument::~TextDocument()
     Clear();
 }
 
-bool TextDocument::Initialize(wchar_t* filename)//跨平台要改
+bool TextDocument::Initialize(wchar_t* filename)
 {
-    HANDLE hFile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+  std::ifstream ifs(filename, std::ios::binary | std::ios::ate);
+  if (!ifs.is_open()) 
+  {
+    return false;
+  }
+  docLengthByBytes = ifs.tellg();
+  ifs.seekg(0, std::ios::beg);
+  if (docLengthByBytes <= 0) 
+  {
+    docLengthByBytes = 0;
+    return false;
+  }
+  try
+  {
+    docBuffer.resize(docLengthByBytes);
+  }
+  catch (const std::bad_alloc& e)
+  {
+    return false;
+  }
+  ifs.read(reinterpret_cast<char*>(docBuffer.data()), docLengthByBytes);
+  if (!ifs)
+  {
+    // Handle error: file could not be fully read
+    // For example, clear the buffer and return false
+    docBuffer.clear();
+    docLengthByBytes = 0;
+    return false;
+  }
 
-    if (hFile == INVALID_HANDLE_VALUE)
-        return false;
+  // Detect file format
+  fileFormat = DetectFileFormat(docBuffer.data(), docLengthByBytes, headerSize);
 
-    return Initialize(hFile);
+  // Work out where each line of text starts
+  if (!InitLineBuffer())
+  {
+    Clear(); // Clear resources if line buffer initialization fails
+    return false;
+  }
+  ifs.close();
+  return true;
 }
 
 bool TextDocument::Initialize(HANDLE hFile)
