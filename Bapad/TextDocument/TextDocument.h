@@ -32,7 +32,6 @@ public:
     const size_t GetDocLength() const;
 
 private:
-    bool Initialize(HANDLE hFile);
     bool InitLineBuffer();
     bool ReleaseLineBuffer();
 

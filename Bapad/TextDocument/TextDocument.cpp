@@ -19,53 +19,50 @@ TextDocument::~TextDocument() noexcept
     Clear();
 }
 
-bool TextDocument::Initialize(wchar_t* filename)//跨平台要改
+bool TextDocument::Initialize(wchar_t* filename)
 {
-    HANDLE hFile = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+  std::ifstream ifs(filename, std::ios::binary | std::ios::ate);
+  if (!ifs.is_open()) 
+  {
+    return false;
+  }
+  docLengthByBytes = ifs.tellg();
+  ifs.seekg(0, std::ios::beg);
+  if (docLengthByBytes <= 0) 
+  {
+    docLengthByBytes = 0;
+    return false;
+  }
+  try
+  {
+    docBuffer.resize(docLengthByBytes);
+  }
+  catch (const std::bad_alloc& e)
+  {
+    return false;
+  }
+  ifs.read(reinterpret_cast<char*>(docBuffer.data()), docLengthByBytes);
+  if (!ifs)
+  {
+    // Handle error: file could not be fully read
+    // For example, clear the buffer and return false
+    docBuffer.clear();
+    docLengthByBytes = 0;
+    return false;
+  }
 
-    if (hFile == INVALID_HANDLE_VALUE)
-        return false;
+  // Detect file format
+  fileFormat = DetectFileFormat(docBuffer.data(), docLengthByBytes, headerSize);
 
-    return Initialize(hFile);
+  // Work out where each line of text starts
+  if (!InitLineBuffer())
+  {
+    Clear(); // Clear resources if line buffer initialization fails
+    return false;
+  }
+  ifs.close();
+  return true;
 }
-
-bool TextDocument::Initialize(HANDLE hFile)
-{
-    //PLARGE_INTEGER Represents a 64-bit signed integer value
-    LARGE_INTEGER TmpDocumentLength = { 0 };
-
-    //Retrieves the size of the specified file.
-    if (GetFileSizeEx(hFile, &TmpDocumentLength) == 0)
-    {
-        docLengthByBytes = 0;
-        return false;
-    }
-    docLengthByBytes = TmpDocumentLength.QuadPart;
-
-    //if (GetFileSize(hFile, 0) != docLengthByBytes)abort();
-
-    // allocate new file-buffer
-    const size_t bufferSize = docLengthByBytes;
-    docBuffer = std::move(std::vector<unsigned char>(bufferSize, 0));
-    ULONG numOfBytesRead = 0;
-    // read entire file into memory
-    BOOL READ_RETVAL = ReadFile(hFile, &docBuffer[0], static_cast<DWORD>(docLengthByBytes), &numOfBytesRead, NULL);
-
-    if (READ_RETVAL == FALSE)
-    {
-        abort();
-    }
-
-    fileFormat = DetectFileFormat(docBuffer.data(), docLengthByBytes, headerSize);
-
-    // work out where each line of text starts
-    if (!InitLineBuffer())
-        Clear();
-
-    CloseHandle(hFile);
-    return true;
-}
-
 
 bool TextDocument::InitLineBuffer()
 {
@@ -327,7 +324,7 @@ const size_t TextDocument::GetDocLength() const
     return docLengthByBytes;
 }
 
-bool TextDocument::Clear()
+bool TextDocument::Clear() noexcept
 {
     if (!docBuffer.empty())
     {
