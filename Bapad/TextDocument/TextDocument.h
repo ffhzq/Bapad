@@ -7,12 +7,12 @@ class TextDocument
 {
     friend class TextIterator;
 public:
-    TextDocument();
-    ~TextDocument();
+    TextDocument() noexcept;
+    ~TextDocument() noexcept;
 
     bool Initialize(wchar_t* filename);
     
-    bool Clear();
+    bool Clear() noexcept;
     bool ReCalculateLineBuffer();
     size_t LineNumFromOffset(size_t offset);
 
@@ -74,18 +74,18 @@ private:
     size_t  offsetBytes;
     size_t  lengthBytes;//bytes remaining
 public:
-    TextIterator()
+    TextIterator() noexcept
         : textDoc(nullptr), offsetBytes(0), lengthBytes(0)
     {
     }
 
-    TextIterator(size_t off, size_t len, TextDocument* td)
+    TextIterator(size_t off, size_t len, TextDocument* td) noexcept
         : textDoc(td), offsetBytes(off), lengthBytes(len)
     {
 
     }
 
-    TextIterator(const TextIterator& ti)
+    TextIterator(const TextIterator& ti) noexcept
         : textDoc(ti.textDoc), offsetBytes(ti.offsetBytes), lengthBytes(ti.lengthBytes)
     {
     }

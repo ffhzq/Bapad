@@ -2,7 +2,7 @@
 #include "formatConversion.h"
 #include "TextDocument.h"
 
-TextDocument::TextDocument()
+TextDocument::TextDocument() noexcept
   :
   docBuffer(),
   docLengthByChars(0),
@@ -14,7 +14,7 @@ TextDocument::TextDocument()
   lineCount(0)
 {
 }
-TextDocument::~TextDocument()
+TextDocument::~TextDocument() noexcept
 {
     Clear();
 }
