@@ -1,4 +1,3 @@
-#pragma once
 #include "pch.h"
 
 //unsigned,8 bits long,BYTE
@@ -26,23 +25,22 @@ typedef unsigned char	UTF8;	// typically 8 bits
 #define UNI_SUR_LOW_START    (UTF32)0xDC00
 #define UNI_SUR_LOW_END      (UTF32)0xDFFF
 
-// Bapad codepage
-constexpr auto BCP_ASCII = 0;
-constexpr auto BCP_UTF8 = 1;
-constexpr auto BCP_UTF16 = 2;
-constexpr auto BCP_UTF16BE = 3;
-constexpr auto BCP_UTF32 = 4;
-constexpr auto BCP_UTF32BE = 5;
+#define BCP_ASCII		0
+#define BCP_UTF8		1
+#define BCP_UTF16		2
+#define BCP_UTF16BE		3
+#define BCP_UTF32		4
+#define BCP_UTF32BE		5
 
 //Byte Order Mark
 struct _BOM_LOOKUP
 {
-    unsigned long  bom;
-    int  headerLength;
+    DWORD  bom;
+    ULONG  headerLength;
     int    type;
 };
 
-int DetectFileFormat(const unsigned char* docBuffer, const size_t docLengthByBytes, int& headerSize);
+int DetectFileFormat(const unsigned char* docBuffer, const size_t docLengthByBytes, size_t& headerSize);
 
 //without side affect
 #define SwapWord(val) (((WORD)(val) << 8) | ((WORD)(val) >> 8))
