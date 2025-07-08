@@ -3,17 +3,16 @@
 #include "TextDocument.h"
 
 TextDocument::TextDocument()
-    :
-    docBuffer(),
-    byteOffsetLineBuffer(nullptr),
-    charOffsetLineBuffer(nullptr)
+  :
+  docBuffer(),
+  docLengthByChars(0),
+  docLengthByBytes(0),
+  fileFormat(0),
+  headerSize(0),
+  byteOffsetLineBuffer(nullptr),
+  charOffsetLineBuffer(nullptr),
+  lineCount(0)
 {
-    docLengthByBytes = 0;
-    docLengthByChars = 0;
-    lineCount = 0;
-
-    fileFormat = BCP_ASCII;
-    headerSize = 0;
 }
 TextDocument::~TextDocument()
 {
