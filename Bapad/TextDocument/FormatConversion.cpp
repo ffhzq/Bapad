@@ -17,7 +17,7 @@ struct _BOM_LOOKUP BOMLOOK[] =
 
 
 
-int DetectFileFormat(const unsigned char* docBuffer, const size_t docLengthByBytes, size_t& headerSize)
+int DetectFileFormat(const unsigned char* docBuffer, const size_t docLengthByBytes, int& headerSize)
 {
     int res = -1;
     for (auto i : BOMLOOK)
