@@ -53,19 +53,6 @@ inline auto SwapWord16(T& ch16)
     return (ch16 = (((T)(ch16) << 8) | ((T)(ch16) >> 8)));
 }
 
-inline void LittleToBig32(char32_t& ch32)
-{
-    unsigned char* data = reinterpret_cast<unsigned char*>(&ch32);
-    ch32 = (data[0] << 0) | (data[1] << 8) | (data[2] << 16) | (data[3] << 24);
-}
-
-inline void BigToLittle32(char32_t& ch32)
-{
-    unsigned char* data = reinterpret_cast<unsigned char*>(&ch32);
-    ch32 = (data[3] << 0) | (data[2] << 8) | (data[1] << 16) | (data[0] << 24);
-
-}
-
 
 size_t  UTF8ToUTF32(unsigned char* utf8Str, size_t utf8Len, unsigned long* pch32);
 size_t  UTF32ToUTF8(unsigned long ch32, unsigned char* utf8Str, size_t& utf8Len);
