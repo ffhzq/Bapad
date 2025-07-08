@@ -54,7 +54,7 @@ private:
     size_t  docLengthByBytes;// size of txt data
 
     int fileFormat;
-    size_t  headerSize;
+    int  headerSize;
 
     size_t* byteOffsetLineBuffer;
     size_t* charOffsetLineBuffer;
