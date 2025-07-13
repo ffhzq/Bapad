@@ -1,22 +1,22 @@
 #pragma once
 #include "pch.h"
 
+std::vector<size_t> createLineStarts(const std::vector<unsigned char>& str);
+
 struct Buffer {
   std::vector<unsigned char> value;
   std::vector<size_t> lineStarts;
-  Buffer() :value(), lineStarts({0})
-  {};
   Buffer(std::vector<unsigned char> input) : value(input), lineStarts(createLineStarts(value))
   {}
 };
 
 struct BufferPosition {
-  size_t index; //  行, index in Buffer.lineStarts
-  size_t offset; // 列
+  size_t index; //  line, index in Buffer.lineStarts
+  size_t offset; // column
   BufferPosition() noexcept : index(0), offset(0)
   {}
 
-  BufferPosition(const size_t& index, const size_t& offset)
+  BufferPosition(const size_t& index, const size_t& offset)noexcept
     : index(index), offset(offset)
   {}
 };
@@ -30,7 +30,7 @@ struct Piece {
   Piece() noexcept :start(), end(), bufferIndex(0), length(0), lineFeedCnt(0)
   {}
 
-  Piece(const BufferPosition& start, const BufferPosition& end, const size_t& bufferIndex, const size_t& length, const size_t& lineFeedCnt)
+  Piece(const BufferPosition& start, const BufferPosition& end, const size_t& bufferIndex, const size_t& length, const size_t& lineFeedCnt) noexcept
     : start(start), end(end), bufferIndex(bufferIndex), length(length), lineFeedCnt(lineFeedCnt)
   {}
 };
@@ -43,7 +43,7 @@ public:
   Node() noexcept :piece(), left(nullptr), right(nullptr)
   {}
 
-  Node(const Piece& piece, Node* left, Node* right)
+  Node(const Piece& piece, Node* left, Node* right) noexcept
     : piece(piece), left(left), right(right)
   {}
 };
@@ -69,7 +69,7 @@ private:
   size_t lineCount;
   size_t length;
 
-  size_t GetNodeIndex(size_t offset);
+  size_t GetNodeIndex(size_t offset) noexcept;
 };
 
 std::vector<size_t> createLineStarts(const std::vector<unsigned char>& str);
