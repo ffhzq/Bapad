@@ -48,8 +48,12 @@ public:
   {}
 };
 
-class PieceTree {
-public:
+struct PieceTree {
+
+  std::vector<Buffer> buffers;
+  Node rootNode; //dump
+  size_t lineCount;
+  size_t length;
 
   PieceTree(std::vector<unsigned char> input);
   ~PieceTree() noexcept;
@@ -63,11 +67,6 @@ public:
   bool InsertText(size_t offset, unsigned char* str, size_t length) noexcept;
   bool EraseText(size_t offset, size_t length) noexcept;
   bool ReplaceText(size_t offset, unsigned char* str, size_t length, size_t erase_length) noexcept;
-private:
-  std::vector<Buffer> buffers;
-  Node rootNode; //dump
-  size_t lineCount;
-  size_t length;
 
   size_t GetNodeIndex(size_t offset) noexcept;
 };
