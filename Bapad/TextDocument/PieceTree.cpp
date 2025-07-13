@@ -65,7 +65,7 @@ size_t PieceTree::GetNodeIndex(size_t offset) noexcept
 
 std::vector<size_t> createLineStarts(const std::vector<unsigned char>& str)
 {
-  std::vector<size_t> lineStarts;
+  std::vector<size_t> lineStarts{0}; // first line starts in 0.
   const size_t length = str.size();
   for (size_t i = 0; i < length; ++i)
   {
@@ -91,6 +91,5 @@ std::vector<size_t> createLineStarts(const std::vector<unsigned char>& str)
       lineStarts.push_back(i + 1);
     }
   }
-  if (lineStarts.empty()) lineStarts.push_back(0);
   return lineStarts;
 }
