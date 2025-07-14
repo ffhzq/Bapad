@@ -2,6 +2,7 @@
 #include "pch.h"
 
 std::vector<size_t> createLineStarts(const std::vector<unsigned char>& str);
+size_t getLineIndexFromOffset(const std::vector<size_t>& lineStarts, size_t offset);
 
 struct Buffer {
   std::vector<unsigned char> value;
@@ -16,7 +17,7 @@ struct BufferPosition {
   BufferPosition() noexcept : index(0), offset(0)
   {}
 
-  BufferPosition(const size_t& index, const size_t& offset)noexcept
+  BufferPosition(const size_t& index, const size_t& offset) noexcept
     : index(index), offset(offset)
   {}
 };
@@ -64,11 +65,11 @@ struct PieceTree {
   PieceTree(PieceTree&&) = delete;
   PieceTree& operator=(PieceTree&&) = delete;
 
-  bool InsertText(size_t offset, unsigned char* str, size_t length) noexcept;
+  bool InsertText(size_t offset, std::vector<unsigned char> input) noexcept;
   bool EraseText(size_t offset, size_t length) noexcept;
-  bool ReplaceText(size_t offset, unsigned char* str, size_t length, size_t erase_length) noexcept;
+  bool ReplaceText(size_t offset, std::vector<unsigned char> input, size_t erase_length) noexcept;
 
-  size_t GetNodeIndex(size_t offset) noexcept;
+  // use (TreeNode*, inNodeOffset) locate the insertion position.
+  TreeNode* GetNodePosition(size_t offset, size_t& inNodeOffset) noexcept;
+  TreeNode* SplitPiece(TreeNode* currNode, const size_t inNodeOffset);
 };
-
-std::vector<size_t> createLineStarts(const std::vector<unsigned char>& str);
