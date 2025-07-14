@@ -11,8 +11,8 @@ struct Buffer {
 };
 
 struct BufferPosition {
-  size_t index; //  line, index in Buffer.lineStarts
-  size_t offset; // column
+  size_t index; //  line offset, index in Buffer.lineStarts
+  size_t offset; // column offset
   BufferPosition() noexcept : index(0), offset(0)
   {}
 
@@ -35,23 +35,23 @@ struct Piece {
   {}
 };
 
-struct Node {
+struct TreeNode {
 public:
   Piece piece;
-  Node* left;
-  Node* right;
-  Node() noexcept :piece(), left(nullptr), right(nullptr)
+  TreeNode* left;
+  std::unique_ptr<TreeNode> right;
+  TreeNode() noexcept :piece(), left(nullptr), right(nullptr)
   {}
 
-  Node(const Piece& piece, Node* left, Node* right) noexcept
-    : piece(piece), left(left), right(right)
+  TreeNode(const Piece& piece, TreeNode* _left) noexcept
+    : piece(piece), left(_left), right(nullptr)
   {}
 };
 
 struct PieceTree {
 
   std::vector<Buffer> buffers;
-  Node rootNode; //dump
+  std::unique_ptr<TreeNode> rootNode;
   size_t lineCount;
   size_t length;
 

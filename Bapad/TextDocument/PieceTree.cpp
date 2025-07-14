@@ -12,7 +12,7 @@ enum class CharCode {
   CarriageReturn = 13,
 };
 
-PieceTree::PieceTree(std::vector<unsigned char> input) : buffers{}, rootNode(), length(0), lineCount(0)
+PieceTree::PieceTree(std::vector<unsigned char> input) : buffers{}, rootNode(std::make_unique<TreeNode>()), length(0), lineCount(0)
 {
   buffers.push_back(Buffer(std::vector<unsigned char>()));
   Buffer buffer(input);
@@ -20,28 +20,20 @@ PieceTree::PieceTree(std::vector<unsigned char> input) : buffers{}, rootNode(), 
   const Piece piece{
     BufferPosition(0,0), // startPos
     BufferPosition(buffer.lineStarts.size() - 1, // endPos
-      buffer.lineStarts.back()),
+      buffer.value.size() - buffer.lineStarts.back()),
     buffers.size(), // BufferIndex
     buffer.value.size(), // length
     buffer.lineStarts.size() - 1}; // lineCount
 
-  rootNode.left = nullptr;
-  rootNode.right = new Node(piece, &rootNode, nullptr);
+  rootNode.get()->left = nullptr;
+  rootNode.get()->right = std::make_unique<TreeNode>(piece, rootNode.get());
   buffers.emplace_back(buffer);
   length += piece.length;
   lineCount += piece.lineFeedCnt;
 }
 
 PieceTree::~PieceTree() noexcept
-{
-  Node* i = rootNode.right;
-  while (i != nullptr)
-  {
-    Node* cur = i;
-    i = i->right;
-    delete cur;
-  }
-}
+{}
 
 bool PieceTree::InsertText(size_t offset, unsigned char* str, size_t length) noexcept
 {
