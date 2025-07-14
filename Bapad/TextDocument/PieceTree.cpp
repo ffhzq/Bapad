@@ -22,7 +22,7 @@ PieceTree::PieceTree(std::vector<unsigned char> input) : buffers{}, rootNode(std
     BufferPosition(0,0), // startPos
     BufferPosition(buffer.lineStarts.size() - 1, // endPos
       buffer.value.size() - buffer.lineStarts.back()),
-    buffers.size(), // BufferIndex
+    buffers.size() -1, // BufferIndex
     buffer.value.size(), // length
     buffer.lineStarts.size() - 1}; // lineCount
 
@@ -56,7 +56,7 @@ bool PieceTree::InsertText(size_t offset, std::vector<unsigned char> input) noex
     BufferPosition(0,0), // startPos
     BufferPosition(buffer.lineStarts.size() - 1, // endPos
       buffer.value.size() - buffer.lineStarts.back()),
-    buffers.size(), // BufferIndex
+    buffers.size() - 1, // BufferIndex
     buffer.value.size(), // length
     buffer.lineStarts.size() - 1}; // lineCount
 
@@ -71,6 +71,9 @@ bool PieceTree::InsertText(size_t offset, std::vector<unsigned char> input) noex
     NewNode->right->left = NewNode.get();
   }
   nodePos->right = std::move(NewNode);
+
+  length += piece.length;
+  lineCount += piece.lineFeedCnt;
 
   return true;
 }
