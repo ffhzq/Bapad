@@ -208,7 +208,7 @@ TEST_F(PieceTreeTest, InsertTextWithNewlines)
   std::vector<unsigned char> textToInsert = toUCharVector("Middle\n");
   bool success = pt.InsertText(6, textToInsert); // Insert at 'Befor|e\nAfter'
   EXPECT_TRUE(success);
-  EXPECT_EQ(pt.length, 13 + 7); // Original (6 + 1 + 5) + Inserted (6 + 1)
+  EXPECT_EQ(pt.length, 12 + 7); // Original (6 + 1 + 5) + Inserted (6 + 1)
   EXPECT_EQ(pt.lineCount, 2 + 1); // Original 1 lines, inserted 1 newline
 }
 
