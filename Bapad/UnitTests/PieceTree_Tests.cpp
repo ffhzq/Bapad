@@ -136,7 +136,7 @@ TEST_F(PieceTreeTest, NonEmptyInputStringConstructor)
 
   // Check overall length and line count
   EXPECT_EQ(pt.length, input.size()); // Should be 11
-  EXPECT_EQ(pt.lineCount, 1); // Only one line feed
+  EXPECT_EQ(pt.lineCount, 2); // 2 lines
 
   // Check buffers content
   ASSERT_EQ(pt.buffers.size(), 2); // Initial empty buffer (index 0) + input buffer (index 1)
@@ -170,8 +170,8 @@ TEST_F(PieceTreeTest, NonEmptyInputStringConstructor)
 TEST_F(PieceTreeTest, InsertAtBeginning_EmptyTree)
 {
   PieceTree pt(toUCharVector("")); // Start with an empty tree
-  std::string textToInsert = "NewText";
-  bool success = pt.InsertText(0, (unsigned char*)textToInsert.data(), textToInsert.size());
+  std::vector<unsigned char> textToInsert = toUCharVector("NewText");
+  bool success = pt.InsertText(0, textToInsert);
   EXPECT_TRUE(success);
 
   EXPECT_EQ(pt.length, textToInsert.size());
@@ -181,8 +181,8 @@ TEST_F(PieceTreeTest, InsertAtBeginning_EmptyTree)
 TEST_F(PieceTreeTest, InsertAtBeginning_NonEmptyTree_NoSplit)
 {
   PieceTree pt(toUCharVector("World"));
-  std::string textToInsert = "Hello ";
-  bool success = pt.InsertText(0, (unsigned char*)textToInsert.data(), textToInsert.size());
+  std::vector<unsigned char> textToInsert = toUCharVector("Hello ");
+  bool success = pt.InsertText(0, textToInsert);
   EXPECT_TRUE(success);
   EXPECT_EQ(pt.length, 5 + 6); // "Hello World"
   EXPECT_EQ(pt.lineCount, 1);
@@ -192,8 +192,8 @@ TEST_F(PieceTreeTest, InsertAtBeginning_NonEmptyTree_NoSplit)
 TEST_F(PieceTreeTest, InsertInMiddle_SplitsPiece)
 {
   PieceTree pt(toUCharVector("HelloWorld")); // Length 10
-  std::string textToInsert = " "; // Insert space at offset 5 ("Hello_World")
-  bool success = pt.InsertText(5, (unsigned char*)textToInsert.data(), textToInsert.size());
+  std::vector<unsigned char> textToInsert = toUCharVector(" "); // Insert space at offset 5 ("Hello_World")
+  bool success = pt.InsertText(5, textToInsert);
   EXPECT_TRUE(success);
   EXPECT_EQ(pt.length, 11);
   EXPECT_EQ(pt.lineCount, 1);
@@ -205,8 +205,8 @@ TEST_F(PieceTreeTest, InsertInMiddle_SplitsPiece)
 TEST_F(PieceTreeTest, InsertTextWithNewlines)
 {
   PieceTree pt(toUCharVector("Before\nAfter"));
-  std::string textToInsert = "Middle\n";
-  bool success = pt.InsertText(6, (unsigned char*)textToInsert.data(), textToInsert.size()); // Insert at 'Befor|e\nAfter'
+  std::vector<unsigned char> textToInsert = toUCharVector("Middle\n");
+  bool success = pt.InsertText(6, textToInsert); // Insert at 'Befor|e\nAfter'
   EXPECT_TRUE(success);
   EXPECT_EQ(pt.length, 13 + 7); // Original (6 + 1 + 5) + Inserted (6 + 1)
   EXPECT_EQ(pt.lineCount, 2 + 1); // Original 1 lines, inserted 1 newline
@@ -276,8 +276,8 @@ TEST_F(PieceTreeTest, EraseWithNewlines)
 TEST_F(PieceTreeTest, ReplaceWithSameLength)
 {
   PieceTree pt(toUCharVector("ABCDEF"));
-  std::string newText = "123";
-  bool success = pt.ReplaceText(1, (unsigned char*)newText.data(), newText.size(), 3); // Replace "BCD" with "123"
+  std::vector<unsigned char> newText = toUCharVector("123");
+  bool success = pt.ReplaceText(1, newText, 3); // Replace "BCD" with "123"
   EXPECT_TRUE(success);
   EXPECT_EQ(pt.length, 6); // Length remains same
   EXPECT_EQ(pt.lineCount, 1);
@@ -287,8 +287,8 @@ TEST_F(PieceTreeTest, ReplaceWithSameLength)
 TEST_F(PieceTreeTest, ReplaceWithLongerText)
 {
   PieceTree pt(toUCharVector("ABCDEF"));
-  std::string newText = "12345";
-  bool success = pt.ReplaceText(1, (unsigned char*)newText.data(), newText.size(), 3); // Replace "BCD" with "12345"
+  std::vector<unsigned char> newText = toUCharVector("12345");
+  bool success = pt.ReplaceText(1, newText, 3); // Replace "BCD" with "12345"
   EXPECT_TRUE(success);
   EXPECT_EQ(pt.length, 6 - 3 + 5); // 8
   EXPECT_EQ(pt.lineCount, 1);
@@ -298,8 +298,8 @@ TEST_F(PieceTreeTest, ReplaceWithLongerText)
 TEST_F(PieceTreeTest, ReplaceWithShorterText)
 {
   PieceTree pt(toUCharVector("ABCDEF"));
-  std::string newText = "1";
-  bool success = pt.ReplaceText(1, (unsigned char*)newText.data(), newText.size(), 3); // Replace "BCD" with "1"
+  std::vector<unsigned char> newText = toUCharVector("1");
+  bool success = pt.ReplaceText(1, newText, 3); // Replace "BCD" with "1"
   EXPECT_TRUE(success);
   EXPECT_EQ(pt.length, 6 - 3 + 1); // 4
   EXPECT_EQ(pt.lineCount, 1);
