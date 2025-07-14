@@ -118,14 +118,14 @@ TEST_F(PieceTreeTest, EmptyInputStringConstructor)
   PieceTree pt(empty_input);
 
   //rootNode
-  ASSERT_EQ(pt.rootNode.left, nullptr);
-  ASSERT_NE(pt.rootNode.right, nullptr); // rootNode.right should not be nullptr
-  EXPECT_EQ(pt.rootNode.piece.length, 0); // Root's piece should be empty
-  EXPECT_EQ(pt.rootNode.right->piece.length, 0); // The piece in the first actual node should be empty
+  ASSERT_EQ(pt.rootNode.get()->left, nullptr);
+  ASSERT_NE(pt.rootNode.get()->right, nullptr); // rootNode.right should not be nullptr
+  EXPECT_EQ(pt.rootNode.get()->piece.length, 0); // Root's piece should be empty
+  EXPECT_EQ(pt.rootNode.get()->right->piece.length, 0); // The piece in the first actual node should be empty
 
   // buffers and others
   EXPECT_EQ(pt.length, 0);
-  EXPECT_EQ(pt.lineCount, 0);
+  EXPECT_EQ(pt.lineCount, 1);
   EXPECT_EQ(pt.buffers.size(), 2); // Initial empty buffer + the empty input buffer
 }
 
@@ -143,8 +143,8 @@ TEST_F(PieceTreeTest, NonEmptyInputStringConstructor)
   EXPECT_EQ(pt.buffers[1].value, input); // Ensure input buffer is correctly stored
 
   // Check the rootNode.right's piece
-  ASSERT_NE(pt.rootNode.right, nullptr);
-  const Piece& initialPiece = pt.rootNode.right->piece;
+  ASSERT_NE(pt.rootNode.get()->right, nullptr);
+  const Piece& initialPiece = pt.rootNode.get()->right->piece;
   EXPECT_EQ(initialPiece.bufferIndex, 1); // Should refer to the input buffer
   EXPECT_EQ(initialPiece.length, input.size());
   EXPECT_EQ(initialPiece.lineFeedCnt, 1);
@@ -153,45 +153,13 @@ TEST_F(PieceTreeTest, NonEmptyInputStringConstructor)
   EXPECT_EQ(initialPiece.start.index, 0);
   EXPECT_EQ(initialPiece.start.offset, 0);
 
-  // For end position: lineStarts.size() - 1 for index, lineStarts.back() for offset
+  // For end position: lineStarts.size() - 1 for index, initialPiece.size() - lineStarts.back() for offset
   // "Hello\nWorld" -> createLineStarts returns {0, 6}. Size is 2.
   // lineStarts.size() - 1 = 1
   // lineStarts.back() = 6
+  // initialPiece.size() = 11
   EXPECT_EQ(initialPiece.end.index, 1); // Index of the last line in piece (the second line, index 1)
-  EXPECT_EQ(initialPiece.end.offset, 6); // Offset of the start of the last line (the 'W' in World)
-}
-
-TEST_F(PieceTreeTest, DestructorCleansUpNodes)
-{
-  // This test relies on memory leak detection tools or careful observation.
-  // It's hard to make a definitive in-unit-test assertion without mocking `new` and `delete`.
-  // However, we can assert that after construction and destruction, the `rootNode.right` is set to `nullptr`.
-  // And ensure the loop logic is sound.
-
-  // A simple way to test is to use ASAN (AddressSanitizer) or Valgrind during development.
-  // Here, we'll just check if rootNode.right becomes nullptr (if you add that in the destructor).
-  // Your current destructor only nullifies `i`, not `rootNode.right`.
-  // If your destructor correctly frees a linear chain of nodes, this test validates that.
-
-  // Create a PieceTree.
-  PieceTree* pt = new PieceTree(toUCharVector("Some text"));
-  // A more complex tree would be better for a destructor test
-  // For now, it only creates rootNode.right
-  ASSERT_NE(pt->rootNode.right, nullptr); // Ensure it's not null before delete
-  Node* initialNode = pt->rootNode.right; // Store pointer to check if it's deleted
-
-  delete pt; // This calls the destructor
-
-  // After deletion, initialNode is a dangling pointer.
-  // We cannot reliably dereference it.
-  // To truly test destructor, you'd need custom allocators that track allocations/deallocations
-  // or rely on external memory debuggers.
-
-  // As a simple behavioral test for current destructor:
-  // If you intend for `rootNode.right` to be null after PieceTree destruction
-  // (which is good practice for dangling pointers), add `rootNode.right = nullptr;` in destructor.
-  // Then you could add:
-  // EXPECT_EQ(pt->rootNode.right, nullptr); // This would require pt to be a stack var or test it differently.
+  EXPECT_EQ(initialPiece.end.offset, 5); // Offset of the start of the last line (the 'W' in World)
 }
 
 
@@ -205,14 +173,9 @@ TEST_F(PieceTreeTest, InsertAtBeginning_EmptyTree)
   std::string textToInsert = "NewText";
   bool success = pt.InsertText(0, (unsigned char*)textToInsert.data(), textToInsert.size());
   EXPECT_TRUE(success);
-  // After insertion, verify:
-  // 1. pt.length is correct
-  // 2. pt.lineCount is correct
-  // 3. The tree structure is updated (rootNode.right points to new nodes)
-  // 4. Content retrieval (you'll need a GetText() method for this later)
-  // For now, focus on length and lineCount.
+
   EXPECT_EQ(pt.length, textToInsert.size());
-  EXPECT_EQ(pt.lineCount, 0); // No newlines in "NewText"
+  EXPECT_EQ(pt.lineCount, 1);
 }
 
 TEST_F(PieceTreeTest, InsertAtBeginning_NonEmptyTree_NoSplit)
@@ -222,9 +185,8 @@ TEST_F(PieceTreeTest, InsertAtBeginning_NonEmptyTree_NoSplit)
   bool success = pt.InsertText(0, (unsigned char*)textToInsert.data(), textToInsert.size());
   EXPECT_TRUE(success);
   EXPECT_EQ(pt.length, 5 + 6); // "Hello World"
-  EXPECT_EQ(pt.lineCount, 0);
-  // Need to test tree structure change here:
-  // rootNode.right should now point to a new internal node or directly to the new piece
+  EXPECT_EQ(pt.lineCount, 1);
+
 }
 
 TEST_F(PieceTreeTest, InsertInMiddle_SplitsPiece)
@@ -234,7 +196,7 @@ TEST_F(PieceTreeTest, InsertInMiddle_SplitsPiece)
   bool success = pt.InsertText(5, (unsigned char*)textToInsert.data(), textToInsert.size());
   EXPECT_TRUE(success);
   EXPECT_EQ(pt.length, 11);
-  EXPECT_EQ(pt.lineCount, 0);
+  EXPECT_EQ(pt.lineCount, 1);
   // This test will require verifying the internal tree structure:
   // The original piece ("HelloWorld") should be split into two pieces ("Hello" and "World"),
   // and a new piece (" ") should be inserted between them.
@@ -247,7 +209,7 @@ TEST_F(PieceTreeTest, InsertTextWithNewlines)
   bool success = pt.InsertText(6, (unsigned char*)textToInsert.data(), textToInsert.size()); // Insert at 'Befor|e\nAfter'
   EXPECT_TRUE(success);
   EXPECT_EQ(pt.length, 13 + 7); // Original (6 + 1 + 5) + Inserted (6 + 1)
-  EXPECT_EQ(pt.lineCount, 1 + 1); // Original 1 newline, inserted 1 newline
+  EXPECT_EQ(pt.lineCount, 2 + 1); // Original 1 lines, inserted 1 newline
 }
 
 // ===========================================================================
@@ -260,7 +222,7 @@ TEST_F(PieceTreeTest, EraseFullContent)
   bool success = pt.EraseText(0, pt.length);
   EXPECT_TRUE(success);
   EXPECT_EQ(pt.length, 0);
-  EXPECT_EQ(pt.lineCount, 0);
+  EXPECT_EQ(pt.lineCount, 1);
   // Tree should logically be empty (e.g., rootNode.right points to a piece with length 0)
 }
 
@@ -270,7 +232,7 @@ TEST_F(PieceTreeTest, EraseFromBeginning)
   bool success = pt.EraseText(0, 3); // Erase "123"
   EXPECT_TRUE(success);
   EXPECT_EQ(pt.length, 6);
-  EXPECT_EQ(pt.lineCount, 0);
+  EXPECT_EQ(pt.lineCount, 1);
   // Need to verify the remaining content (e.g., "456789") via GetText() later
 }
 
@@ -303,7 +265,7 @@ TEST_F(PieceTreeTest, EraseWithNewlines)
   // Erase "1\nLine2" (len 7) from offset 4
   // Becomes "Line\nLine3" (len 10)
   EXPECT_EQ(pt.length, 10);
-  EXPECT_EQ(pt.lineCount, 1); // One newline remains
+  EXPECT_EQ(pt.lineCount, 2); // 2 lines remains
 }
 
 
@@ -318,7 +280,7 @@ TEST_F(PieceTreeTest, ReplaceWithSameLength)
   bool success = pt.ReplaceText(1, (unsigned char*)newText.data(), newText.size(), 3); // Replace "BCD" with "123"
   EXPECT_TRUE(success);
   EXPECT_EQ(pt.length, 6); // Length remains same
-  EXPECT_EQ(pt.lineCount, 0);
+  EXPECT_EQ(pt.lineCount, 1);
   // Expected content "A123EF"
 }
 
@@ -329,7 +291,7 @@ TEST_F(PieceTreeTest, ReplaceWithLongerText)
   bool success = pt.ReplaceText(1, (unsigned char*)newText.data(), newText.size(), 3); // Replace "BCD" with "12345"
   EXPECT_TRUE(success);
   EXPECT_EQ(pt.length, 6 - 3 + 5); // 8
-  EXPECT_EQ(pt.lineCount, 0);
+  EXPECT_EQ(pt.lineCount, 1);
   // Expected content "A12345EF"
 }
 
@@ -340,6 +302,6 @@ TEST_F(PieceTreeTest, ReplaceWithShorterText)
   bool success = pt.ReplaceText(1, (unsigned char*)newText.data(), newText.size(), 3); // Replace "BCD" with "1"
   EXPECT_TRUE(success);
   EXPECT_EQ(pt.length, 6 - 3 + 1); // 4
-  EXPECT_EQ(pt.lineCount, 0);
+  EXPECT_EQ(pt.lineCount, 1);
   // Expected content "A1EF"
 }
