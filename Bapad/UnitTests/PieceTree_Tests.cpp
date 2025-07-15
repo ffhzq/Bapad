@@ -242,7 +242,7 @@ TEST_F(PieceTreeTest, EraseFromMiddle)
   bool success = pt.EraseText(3, 3); // Erase "DEF"
   EXPECT_TRUE(success);
   EXPECT_EQ(pt.length, 6);
-  EXPECT_EQ(pt.lineCount, 0);
+  EXPECT_EQ(pt.lineCount, 1);
   // Result should be "ABCGHI"
 }
 
@@ -260,10 +260,6 @@ TEST_F(PieceTreeTest, EraseWithNewlines)
   PieceTree pt(toUCharVector("Line1\nLine2\nLine3"));
   bool success = pt.EraseText(4, 7); // Erase "1\nLine2"
   EXPECT_TRUE(success);
-  EXPECT_EQ(pt.length, 15 - 7); // Expected length: "Line3Line3" - Oops, "Line\nLine3"
-  // "Line1\nLine2\nLine3" (len 17, 2 newlines)
-  // Erase "1\nLine2" (len 7) from offset 4
-  // Becomes "Line\nLine3" (len 10)
   EXPECT_EQ(pt.length, 10);
   EXPECT_EQ(pt.lineCount, 2); // 2 lines remains
 }
