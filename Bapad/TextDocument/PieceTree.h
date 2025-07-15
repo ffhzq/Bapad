@@ -66,7 +66,7 @@ struct PieceTree {
   PieceTree& operator=(PieceTree&&) = delete;
 
   bool InsertText(size_t offset, std::vector<unsigned char> input) noexcept;
-  bool EraseText(size_t offset, size_t length) noexcept;
+  bool EraseText(size_t offset, size_t erase_length) noexcept;
   bool ReplaceText(size_t offset, std::vector<unsigned char> input, size_t erase_length) noexcept;
 
   // use (TreeNode*, inNodeOffset) locate the insertion position.
