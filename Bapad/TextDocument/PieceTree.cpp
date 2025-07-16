@@ -181,7 +181,15 @@ bool PieceTree::EraseText(size_t offset, size_t erase_length) noexcept
 
 bool PieceTree::ReplaceText(size_t offset, std::vector<unsigned char> input, size_t erase_length) noexcept
 {
-  return false;
+  if (EraseText(offset, erase_length) == false)
+  {
+    return false;
+  }
+  if (InsertText(offset, input) == false)
+  {
+    return false;
+  }
+  return true;
 }
 
 TreeNode* PieceTree::GetNodePosition(size_t offset, size_t& inNodeOffset) noexcept
