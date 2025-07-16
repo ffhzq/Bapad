@@ -6,7 +6,10 @@ std::vector<unsigned char> toUCharVector(const std::string& s)
 {
   return std::vector<unsigned char>(s.begin(), s.end());
 }
-
+std::string UCVtoString(const std::vector<unsigned char> uchar_vec)
+{
+  return std::string(uchar_vec.begin(), uchar_vec.end());
+}
 // Test fixture for createLineStarts
 TEST(CreateLineStartsTest, EmptyString)
 {
@@ -110,6 +113,12 @@ protected:
   // Any teardown that needs to happen after each test
   void TearDown() override
   {}
+protected:
+  // Helper to create a PieceTree from a string
+  std::unique_ptr<PieceTree> CreatePieceTree(const std::string& s)
+  {
+    return std::make_unique<PieceTree>(toUCharVector(s));
+  }
 };
 
 TEST_F(PieceTreeTest, EmptyInputStringConstructor)
@@ -176,6 +185,7 @@ TEST_F(PieceTreeTest, InsertAtBeginning_EmptyTree)
 
   EXPECT_EQ(pt.length, textToInsert.size());
   EXPECT_EQ(pt.lineCount, 1);
+  EXPECT_EQ(UCVtoString(pt.GetText(0, 99)), "NewText");
 }
 
 TEST_F(PieceTreeTest, InsertAtBeginning_NonEmptyTree_NoSplit)
@@ -186,7 +196,7 @@ TEST_F(PieceTreeTest, InsertAtBeginning_NonEmptyTree_NoSplit)
   EXPECT_TRUE(success);
   EXPECT_EQ(pt.length, 5 + 6); // "Hello World"
   EXPECT_EQ(pt.lineCount, 1);
-
+  EXPECT_EQ(UCVtoString(pt.GetText(0, 99)), "Hello World");
 }
 
 TEST_F(PieceTreeTest, InsertInMiddle_SplitsPiece)
@@ -200,6 +210,7 @@ TEST_F(PieceTreeTest, InsertInMiddle_SplitsPiece)
   // This test will require verifying the internal tree structure:
   // The original piece ("HelloWorld") should be split into two pieces ("Hello" and "World"),
   // and a new piece (" ") should be inserted between them.
+  EXPECT_EQ(UCVtoString(pt.GetText(0, 99)), "Hello World");
 }
 
 TEST_F(PieceTreeTest, InsertTextWithNewlines)
@@ -223,7 +234,7 @@ TEST_F(PieceTreeTest, EraseFullContent)
   EXPECT_TRUE(success);
   EXPECT_EQ(pt.length, 0);
   EXPECT_EQ(pt.lineCount, 1);
-  // Tree should logically be empty (e.g., rootNode.right points to a piece with length 0)
+  EXPECT_EQ(UCVtoString(pt.GetText(0, 99)), "");
 }
 
 TEST_F(PieceTreeTest, EraseFromBeginning)
@@ -233,7 +244,7 @@ TEST_F(PieceTreeTest, EraseFromBeginning)
   EXPECT_TRUE(success);
   EXPECT_EQ(pt.length, 6);
   EXPECT_EQ(pt.lineCount, 1);
-  // Need to verify the remaining content (e.g., "456789") via GetText() later
+  EXPECT_EQ(UCVtoString(pt.GetText(0, 99)), "456789");
 }
 
 TEST_F(PieceTreeTest, EraseFromMiddle)
@@ -243,7 +254,7 @@ TEST_F(PieceTreeTest, EraseFromMiddle)
   EXPECT_TRUE(success);
   EXPECT_EQ(pt.length, 6);
   EXPECT_EQ(pt.lineCount, 1);
-  // Result should be "ABCGHI"
+  EXPECT_EQ(UCVtoString(pt.GetText(0, 99)), "ABCGHI");
 }
 
 TEST_F(PieceTreeTest, EraseAcrossMultiplePieces_ComplexScenario)
@@ -253,6 +264,14 @@ TEST_F(PieceTreeTest, EraseAcrossMultiplePieces_ComplexScenario)
   // Example: original "Hello World", insert "Cruel" at 5 -> "HelloCruel World"
   // Then erase "loCruel W" (part of original, new, part of original)
   // This is where GetText() becomes crucial for validation.
+  PieceTree pt(toUCharVector("Hello World"));
+  std::vector<unsigned char> textToInsert = toUCharVector("Cruel");
+  bool success = pt.InsertText(5, textToInsert);
+  EXPECT_TRUE(success);
+  EXPECT_EQ(UCVtoString(pt.GetText(0, 99)), "HelloCruel World");
+  success = pt.EraseText(3, 9); // Erase "loCruel W"
+  EXPECT_TRUE(success);
+  EXPECT_EQ(UCVtoString(pt.GetText(0, 99)), "Helorld");
 }
 
 TEST_F(PieceTreeTest, EraseWithNewlines)
@@ -262,6 +281,7 @@ TEST_F(PieceTreeTest, EraseWithNewlines)
   EXPECT_TRUE(success);
   EXPECT_EQ(pt.length, 10);
   EXPECT_EQ(pt.lineCount, 2); // 2 lines remains
+  EXPECT_EQ(UCVtoString(pt.GetText(0, 99)), "Line\nLine3");
 }
 
 
@@ -278,6 +298,7 @@ TEST_F(PieceTreeTest, ReplaceWithSameLength)
   EXPECT_EQ(pt.length, 6); // Length remains same
   EXPECT_EQ(pt.lineCount, 1);
   // Expected content "A123EF"
+  EXPECT_EQ(UCVtoString(pt.GetText(0, 99)), "A123EF");
 }
 
 TEST_F(PieceTreeTest, ReplaceWithLongerText)
@@ -289,6 +310,7 @@ TEST_F(PieceTreeTest, ReplaceWithLongerText)
   EXPECT_EQ(pt.length, 6 - 3 + 5); // 8
   EXPECT_EQ(pt.lineCount, 1);
   // Expected content "A12345EF"
+  EXPECT_EQ(UCVtoString(pt.GetText(0, 99)), "A12345EF");
 }
 
 TEST_F(PieceTreeTest, ReplaceWithShorterText)
@@ -300,4 +322,85 @@ TEST_F(PieceTreeTest, ReplaceWithShorterText)
   EXPECT_EQ(pt.length, 6 - 3 + 1); // 4
   EXPECT_EQ(pt.lineCount, 1);
   // Expected content "A1EF"
+  EXPECT_EQ(UCVtoString(pt.GetText(0, 99)), "A1EF");
+}
+
+// ===========================================================================
+// Tests for GetText
+// ===========================================================================
+TEST_F(PieceTreeTest, GetText_FullContent_SinglePiece) {
+    std::string original = "Hello World!";
+    auto pt = CreatePieceTree(original);
+    EXPECT_EQ(toUCharVector(original), pt->GetText(0, original.length()));
+}
+
+TEST_F(PieceTreeTest, GetText_PartialContent_SinglePiece_Start) {
+    std::string original = "Hello World!";
+    auto pt = CreatePieceTree(original);
+    EXPECT_EQ(toUCharVector("Hello"), pt->GetText(0, 5));
+}
+
+TEST_F(PieceTreeTest, GetText_PartialContent_SinglePiece_Middle) {
+    std::string original = "Hello World!";
+    auto pt = CreatePieceTree(original);
+    EXPECT_EQ(toUCharVector("lo Wor"), pt->GetText(3, 6));
+}
+
+TEST_F(PieceTreeTest, GetText_PartialContent_SinglePiece_End) {
+    std::string original = "Hello World!";
+    auto pt = CreatePieceTree(original);
+    EXPECT_EQ(toUCharVector("World!"), pt->GetText(6, 6));
+}
+
+TEST_F(PieceTreeTest, GetText_ZeroLength) {
+    auto pt = CreatePieceTree("Test");
+    EXPECT_TRUE(pt->GetText(1, 0).empty());
+}
+
+TEST_F(PieceTreeTest, GetText_OffsetOutOfBounds) {
+    auto pt = CreatePieceTree("Test");
+    EXPECT_TRUE(pt->GetText(10, 5).empty()); // Offset completely out of bounds
+}
+
+TEST_F(PieceTreeTest, GetText_LengthExceedsDocument) {
+    auto pt = CreatePieceTree("Test"); // Length 4
+    EXPECT_EQ(toUCharVector("Test"), pt->GetText(0, 10)); // Should return full "Test"
+    EXPECT_EQ(toUCharVector("est"), pt->GetText(1, 10)); // Should return "est"
+}
+
+TEST_F(PieceTreeTest, GetText_AcrossMultiplePieces) {
+    // Scenario: "FirstPart" + "MiddlePart" + "LastPart"
+    // Create "FirstPartLastPart"
+    auto pt = CreatePieceTree("FirstPartLastPart"); // One piece: length 17
+    // Insert "MiddlePart" at offset 9 ("FirstPart|LastPart")
+    pt->InsertText(9, toUCharVector("MiddlePart")); // "FirstPartMiddlePartLastPart"
+    // Now you have (at least) three pieces: 
+    // P1("FirstPart") len:9, P2("MiddlePart") len:10, P3("LastPart") len:8
+
+    // Get text that spans P1 and P2
+    EXPECT_EQ(std::string("rtMiddle"), UCVtoString(pt->GetText(7, 8)));
+
+    // Get text that spans P2 and P3
+    EXPECT_EQ(std::string("PartLastP"), UCVtoString(pt->GetText(15, 9)));
+
+    // Get text that spans all three pieces
+    EXPECT_EQ(std::string("artMiddlePartLas"), UCVtoString(pt->GetText(6, 16)));
+}
+
+TEST_F(PieceTreeTest, GetText_WithNewlines) {
+    auto pt = CreatePieceTree("Line1\nLine2\nLine3"); // 3 lines
+    // Insert "MID\n" at offset 7 (after \n)
+    pt->InsertText(6, toUCharVector("MID\n")); // "Line1\nMID\nLine2\nLine3"
+
+    // Get "MID\nLi" from offset 7
+    EXPECT_EQ(toUCharVector("ID\nLin"), pt->GetText(7, 6));
+
+    // Get "Line2\n" from offset 11
+    EXPECT_EQ(toUCharVector("ine2\nL"), pt->GetText(11, 6));
+}
+
+TEST_F(PieceTreeTest, GetText_FromEmptyTree) {
+    auto pt = CreatePieceTree("");
+    EXPECT_TRUE(pt->GetText(0, 10).empty());
+    EXPECT_TRUE(pt->GetText(5, 5).empty());
 }
