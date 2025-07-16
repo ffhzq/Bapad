@@ -142,8 +142,9 @@ bool PieceTree::EraseText(size_t offset, size_t erase_length) noexcept
       piece.lineFeedCnt = lineIndex;
       length -= original_piece.length - piece.length;
       lineCount -= original_piece.lineFeedCnt - piece.lineFeedCnt;
+      left = left->right.get();
     }
-    TreeNode* pre = leftmost;
+    TreeNode* pre = nullptr;
     while (left != right)
     {
       const Piece& piece = left->piece;
@@ -192,7 +193,7 @@ bool PieceTree::ReplaceText(size_t offset, std::vector<unsigned char> input, siz
   return true;
 }
 
-TreeNode* PieceTree::GetNodePosition(size_t offset, size_t& inNodeOffset) noexcept
+TreeNode* PieceTree::GetNodePosition(size_t offset, size_t& inPieceOffset) noexcept
 {
   const size_t originalOffset = offset;
   if (offset > length) return nullptr;
@@ -203,44 +204,76 @@ TreeNode* PieceTree::GetNodePosition(size_t offset, size_t& inNodeOffset) noexce
     offset -= ptr->piece.length;
     ptr = ptr->right.get();
   }
-  inNodeOffset = offset;
+  inPieceOffset = offset;
   return ptr;
 }
 
-TreeNode* PieceTree::SplitPiece(TreeNode* currNode, const size_t inNodeOffset)
+TreeNode* PieceTree::SplitPiece(TreeNode* currNode, const size_t inPieceOffset)
 {
-  auto parrentNode = currNode->left;
-  size_t offset = inNodeOffset;
-  size_t linePos = 0;
   const Buffer& currBuffer = buffers[currNode->piece.bufferIndex];
-  const Piece& currPiece = currNode->piece;
+  const Piece original_piece = currNode->piece;
+  Piece& current_piece = currNode->piece;
 
+  const size_t lineIndex = getLineIndexFromOffset(currBuffer.lineStarts, inPieceOffset - 1);
+  current_piece.end = BufferPosition{lineIndex, inPieceOffset - currBuffer.lineStarts[lineIndex] - 1};
+  current_piece.length = inPieceOffset;
+  current_piece.lineFeedCnt = lineIndex;
 
-  size_t lineIndex = getLineIndexFromOffset(currBuffer.lineStarts, offset);
-  Piece p1{
-  currPiece.start,
-  BufferPosition{lineIndex, offset - currBuffer.lineStarts[lineIndex]},
-  currPiece.bufferIndex,
-  inNodeOffset,
-  lineIndex
-  };
+  const size_t lineIndex2 = getLineIndexFromOffset(currBuffer.lineStarts, inPieceOffset);
   Piece p2{
-     BufferPosition{lineIndex, offset - currBuffer.lineStarts[lineIndex] + 1}, // p1.end + 1
-     currPiece.end,
-     currPiece.bufferIndex,
-     currPiece.length - inNodeOffset,
-     currPiece.lineFeedCnt - lineIndex
+     BufferPosition{lineIndex2, inPieceOffset - currBuffer.lineStarts[lineIndex2]}, // p1.end + 1
+     original_piece.end,
+     original_piece.bufferIndex,
+     original_piece.length - current_piece.length,
+     original_piece.lineFeedCnt - current_piece.lineFeedCnt
   };
 
-  auto Node1 = std::make_unique<TreeNode>(p1, parrentNode);
-  auto Node2 = std::make_unique<TreeNode>(p2, Node1.get());
-
+  auto Node2 = std::make_unique<TreeNode>(p2, currNode);
   Node2->right = std::move(currNode->right);
-  currNode->right = nullptr;
-  Node1->right = std::move(Node2);
-  parrentNode->right = std::move(Node1); // then currNode has been deconstructed.
-  currNode = nullptr;
-  return parrentNode->right.get();
+  if (Node2->right != nullptr) Node2->right->left = Node2.get();
+  currNode->right = std::move(Node2);
+  return currNode;
+}
+
+std::vector<unsigned char> PieceTree::GetText(size_t offset, size_t text_length)
+{
+  auto text = std::vector<unsigned char>();
+  if (offset >= length) return text;
+  if (offset + text_length > length) text_length = length - offset;
+  if (text_length == 0) return text;
+  text.reserve(text_length);
+
+  size_t in_piece_offset_start = 0;
+  TreeNode* current_node = GetNodePosition(offset, in_piece_offset_start);
+  if (current_node == nullptr) return text;
+  if (current_node->piece.length == in_piece_offset_start)
+  {
+    current_node = current_node->right.get();
+    in_piece_offset_start = 0;
+  }
+  size_t bytes_copied = 0;
+  while (current_node != nullptr && bytes_copied < text_length)
+  {
+    const Piece& piece = current_node->piece;
+    const Buffer& buffer = buffers[piece.bufferIndex];
+    const std::vector<unsigned char>& buffer_value = buffer.value;
+
+    in_piece_offset_start = (bytes_copied == 0 ? in_piece_offset_start : 0); // first piece or not
+    const size_t piece_start = buffer.lineStarts[piece.start.index] + piece.start.offset;
+    const size_t piece_end = buffer.lineStarts[piece.end.index] + piece.end.offset;
+
+    const size_t remain_bytes_to_be_copied = text_length - bytes_copied;
+    const size_t available_bytes_in_piece = piece.length - in_piece_offset_start;
+    const size_t bytes_to_be_copied = (std::min)(available_bytes_in_piece, remain_bytes_to_be_copied);
+
+    text.insert(text.end(),
+      buffer_value.begin() + piece_start + in_piece_offset_start,
+      buffer_value.begin() + piece_start + in_piece_offset_start + bytes_to_be_copied);
+
+    bytes_copied += bytes_to_be_copied;
+    current_node = current_node->right.get();
+  }
+  return text;
 }
 
 std::vector<size_t> createLineStarts(const std::vector<unsigned char>& str)
@@ -274,13 +307,13 @@ std::vector<size_t> createLineStarts(const std::vector<unsigned char>& str)
   return lineStarts;
 }
 
-size_t getLineIndexFromOffset(const std::vector<size_t>& lineStarts, size_t offset)
+size_t getLineIndexFromOffset(const std::vector<size_t>& lineStarts, size_t inPieceOffset)
 {
   if (lineStarts.empty())
   {
     throw;
   }
-  auto it = std::upper_bound(lineStarts.begin(), lineStarts.end(), offset);
+  auto it = std::upper_bound(lineStarts.begin(), lineStarts.end(), inPieceOffset);
 
   const size_t lineIndex = std::distance(lineStarts.begin(), it);
 

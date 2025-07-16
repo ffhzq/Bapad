@@ -2,7 +2,7 @@
 #include "pch.h"
 
 std::vector<size_t> createLineStarts(const std::vector<unsigned char>& str);
-size_t getLineIndexFromOffset(const std::vector<size_t>& lineStarts, size_t offset);
+size_t getLineIndexFromOffset(const std::vector<size_t>& lineStarts, size_t inPieceOffset);
 
 struct Buffer {
   std::vector<unsigned char> value;
@@ -69,7 +69,8 @@ struct PieceTree {
   bool EraseText(size_t offset, size_t erase_length) noexcept;
   bool ReplaceText(size_t offset, std::vector<unsigned char> input, size_t erase_length) noexcept;
 
-  // use (TreeNode*, inNodeOffset) locate the insertion position.
-  TreeNode* GetNodePosition(size_t offset, size_t& inNodeOffset) noexcept;
-  TreeNode* SplitPiece(TreeNode* currNode, const size_t inNodeOffset);
+  // use (TreeNode*, inPieceOffset) locate the insertion position.
+  TreeNode* GetNodePosition(size_t offset, size_t& inPieceOffset) noexcept;
+  TreeNode* SplitPiece(TreeNode* currNode, const size_t inPieceOffset);
+  std::vector<unsigned char> GetText(size_t offset, size_t text_length);
 };
