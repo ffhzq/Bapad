@@ -26,7 +26,7 @@ TextView::TextView(HWND hwnd)
     selectionEnd(0),
     cursorOffset(0),
     //
-    pTextDoc(new TextDocument())
+    pTextDoc(std::make_unique<TextDocument>())
 {
 
     // Default display colours
@@ -53,10 +53,7 @@ TextView::TextView(HWND hwnd)
 //
 TextView::~TextView()
 {
-    if (pTextDoc)
-    {
-        delete pTextDoc;
-    }
+  this->pTextDoc.reset(nullptr);
     //DestroyCursor(m_hMarginCursor);
 }
 

@@ -59,7 +59,7 @@ LRESULT TextView::NotifyParent(UINT nNotifyCode, NMHDR* optional)
 
 void TextView::Smeg(BOOL fAdvancing)
 {
-    pTextDoc->ReCalculateLineBuffer();
+    //pTextDoc->ReCalculateLineBuffer();
     lineCount = pTextDoc->GetLineCount();
     UpdateMetrics();
     SetupScrollbars();

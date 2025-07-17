@@ -101,10 +101,10 @@ private:
     UINT_PTR scrollTimer;
     int scrollCounter;
     bool hideCaret;
-    TextDocument* pTextDoc;
+    std::unique_ptr<TextDocument> pTextDoc;
 
 
-    //处理消息
+    //澶勭悊娑堟伅
     LONG OnPaint();
     LONG OnSetFont(HFONT hFont);
     LONG OnSize(UINT nFlags, int width, int height);
@@ -113,7 +113,7 @@ private:
     LONG OnMouseWheel(int nDelta);
     LONG OnTimer(UINT nTimer);
 
-    //鼠标
+    //榧犳爣
     LONG OnMouseActivate(HWND hwndTop, UINT nHitTest, UINT nMessage);
     LONG OnLButtonDown(UINT nFlags, int x, int y);
     LONG OnLButtonUp(UINT nFlags, int x, int y);
@@ -122,7 +122,7 @@ private:
     LONG OnSetFocus(HWND hwndOld);
     LONG OnKillFocus(HWND hwndNew);
 
-    //用户操作
+    //鐢ㄦ埛鎿嶄綔
 
     LONG OpenFile(WCHAR* szFileName);
     LONG ClearFile();

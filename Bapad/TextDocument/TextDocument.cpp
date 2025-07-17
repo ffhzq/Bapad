@@ -2,582 +2,378 @@
 #include "formatConversion.h"
 #include "TextDocument.h"
 
+constexpr size_t LEN = 0x100;
+
 TextDocument::TextDocument() noexcept
   :
-  docBuffer(),
-  docLengthByChars(0),
-  docLengthByBytes(0),
+  docBuffer(std::vector<unsigned char>()),
   fileFormat(0),
-  headerSize(0),
-  byteOffsetLineBuffer(nullptr),
-  charOffsetLineBuffer(nullptr),
-  lineCount(0)
-{
-}
-TextDocument::~TextDocument() noexcept
-{
-    Clear();
-}
-
+  headerSize(0)
+{}
 bool TextDocument::Initialize(wchar_t* filename)
 {
   std::ifstream ifs(filename, std::ios::binary | std::ios::ate);
-  if (!ifs.is_open()) 
+  if (!ifs.is_open())
   {
     return false;
   }
-  docLengthByBytes = ifs.tellg();
+  const size_t docLengthByBytes = ifs.tellg();
+  std::vector<unsigned char> read_buffer;
+
   ifs.seekg(0, std::ios::beg);
-  if (docLengthByBytes <= 0) 
+  if (docLengthByBytes <= 0)
   {
-    docLengthByBytes = 0;
     return false;
   }
   try
   {
-    docBuffer.resize(docLengthByBytes);
+    read_buffer.reserve(docLengthByBytes);
   }
   catch (const std::bad_alloc& e)
   {
     return false;
   }
-  ifs.read(reinterpret_cast<char*>(docBuffer.data()), docLengthByBytes);
+  ifs.read(reinterpret_cast<char*>(read_buffer.data()), docLengthByBytes);
   if (!ifs)
   {
-    // Handle error: file could not be fully read
-    // For example, clear the buffer and return false
-    docBuffer.clear();
-    docLengthByBytes = 0;
     return false;
   }
 
   // Detect file format
-  fileFormat = DetectFileFormat(docBuffer.data(), docLengthByBytes, headerSize);
+  fileFormat = DetectFileFormat(read_buffer.data(), docLengthByBytes, headerSize);
 
-  // Work out where each line of text starts
-  if (!InitLineBuffer())
-  {
-    Clear(); // Clear resources if line buffer initialization fails
-    return false;
-  }
+  docBuffer = std::move(PieceTree(read_buffer));
+
   ifs.close();
   return true;
 }
 
-bool TextDocument::InitLineBuffer()
-{
-    const size_t bufLen = docLengthByBytes - headerSize;
-    byteOffsetLineBuffer = new size_t[bufLen + 1];
-    if (byteOffsetLineBuffer == nullptr)
-        return false;
-    charOffsetLineBuffer = new size_t[bufLen + 1];
-    if (charOffsetLineBuffer == nullptr)
-        return false;
-
-    lineCount = 0;
-
-    size_t offsetBytes = 0, offsetChars = 0;
-    size_t lineStartBytes = 0, lineStartChars = 0;
-    while (offsetBytes < bufLen)
-    {
-        char32_t ch32;
-        size_t len = GetUTF32Char(offsetBytes, bufLen - offsetBytes, ch32);
-        offsetBytes += len;
-        offsetChars += 1;
-
-        //TODO:判断语句的变量类型不同,需要验证
-        if (ch32 == '\r')
-        {
-            if (lineCount >= bufLen)
-            {
-                return false;
-            }
-            //记录行起始位置
-            byteOffsetLineBuffer[lineCount] = lineStartBytes;
-            charOffsetLineBuffer[lineCount] = lineStartChars;
-            lineStartBytes = offsetBytes;
-            lineStartChars = offsetChars;
-
-            //找下一字符
-            len = GetUTF32Char(offsetBytes, bufLen - offsetBytes, ch32);
-            offsetBytes += len;
-            offsetChars += 1;
-
-            //判断"\r\n"组和
-            if (ch32 == '\n')
-            {
-                lineStartBytes = offsetBytes;
-                lineStartChars = offsetChars;
-            }
-
-            lineCount++;
-        }
-        else if (ch32 == '\n')// || ch32 == '\x0b' || ch32 == '\x0c' || ch32 == 0x0085 || ch32 == 0x2029 || ch32 == 0x2028)
-        {
-            if (lineCount >= bufLen)
-            {
-                return false;
-            }
-            //记录行起始位置
-            byteOffsetLineBuffer[lineCount] = lineStartBytes;
-            charOffsetLineBuffer[lineCount] = lineStartChars;
-            lineStartBytes = offsetBytes;
-            lineStartChars = offsetChars;
-            lineCount++;
-        }
-    }
-    if (lineCount >= bufLen)
-    {
-        return false;
-    }
-    if (bufLen > 0)
-    {
-        byteOffsetLineBuffer[lineCount] = lineStartBytes;
-        charOffsetLineBuffer[lineCount] = lineStartChars;
-        lineCount++;
-    }
-
-    if (lineCount > bufLen)
-    {
-        return false;
-    }
-    byteOffsetLineBuffer[lineCount] = bufLen;
-    charOffsetLineBuffer[lineCount] = offsetChars;
-
-
-    return true;
-}
-
-
-size_t TextDocument::GetUTF32Char(size_t offset, size_t lenBytes, char32_t & pch32)
-{
-    //Byte* rawData = reinterpret_cast<Byte*>(docBuffer + offset + headerSize);
-    //Word* rawDataW = reinterpret_cast<Word*>(docBuffer + offset + headerSize);
-    Byte* rawdata;
-
-    lenBytes = min(16, lenBytes);
-    rawdata = reinterpret_cast<Byte*>(&docBuffer[0] + offset + headerSize);
-    UTF16* rawdata_w = (UTF16*)rawdata;
-    WCHAR     ch16;
-    size_t   ch32len = 1;
-
-    switch (fileFormat)
-    {
-    case BCP_ASCII:
-        MultiByteToWideChar(CP_ACP, 0, reinterpret_cast<CCHAR*>(rawdata), 1, &ch16, 1);
-        pch32 = ch16;
-        return 1;
-
-    case BCP_UTF16:
-        return UTF16ToUTF32(rawdata_w, lenBytes / 2, reinterpret_cast<UTF32*>(&pch32), ch32len) * sizeof(WCHAR);
-
-    case BCP_UTF16BE:
-        return UTF16BEToUTF32(rawdata_w, lenBytes / 2, reinterpret_cast<UTF32*>(&pch32), ch32len) * sizeof(WCHAR);
-
-    case BCP_UTF8:
-        return UTF8ToUTF32(rawdata, lenBytes, reinterpret_cast<UTF32*>(&pch32));
-
-    default:
-        return 0;
-    }
-}
-
 size_t TextDocument::GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t& bufLen)
 {
-    Byte* rawData = reinterpret_cast<Byte*>(&docBuffer[0] + offset + headerSize);
-    //size_t  len;
+  size_t offset_plus = offset + headerSize;
+  auto rawData = docBuffer.GetText(offset_plus, lenBytes);
+  //size_t  len;
 
-    if (offset >= docLengthByBytes)
-    {
-        bufLen = 0;
-        return 0;
-    }
+  if (offset >= docBuffer.length)
+  {
+    bufLen = 0;
+    return 0;
+  }
 
-    switch (fileFormat)
-    {
-        // convert from ANSI->UNICODE
-    case BCP_ASCII:
-        return AsciiToUTF16((UTF8*)rawData, lenBytes, (UTF16*)buf, bufLen);
+  switch (fileFormat)
+  {
+    // convert from ANSI->UNICODE
+  case BCP_ASCII:
+    return AsciiToUTF16((UTF8*)rawData.data(), lenBytes, (UTF16*)buf, bufLen);
 
-    case BCP_UTF8:
-        return UTF8ToUTF16((UTF8*)rawData, lenBytes, (UTF16*)buf, bufLen);
+  case BCP_UTF8:
+    return UTF8ToUTF16((UTF8*)rawData.data(), lenBytes, (UTF16*)buf, bufLen);
 
-        // already unicode, do a straight memory copy
-    case BCP_UTF16:
-        return CopyUTF16((UTF16*)(rawData), lenBytes / sizeof(wchar_t), (UTF16*)buf, bufLen) * sizeof(WCHAR);
+    // already unicode, do a straight memory copy
+  case BCP_UTF16:
+    return CopyUTF16((UTF16*)(rawData.data()), lenBytes / sizeof(wchar_t), (UTF16*)buf, bufLen) * sizeof(WCHAR);
 
-        // need to convert from big-endian to little-endian
-    case BCP_UTF16BE:
-        return SwapUTF16((UTF16*)(rawData), lenBytes / sizeof(wchar_t), (UTF16*)buf, bufLen) * sizeof(WCHAR);
+    // need to convert from big-endian to little-endian
+  case BCP_UTF16BE:
+    return SwapUTF16((UTF16*)(rawData.data()), lenBytes / sizeof(wchar_t), (UTF16*)buf, bufLen) * sizeof(WCHAR);
 
-        // error! we should *never* reach this point
-    default:
-        bufLen = 0;
-        return 0;
-    }
+    // error! we should *never* reach this point
+  default:
+    bufLen = 0;
+    return 0;
+  }
 
 }
 
 size_t TextDocument::RawDataToUTF16(unsigned char* rawdata, size_t rawlen, wchar_t* utf16str, size_t& utf16len)
 {
-    switch (fileFormat)
-    {
-        // convert from ANSI->UNICODE
-    case BCP_ASCII:
+  switch (fileFormat)
+  {
+    // convert from ANSI->UNICODE
+  case BCP_ASCII:
 
-      return AsciiToUTF16(rawdata, rawlen, reinterpret_cast<UTF16*>(utf16str), utf16len);
+    return AsciiToUTF16(rawdata, rawlen, reinterpret_cast<UTF16*>(utf16str), utf16len);
 
-    case BCP_UTF8:
-      return UTF8ToUTF16(rawdata, rawlen, reinterpret_cast<UTF16*>(utf16str), utf16len);
+  case BCP_UTF8:
+    return UTF8ToUTF16(rawdata, rawlen, reinterpret_cast<UTF16*>(utf16str), utf16len);
 
-        // already unicode, do a straight memory copy
-    case BCP_UTF16:
-      rawlen /= sizeof(TCHAR);
-      return CopyUTF16(reinterpret_cast<UTF16*>(rawdata), rawlen, reinterpret_cast<UTF16*>(utf16str), utf16len) * sizeof(TCHAR);
+    // already unicode, do a straight memory copy
+  case BCP_UTF16:
+    rawlen /= sizeof(TCHAR);
+    return CopyUTF16(reinterpret_cast<UTF16*>(rawdata), rawlen, reinterpret_cast<UTF16*>(utf16str), utf16len) * sizeof(TCHAR);
 
-        // need to convert from big-endian to little-endian
-    case BCP_UTF16BE:
-      rawlen /= sizeof(TCHAR);
-      return SwapUTF16(reinterpret_cast<UTF16*>(rawdata), rawlen, reinterpret_cast<UTF16*>(utf16str), utf16len) * sizeof(TCHAR);
-    default:
-      utf16len = 0;
-        return 0;
+    // need to convert from big-endian to little-endian
+  case BCP_UTF16BE:
+    rawlen /= sizeof(TCHAR);
+    return SwapUTF16(reinterpret_cast<UTF16*>(rawdata), rawlen, reinterpret_cast<UTF16*>(utf16str), utf16len) * sizeof(TCHAR);
+  default:
+    utf16len = 0;
+    return 0;
 
-    }
+  }
 }
 
 size_t TextDocument::UTF16ToRawData(wchar_t* utf16Str, size_t utf16Len, unsigned char* rawData, size_t& rawLen)
 {
-    switch (fileFormat)
-    {
-    case BCP_ASCII:
-      return UTF16ToAscii(reinterpret_cast<UTF16*>(utf16Str), utf16Len, rawData, rawLen);
-    case BCP_UTF8:
-      return UTF16ToUTF8(reinterpret_cast<UTF16*>(utf16Str), utf16Len, rawData, rawLen);
-    case BCP_UTF16:
-      rawLen /= sizeof(WCHAR);
-        utf16Len = CopyUTF16(reinterpret_cast<UTF16*>(utf16Str), utf16Len, reinterpret_cast<UTF16*>(rawData), rawLen);
-        rawLen *= sizeof(WCHAR);
-        return utf16Len;
-    case BCP_UTF16BE:
-      rawLen /= sizeof(WCHAR);
-        utf16Len = SwapUTF16(reinterpret_cast<UTF16*>(utf16Str), utf16Len, reinterpret_cast<UTF16*>(rawData), rawLen);
-        rawLen *= sizeof(WCHAR);
-        return utf16Len;
-    default:
-      rawLen = 0;
-        return 0;
-    }
+  switch (fileFormat)
+  {
+  case BCP_ASCII:
+    return UTF16ToAscii(reinterpret_cast<UTF16*>(utf16Str), utf16Len, rawData, rawLen);
+  case BCP_UTF8:
+    return UTF16ToUTF8(reinterpret_cast<UTF16*>(utf16Str), utf16Len, rawData, rawLen);
+  case BCP_UTF16:
+    rawLen /= sizeof(WCHAR);
+    utf16Len = CopyUTF16(reinterpret_cast<UTF16*>(utf16Str), utf16Len, reinterpret_cast<UTF16*>(rawData), rawLen);
+    rawLen *= sizeof(WCHAR);
+    return utf16Len;
+  case BCP_UTF16BE:
+    rawLen /= sizeof(WCHAR);
+    utf16Len = SwapUTF16(reinterpret_cast<UTF16*>(utf16Str), utf16Len, reinterpret_cast<UTF16*>(rawData), rawLen);
+    rawLen *= sizeof(WCHAR);
+    return utf16Len;
+  default:
+    rawLen = 0;
+    return 0;
+  }
 }
 
-
-
-const int TextDocument::GetFileFormat() const
+const int TextDocument::GetFileFormat() const noexcept
 {
-    return fileFormat;
+  return fileFormat;
 }
 
-const size_t TextDocument::GetLineCount() const
+const size_t TextDocument::GetLineCount() const noexcept
 {
-    return lineCount;
+  return docBuffer.lineCount;
 }
 
-const size_t TextDocument::GetLongestLine(int tabwidth = 4) const
+const size_t TextDocument::GetLongestLine(int tabwidth) const noexcept
 {
-    size_t longest = 0;
-    size_t xpos = 0;
-    if (docBuffer.empty())return 0;
-    char* bufPtr = (char*)(&docBuffer[0] + headerSize);
-
-
-    for (size_t i = 0; i < docLengthByBytes; i++)
-    {
-        if (bufPtr[i] == '\r')
-        {
-            if (bufPtr[i + 1] == '\n')
-                i++;
-
-            longest = max(longest, xpos);
-            xpos = 0;
-        }
-        else if (bufPtr[i] == '\n')
-        {
-            longest = max(longest, xpos);
-            xpos = 0;
-        }
-        else if (bufPtr[i] == '\t')
-        {
-            xpos += tabwidth - (xpos % tabwidth);
-        }
-        else
-        {
-            ++xpos;
-        }
-    }
-
-    longest = max(longest, xpos);
-    return longest;
+  return size_t{100};
 }
 
-const size_t TextDocument::GetDocLength() const
+const size_t TextDocument::GetDocLength() const noexcept
 {
-    return docLengthByBytes;
+  return docBuffer.length;
 }
-
-bool TextDocument::Clear() noexcept
-{
-    if (!docBuffer.empty())
-    {
-        docLengthByBytes = 0;
-        docBuffer.resize(0);
-        docBuffer.shrink_to_fit();
-    }
-    ReleaseLineBuffer();
-    lineCount = 0;
-    return true;
-}
-
 
 size_t TextDocument::LineNumFromOffset(size_t offset)
 {
-    size_t lineNum = 0;
-    LineInfoFromOffset(offset, &lineNum, nullptr, nullptr, nullptr, nullptr);
-    return lineNum;
+  size_t lineNum = 0;
+  size_t byte_offset = 0;
+  TreeNode* node = docBuffer.GetNodePosition(offset, byte_offset);
+  LineInfoFromOffset(offset, &lineNum, nullptr, nullptr, nullptr, nullptr);
+  return lineNum;
 }
 
 bool TextDocument::LineInfoFromOffset(size_t offset_chars, size_t* lineNo, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes)
 {
-    size_t low = 0;
-    size_t high = lineCount - 1;
-    size_t line = 0;
+  size_t low = 0;
+  size_t high = docBuffer.lineCount - 1;
+  size_t line = 0;
 
-    if (lineCount == 0)
+  if (docBuffer.lineCount == 0)
+  {
+    if (lineNo != nullptr)          *lineNo = 0;
+    if (lineoffChars != nullptr)    *lineoffChars = 0;
+    if (linelenChars != nullptr)    *linelenChars = 0;
+    if (lineoffBytes != nullptr)    *lineoffBytes = 0;
+    if (linelenBytes != nullptr)    *linelenBytes = 0;
+
+    return false;
+  }
+
+  /*while (low <= high)
+  {
+    line = (high + low) / 2;
+
+    if (offset_chars >= charOffsetLineBuffer[line] && offset_chars < charOffsetLineBuffer[line + 1])
     {
-        if (lineNo != nullptr)          *lineNo = 0;
-        if (lineoffChars != nullptr)    *lineoffChars = 0;
-        if (linelenChars != nullptr)    *linelenChars = 0;
-        if (lineoffBytes != nullptr)    *lineoffBytes = 0;
-        if (linelenBytes != nullptr)    *linelenBytes = 0;
-
-        return false;
+      break;
     }
-
-    while (low <= high)
+    else if (offset_chars < charOffsetLineBuffer[line])
     {
-        line = (high + low) / 2;
-
-        if (offset_chars >= charOffsetLineBuffer[line] && offset_chars < charOffsetLineBuffer[line + 1])
-        {
-            break;
-        }
-        else if (offset_chars < charOffsetLineBuffer[line])
-        {
-            high = line - 1;
-        }
-        else
-        {
-            low = line + 1;
-        }
+      high = line - 1;
     }
+    else
+    {
+      low = line + 1;
+    }
+  }*/
 
-    if (lineNo != nullptr)	        *lineNo = line;
-    if (lineoffBytes != nullptr)	*lineoffBytes = byteOffsetLineBuffer[line];
-    if (linelenBytes != nullptr)	*linelenBytes = byteOffsetLineBuffer[line + 1] - byteOffsetLineBuffer[line];
-    if (lineoffChars != nullptr)	*lineoffChars = charOffsetLineBuffer[line];
-    if (linelenChars != nullptr)	*linelenChars = charOffsetLineBuffer[line + 1] - charOffsetLineBuffer[line];
+  //if (lineNo != nullptr)	        *lineNo = line;
+  //if (lineoffBytes != nullptr)	*lineoffBytes = byteOffsetLineBuffer[line];
+  //if (linelenBytes != nullptr)	*linelenBytes = byteOffsetLineBuffer[line + 1] - byteOffsetLineBuffer[line];
+  //if (lineoffChars != nullptr)	*lineoffChars = charOffsetLineBuffer[line];
+  //if (linelenChars != nullptr)	*linelenChars = charOffsetLineBuffer[line + 1] - charOffsetLineBuffer[line];
 
-    return true;
+  return true;
 }
 
 bool TextDocument::LineInfoFromLineNumber(size_t lineno, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes)
 {
-    if (lineno < lineCount)
-    {
-        if (linelenChars != nullptr) *linelenChars = charOffsetLineBuffer[lineno + 1] - charOffsetLineBuffer[lineno];
-        if (lineoffChars != nullptr) *lineoffChars = charOffsetLineBuffer[lineno];
-        if (linelenBytes != nullptr) *linelenBytes = byteOffsetLineBuffer[lineno + 1] - byteOffsetLineBuffer[lineno];
-        if (lineoffBytes != nullptr) *lineoffBytes = byteOffsetLineBuffer[lineno];
+  if (lineno < docBuffer.lineCount)
+  {
+    //if (linelenChars != nullptr) *linelenChars = charOffsetLineBuffer[lineno + 1] - charOffsetLineBuffer[lineno];
+    //if (lineoffChars != nullptr) *lineoffChars = charOffsetLineBuffer[lineno];
+    //if (linelenBytes != nullptr) *linelenBytes = byteOffsetLineBuffer[lineno + 1] - byteOffsetLineBuffer[lineno];
+    //if (lineoffBytes != nullptr) *lineoffBytes = byteOffsetLineBuffer[lineno];
 
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return true;
+  }
+  else
+  {
+    return false;
+  }
 }
 
 
 TextIterator TextDocument::IterateLineByLineNumber(size_t lineno, size_t* linestart, size_t* linelen)
 {
-    size_t offset_bytes;
-    size_t length_bytes;
+  size_t offset_bytes;
+  size_t length_bytes;
 
-    if (!LineInfoFromLineNumber(lineno, linestart, linelen, &offset_bytes, &length_bytes))
-        return TextIterator();
+  if (!LineInfoFromLineNumber(lineno, linestart, linelen, &offset_bytes, &length_bytes))
+    return TextIterator();
 
-    return TextIterator(offset_bytes, length_bytes, this);
+  return TextIterator(offset_bytes, length_bytes, this);
 }
 
 TextIterator TextDocument::IterateLineByOffset(size_t offset_chars, size_t* lineno, size_t* linestart)
 {
-    size_t offset_bytes = 0;
-    size_t length_bytes = 0;
+  size_t offset_bytes = 0;
+  size_t length_bytes = 0;
 
-    if (!LineInfoFromOffset(offset_chars, lineno, linestart, nullptr, &offset_bytes, &length_bytes))
-        return TextIterator();
+  if (!LineInfoFromOffset(offset_chars, lineno, linestart, nullptr, &offset_bytes, &length_bytes))
+    return TextIterator();
 
-    return TextIterator(offset_bytes, length_bytes, this);
+  return TextIterator(offset_bytes, length_bytes, this);
 }
 
 
 size_t TextDocument::InsertText(size_t offsetChars, wchar_t* text, size_t length)
 {
-  size_t offsetBytes = CharOffsetToByteOffset(offsetChars);
+  const size_t offsetBytes = CharOffsetToByteOffset(offsetChars);
   return InsertTextRaw(offsetBytes, text, length);
 }
 size_t TextDocument::ReplaceText(size_t offsetChars, wchar_t* text, size_t length, size_t eraseLen)
 {
-  size_t offsetBytes = CharOffsetToByteOffset(offsetChars);
+  const size_t offsetBytes = CharOffsetToByteOffset(offsetChars);
   return ReplaceTextRaw(offsetBytes, text, length, eraseLen);
 }
 size_t TextDocument::EraseText(size_t offsetChars, size_t length)
 {
-    size_t offsetBytes = CharOffsetToByteOffset(offsetChars);
-    return EraseTextRaw(offsetBytes, length);
+  const size_t offsetBytes = CharOffsetToByteOffset(offsetChars);
+  return EraseTextRaw(offsetBytes, length);
 }
 
 size_t TextDocument::InsertTextRaw(size_t offsetBytes, wchar_t* text, size_t textLength)
 {
-    const size_t LEN = 0x100;
-    unsigned char buf[LEN];
-    size_t processedChars = 0, rawLen = 0, offset = offsetBytes + headerSize, bufLen = LEN;
-    size_t newLen = static_cast<size_t>((docBuffer.size() + textLength * sizeof(WCHAR)) * 1.5);
-    docBuffer.reserve(newLen);
-    while (textLength)
-    {
-        rawLen = bufLen;
-        processedChars = UTF16ToRawData(text, textLength, buf, bufLen);
+  unsigned char buf[LEN];
+  size_t processedChars = 0, rawLen = 0, offset = offsetBytes + headerSize, bufLen = LEN;
+  while (textLength)
+  {
+    rawLen = bufLen;
+    processedChars = UTF16ToRawData(text, textLength, buf, bufLen);
 
-        docBuffer.insert(docBuffer.begin() + offset, std::begin(buf), std::begin(buf) + bufLen);
+    docBuffer.InsertText(offset, std::vector<unsigned char>(buf, buf + processedChars));
 
-        text += processedChars;
-        textLength -= processedChars;
-        rawLen += bufLen;
-        offset += bufLen;
-    }
-    docBuffer.shrink_to_fit();
-    docLengthByBytes = docBuffer.size();
-    return rawLen;
+    text += processedChars;
+    textLength -= processedChars;
+    rawLen += bufLen;
+    offset += bufLen;
+  }
+  return rawLen;
 
 }
 size_t TextDocument::ReplaceTextRaw(size_t offsetBytes, wchar_t* text, size_t textLength, size_t eraseLen)
 {
-    const size_t LEN = 0x100;
-    unsigned char buf[LEN];
-    size_t processedChars = 0, rawLen = 0, offset = offsetBytes + headerSize, bufLen = LEN;
-    size_t newLen = static_cast<size_t>((docBuffer.size() - eraseLen + textLength * sizeof(WCHAR)) * 1.5);
-    docBuffer.reserve(newLen);
-    size_t eraseBytes = CharOffsetToByteOffsetAt(offsetBytes, eraseLen);
-    auto beginIter = docBuffer.begin() + offsetBytes, endIter = beginIter + eraseBytes;
-    docBuffer.erase(beginIter, endIter);
-    auto insertIter = docBuffer.begin() + offsetBytes;
-    while (textLength)
-    {
-        rawLen = bufLen;
-        processedChars = UTF16ToRawData(text, textLength, buf, bufLen);
+  
+  unsigned char buf[LEN];
+  size_t processedChars = 0, rawLen = 0, offset = offsetBytes + headerSize, bufLen = LEN;
+  size_t eraseBytes = CharOffsetToByteOffsetAt(offsetBytes, eraseLen);
+  auto insertIter = offsetBytes;
+  while (textLength)
+  {
+    rawLen = bufLen;
+    processedChars = UTF16ToRawData(text, textLength, buf, bufLen);
 
-        insertIter = docBuffer.insert(insertIter, std::begin(buf), std::begin(buf) + bufLen);
 
-        text += processedChars;
-        textLength -= processedChars;
-        rawLen += bufLen;
-        offset += bufLen;
-    }
-    docBuffer.shrink_to_fit();
-    docLengthByBytes = docBuffer.size();
-    return rawLen;
+    text += processedChars;
+    textLength -= processedChars;
+    rawLen += bufLen;
+    offset += bufLen;
+  }
+  return rawLen;
 
 
 }
 size_t TextDocument::EraseTextRaw(size_t offsetBytes, size_t textLength)
 {
-    size_t eraseBytes = CharOffsetToByteOffsetAt(offsetBytes, textLength);
-    auto beginIter = docBuffer.begin() + offsetBytes, endIter = beginIter + eraseBytes;
-    docBuffer.erase(beginIter, endIter);
-    return textLength;
+  const size_t eraseBytes = CharOffsetToByteOffsetAt(offsetBytes, textLength);
+  auto beginIter = offsetBytes, endIter = eraseBytes;
+  docBuffer.EraseText(beginIter, endIter);
+  return textLength;
 }
 
 size_t TextDocument::CharOffsetToByteOffsetAt(size_t offsetBytes, size_t charCount)
 {
-    switch (fileFormat)
-    {
-    case BCP_ASCII:
-        return charCount;
-    case BCP_UTF16:case BCP_UTF16BE:
-        return charCount * sizeof(WCHAR);
+  switch (fileFormat)
+  {
+  case BCP_ASCII:
+    return charCount;
+  case BCP_UTF16:case BCP_UTF16BE:
+    return charCount * sizeof(WCHAR);
 
-    default:
-        break;
-    }
-    // case UTF-8
-    size_t start = offsetBytes;
-    while (charCount && offsetBytes < docLengthByBytes)//todo: +headrsize ?
-    {
-        const size_t bufLen = 0x100;
-        WCHAR buf[bufLen];
-        size_t charLen = min(charCount, bufLen);//因为底层默认输入为UTF-16所以直接定义WCHAR数组
-        size_t byteLen = GetText(offsetBytes, docLengthByBytes - offsetBytes, buf, charLen);
-        charCount -= charLen;
-        offsetBytes += byteLen;
+  default:
+    break;
+  }
+  // case UTF-8
+  const size_t start = offsetBytes;
+  while (charCount && offsetBytes < docBuffer.length)//todo: +headrsize ?
+  {
+    WCHAR buf[LEN];
+    size_t charLen = (std::min)(charCount, LEN);//因为底层默认输入为UTF-16所以直接定义WCHAR数组
+    size_t byteLen = GetText(offsetBytes, docBuffer.length - offsetBytes, buf, charLen);
+    charCount -= charLen;
+    offsetBytes += byteLen;
 
-    }
-    return offsetBytes - start;
+  }
+  return offsetBytes - start;
 
 }
 
 size_t TextDocument::CharOffsetToByteOffset(size_t offsetChars)
 {
-    switch (fileFormat)
-    {
-    case BCP_ASCII:
-        return offsetChars;
-    case BCP_UTF16:case BCP_UTF16BE:
-        return offsetChars * sizeof(WCHAR);
+  switch (fileFormat)
+  {
+  case BCP_ASCII:
+    return offsetChars;
+  case BCP_UTF16:case BCP_UTF16BE:
+    return offsetChars * sizeof(WCHAR);
 
-    default:
-        break;
-    }
-    // case UTF-8 ....
-    size_t lineOffChars;
-    size_t lineOffBytes;
-    if (LineInfoFromOffset(offsetChars, 0, &lineOffChars, 0, &lineOffBytes, 0))
-    {
-        return CharOffsetToByteOffsetAt(lineOffBytes, offsetChars - lineOffChars)
-            + lineOffBytes;
-    }
-    else
-    {
-        return 0;
-    }
+  default:
+    break;
+  }
+  // case UTF-8 ....
+  size_t lineOffChars;
+  size_t lineOffBytes;
+  if (LineInfoFromOffset(offsetChars, 0, &lineOffChars, 0, &lineOffBytes, 0))
+  {
+    return CharOffsetToByteOffsetAt(lineOffBytes, offsetChars - lineOffChars)
+      + lineOffBytes;
+  }
+  else
+  {
+    return 0;
+  }
 }
-
-bool TextDocument::ReCalculateLineBuffer()
+bool TextDocument::Clear()
 {
-    ReleaseLineBuffer();
-    InitLineBuffer();
-    return true;
-}
-bool TextDocument::ReleaseLineBuffer()
-{
-    if (byteOffsetLineBuffer != nullptr)
-    {
-        delete[] byteOffsetLineBuffer;
-        byteOffsetLineBuffer = nullptr;
-    }
-    if (charOffsetLineBuffer != nullptr)
-    {
-        delete[] charOffsetLineBuffer;
-        charOffsetLineBuffer = nullptr;
-    }
-    return true;
+  docBuffer.length = 0;
+  docBuffer.lineCount = 0;
+  docBuffer.buffers.clear();
+  docBuffer.buffers.shrink_to_fit();
+  docBuffer.rootNode.reset(nullptr);
+  return true;
 }

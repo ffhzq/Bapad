@@ -1,5 +1,6 @@
 #pragma once
 #include "pch.h"
+#include "PieceTree.h"
 
 class TextIterator;
 
@@ -8,12 +9,10 @@ class TextDocument
     friend class TextIterator;
 public:
     TextDocument() noexcept;
-    ~TextDocument() noexcept;
 
     bool Initialize(wchar_t* filename);
     
-    bool Clear() noexcept;
-    bool ReCalculateLineBuffer();
+    bool Clear();
     size_t LineNumFromOffset(size_t offset);
 
     bool LineInfoFromOffset(size_t offset_chars, size_t* lineNo, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);//定位对应offset所在的行并返回行号、字符偏移量、行字符数、字节偏移量、行字节数这些信息
@@ -26,16 +25,12 @@ public:
     size_t	ReplaceText(size_t offsetChars, wchar_t * text, size_t length, size_t eraseLen);
     size_t	EraseText(size_t offsetChars, size_t length);
 
-    const int GetFileFormat() const;
-    const size_t GetLineCount() const;
-    const size_t GetLongestLine(int tabwidth) const;
-    const size_t GetDocLength() const;
+    const int GetFileFormat() const noexcept;
+    const size_t GetLineCount() const noexcept;
+    const size_t GetLongestLine(int tabwidth) const noexcept;
+    const size_t GetDocLength() const noexcept;
 
 private:
-    bool InitLineBuffer();
-    bool ReleaseLineBuffer();
-
-    size_t GetUTF32Char(size_t offset, size_t lenBytes, char32_t& pch32);
 
     // GetText: read 'lenBytes'or'bufLen'(use the smaller one) bytes wchar from the position (docBuffer+offset) to 'buf'
     size_t  GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t& bufLen);
@@ -49,19 +44,10 @@ private:
 
     size_t CharOffsetToByteOffsetAt(size_t offsetBytes, size_t charCount);
     size_t CharOffsetToByteOffset(size_t offsetChars);
-    std::vector<unsigned char> docBuffer;// raw txt data
-    size_t  docLengthByChars;//
-    size_t  docLengthByBytes;// size of txt data
-
+    PieceTree docBuffer;// raw txt data
+    
     int fileFormat;
     int  headerSize;
-
-    size_t* byteOffsetLineBuffer;
-    size_t* charOffsetLineBuffer;
-
-    size_t  lineCount;
-
-
 
 };
 
