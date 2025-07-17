@@ -35,7 +35,7 @@ PieceTree::PieceTree(std::vector<unsigned char> input) : buffers{}, rootNode(std
 PieceTree::~PieceTree() noexcept
 {}
 
-bool PieceTree::InsertText(size_t offset, std::vector<unsigned char> input) noexcept
+bool PieceTree::InsertText(size_t offset, std::vector<unsigned char> input)
 {
   if (offset > this->length)
   {
@@ -78,14 +78,14 @@ bool PieceTree::InsertText(size_t offset, std::vector<unsigned char> input) noex
   return true;
 }
 
-bool PieceTree::EraseText(size_t offset, size_t erase_length) noexcept
+bool PieceTree::EraseText(size_t offset, size_t erase_length)
 {
   if (rootNode->right == nullptr || offset + erase_length > length) return false;
   const size_t original_offset = offset, original_erase_length = erase_length;
   size_t in_piece_offset_start = 0;
   TreeNode* current_node = GetNodePosition(offset, in_piece_offset_start);
   TreeNode* parrent = current_node->left;
-  if (current_node == rootNode.get()) return false;
+  if (current_node == rootNode.get() || parrent == nullptr) return false;
   current_node = parrent;
   size_t bytes_erased = 0;
   while (current_node != nullptr && bytes_erased < erase_length)
@@ -100,7 +100,7 @@ bool PieceTree::EraseText(size_t offset, size_t erase_length) noexcept
     }
 
     const Piece& piece = current_node->piece;
-    const Buffer& buffer = buffers[piece.bufferIndex];
+    const Buffer& buffer = gsl::at(buffers, piece.bufferIndex);
     const std::vector<unsigned char>& buffer_value = buffer.value;
     const size_t remain_bytes_to_be_erased = erase_length - bytes_erased;
     const size_t available_bytes_in_piece = piece.length - in_piece_offset_start;
@@ -121,7 +121,7 @@ bool PieceTree::EraseText(size_t offset, size_t erase_length) noexcept
   return true;
 }
 
-bool PieceTree::ReplaceText(size_t offset, std::vector<unsigned char> input, size_t erase_length) noexcept
+bool PieceTree::ReplaceText(size_t offset, std::vector<unsigned char> input, size_t erase_length)
 {
   if (EraseText(offset, erase_length) == false)
   {
@@ -134,7 +134,7 @@ bool PieceTree::ReplaceText(size_t offset, std::vector<unsigned char> input, siz
   return true;
 }
 
-TreeNode* PieceTree::GetNodePosition(size_t offset, size_t& inPieceOffset) noexcept
+TreeNode* PieceTree::GetNodePosition(size_t offset, size_t& inPieceOffset) const noexcept
 {
   const size_t originalOffset = offset;
   if (offset > length) return nullptr;
@@ -151,12 +151,12 @@ TreeNode* PieceTree::GetNodePosition(size_t offset, size_t& inPieceOffset) noexc
 
 TreeNode* PieceTree::SplitPiece(TreeNode* currNode, const size_t inPieceOffset)
 {
-  const Buffer& currBuffer = buffers[currNode->piece.bufferIndex];
+  const Buffer& currBuffer = gsl::at(buffers, currNode->piece.bufferIndex);
   const Piece original_piece = currNode->piece;
   Piece& current_piece = currNode->piece;
 
   const size_t lineIndex = getLineIndexFromOffset(currBuffer.lineStarts, inPieceOffset);
-  current_piece.end = BufferPosition{lineIndex, inPieceOffset - currBuffer.lineStarts[lineIndex]};
+  current_piece.end = BufferPosition{lineIndex, inPieceOffset - gsl::at(currBuffer.lineStarts,lineIndex)};
   current_piece.length = inPieceOffset;
   current_piece.lineFeedCnt = lineIndex;
   Piece p2;
@@ -168,7 +168,7 @@ TreeNode* PieceTree::SplitPiece(TreeNode* currNode, const size_t inPieceOffset)
   {
     const size_t lineIndex2 = getLineIndexFromOffset(currBuffer.lineStarts, inPieceOffset);
     p2 = Piece{
-       BufferPosition{lineIndex2, inPieceOffset - currBuffer.lineStarts[lineIndex2]},
+       BufferPosition{lineIndex2, inPieceOffset - gsl::at(currBuffer.lineStarts,lineIndex2)},
        original_piece.end,
        original_piece.bufferIndex,
        original_piece.length - current_piece.length,
@@ -202,12 +202,12 @@ std::vector<unsigned char> PieceTree::GetText(size_t offset, size_t text_length)
   while (current_node != nullptr && bytes_copied < text_length)
   {
     const Piece& piece = current_node->piece;
-    const Buffer& buffer = buffers[piece.bufferIndex];
+    const Buffer& buffer = gsl::at(buffers, piece.bufferIndex);
     const std::vector<unsigned char>& buffer_value = buffer.value;
 
     in_piece_offset_start = (bytes_copied == 0 ? in_piece_offset_start : 0); // first piece or not
-    const size_t piece_start = buffer.lineStarts[piece.start.index] + piece.start.offset;
-    const size_t piece_end = buffer.lineStarts[piece.end.index] + piece.end.offset;
+    const size_t piece_start = gsl::at(buffer.lineStarts, piece.start.index) + piece.start.offset;
+    const size_t piece_end = gsl::at(buffer.lineStarts, piece.end.index) + piece.end.offset;
 
     const size_t remain_bytes_to_be_copied = text_length - bytes_copied;
     const size_t available_bytes_in_piece = piece.length - in_piece_offset_start;
@@ -227,17 +227,17 @@ void PieceTree::ShrinkPiece(TreeNode* current_node, size_t shrink_to_right, size
 {
   Piece& piece = current_node->piece;
   const Piece original_piece = piece;
-  auto lineStarts = buffers[piece.bufferIndex].lineStarts;
-  const size_t offset1 = lineStarts[piece.start.index] + piece.start.offset + shrink_to_right,
-    offset2 = lineStarts[piece.end.index] + piece.end.offset - shrink_to_left;
+  auto& lineStarts = gsl::at(buffers, piece.bufferIndex).lineStarts;
+  const size_t offset1 = gsl::at(lineStarts, piece.start.index) + piece.start.offset + shrink_to_right,
+    offset2 = gsl::at(lineStarts, piece.end.index) + piece.end.offset - shrink_to_left;
 
   if (offset1 <= offset2)
   {
     const size_t lineIndex1 = getLineIndexFromOffset(lineStarts, offset1),
       lineIndex2 = getLineIndexFromOffset(lineStarts, offset2);
 
-    const size_t line_offset1 = offset1 - lineStarts[lineIndex1],
-      line_offset2 = offset2 - lineStarts[lineIndex1];
+    const size_t line_offset1 = offset1 - gsl::at(lineStarts, lineIndex1),
+      line_offset2 = offset2 - gsl::at(lineStarts, lineIndex1);
 
     piece.start = BufferPosition(lineIndex1, line_offset1);
     piece.end = BufferPosition(lineIndex2, line_offset2);
@@ -259,10 +259,10 @@ std::vector<size_t> createLineStarts(const std::vector<unsigned char>& str)
   const size_t length = str.size();
   for (size_t i = 0; i < length; ++i)
   {
-    auto ch = str[i];
+    auto ch = gsl::at(str, i);
     if (ch == static_cast<unsigned int>(CharCode::CarriageReturn))
     {
-      if (i + 1 < length && str[i + 1] == static_cast<unsigned int>(CharCode::LineFeed))
+      if (i + 1 < length && gsl::at(str, i + 1) == static_cast<unsigned int>(CharCode::LineFeed))
       {
         // \r\n
         lineStarts.push_back(i + 2);

@@ -65,12 +65,12 @@ struct PieceTree {
   PieceTree(PieceTree&&) = delete;
   PieceTree& operator=(PieceTree&&) = delete;
 
-  bool InsertText(size_t offset, std::vector<unsigned char> input) noexcept;
-  bool EraseText(size_t offset, size_t erase_length) noexcept;
-  bool ReplaceText(size_t offset, std::vector<unsigned char> input, size_t erase_length) noexcept;
+  bool InsertText(size_t offset, std::vector<unsigned char> input);
+  bool EraseText(size_t offset, size_t erase_length);
+  bool ReplaceText(size_t offset, std::vector<unsigned char> input, size_t erase_length);
 
   // use (TreeNode*, inPieceOffset) locate the insertion position.
-  TreeNode* GetNodePosition(size_t offset, size_t& inPieceOffset) noexcept;
+  TreeNode* GetNodePosition(size_t offset, size_t& inPieceOffset) const noexcept;
   TreeNode* SplitPiece(TreeNode* currNode, const size_t inPieceOffset);
   std::vector<unsigned char> GetText(size_t offset, size_t text_length);
   void ShrinkPiece(TreeNode* current_node, size_t shrink_to_right, size_t shrink_to_left);

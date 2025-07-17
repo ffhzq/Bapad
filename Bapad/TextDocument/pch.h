@@ -9,10 +9,11 @@
 
 // add headers that you want to pre-compile here
 #include "framework.h"
+#include <fstream>
+#include <gsl/gsl>
 #include <memory>
 #include <string>
 #include <vector>
 #include <windows.h>
-#include <fstream>
 
 #endif //PCH_H
