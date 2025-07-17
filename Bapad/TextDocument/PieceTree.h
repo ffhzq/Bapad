@@ -57,13 +57,13 @@ struct PieceTree {
   size_t length;
 
   PieceTree(std::vector<unsigned char> input);
-  ~PieceTree() noexcept;
+  ~PieceTree() noexcept = default;
 
-  PieceTree() = delete;
+
   PieceTree(const PieceTree&) = delete;
   PieceTree& operator=(const PieceTree&) = delete;
-  PieceTree(PieceTree&&) = delete;
-  PieceTree& operator=(PieceTree&&) = delete;
+  PieceTree(PieceTree&&) = default;
+  PieceTree& operator=(PieceTree&&) = default;
 
   bool InsertText(size_t offset, std::vector<unsigned char> input);
   bool EraseText(size_t offset, size_t erase_length);

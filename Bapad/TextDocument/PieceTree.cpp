@@ -32,8 +32,6 @@ PieceTree::PieceTree(std::vector<unsigned char> input) : buffers{}, rootNode(std
   lineCount += piece.lineFeedCnt;
 }
 
-PieceTree::~PieceTree() noexcept
-{}
 
 bool PieceTree::InsertText(size_t offset, std::vector<unsigned char> input)
 {
