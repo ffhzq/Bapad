@@ -82,101 +82,42 @@ bool PieceTree::EraseText(size_t offset, size_t erase_length) noexcept
 {
   if (rootNode->right == nullptr || offset + erase_length > length) return false;
   const size_t original_offset = offset, original_erase_length = erase_length;
-  size_t left_node_offset = 0, right_node_offset = 0;
-  TreeNode* left = GetNodePosition(offset, left_node_offset), * right = GetNodePosition(offset + erase_length, right_node_offset);
-  if (left == right) // in a piece
+  size_t in_piece_offset_start = 0;
+  TreeNode* current_node = GetNodePosition(offset, in_piece_offset_start);
+  TreeNode* parrent = current_node->left;
+  if (current_node == rootNode.get()) return false;
+  current_node = parrent;
+  size_t bytes_erased = 0;
+  while (current_node != nullptr && bytes_erased < erase_length)
   {
-    if (left_node_offset != 0 && right_node_offset != left->piece.length) // case1: in the middle of a piece
+    current_node = current_node->right.get();
+    if (in_piece_offset_start != 0) // if erase from middle, then split piece from middle
     {
-      Piece& piece1 = left->piece;
-      Piece piece2 = piece1;
-      size_t lineIndex1 = getLineIndexFromOffset(buffers[piece1.bufferIndex].lineStarts, left_node_offset);
-      size_t lineIndex2 = getLineIndexFromOffset(buffers[piece1.bufferIndex].lineStarts, right_node_offset);
-      piece1.end = BufferPosition(lineIndex1, left_node_offset - buffers[piece1.bufferIndex].lineStarts[lineIndex1]);
-      piece1.length = left_node_offset;
-      piece1.lineFeedCnt = lineIndex1;
-      piece2.start = BufferPosition(lineIndex2, right_node_offset - buffers[piece1.bufferIndex].lineStarts[lineIndex2]);
-      piece2.length -= left_node_offset + erase_length;
-      piece2.lineFeedCnt = piece2.end.index - piece2.start.index;
-
-      auto newNode = std::make_unique<TreeNode>(piece2, left);
-      newNode->right = std::move(left->right);
-      left->right = std::move(newNode);
-
-      length -= erase_length;
-      lineCount -= lineIndex2 - lineIndex1;
-
+      current_node = SplitPiece(current_node, in_piece_offset_start);
+      parrent = current_node;
+      current_node = current_node->right.get();
+      in_piece_offset_start = 0;
     }
-    else // case2: from head or to tail of piece
-    {
-      //if(erase_length == right_node_offset) // delete whole piece
 
-      Piece& piece = left->piece;
-      const Piece original_piece = piece;
-      size_t lineIndex1 = getLineIndexFromOffset(buffers[piece.bufferIndex].lineStarts, left_node_offset);
-      size_t lineIndex2 = getLineIndexFromOffset(buffers[piece.bufferIndex].lineStarts, right_node_offset);
-      piece.start = BufferPosition(lineIndex1, left_node_offset - buffers[piece.bufferIndex].lineStarts[lineIndex1]);
-      piece.end = BufferPosition(lineIndex2, right_node_offset - buffers[piece.bufferIndex].lineStarts[lineIndex2]);
+    const Piece& piece = current_node->piece;
+    const Buffer& buffer = buffers[piece.bufferIndex];
+    const std::vector<unsigned char>& buffer_value = buffer.value;
+    const size_t remain_bytes_to_be_erased = erase_length - bytes_erased;
+    const size_t available_bytes_in_piece = piece.length - in_piece_offset_start;
+    const size_t bytes_to_be_erased = (std::min)(available_bytes_in_piece, remain_bytes_to_be_erased);
 
-      piece.length -= erase_length;
-      piece.lineFeedCnt = lineIndex2 - lineIndex1;
-
-      length -= erase_length;
-      lineCount -= original_piece.lineFeedCnt - piece.lineFeedCnt;
-    }
+    ShrinkPiece(current_node, bytes_to_be_erased, 0);
+    bytes_erased += bytes_to_be_erased;
   }
-  else // case3: several pieces
+  if (current_node == nullptr)
   {
-    TreeNode* leftmost = left;
-    if (left_node_offset == 0)
-    {
-      leftmost = left->left;
-    }
-    else // shrink first piece.
-    {
-      Piece& piece = left->piece;
-      const Piece original_piece = piece;
-      size_t lineIndex = getLineIndexFromOffset(buffers[piece.bufferIndex].lineStarts, left_node_offset);
-      piece.end = BufferPosition(lineIndex, left_node_offset - buffers[piece.bufferIndex].lineStarts[lineIndex]);
-      piece.length = left_node_offset;
-      piece.lineFeedCnt = lineIndex;
-      length -= original_piece.length - piece.length;
-      lineCount -= original_piece.lineFeedCnt - piece.lineFeedCnt;
-      left = left->right.get();
-    }
-    TreeNode* pre = nullptr;
-    while (left != right)
-    {
-      const Piece& piece = left->piece;
-      length -= piece.length;
-      lineCount -= piece.lineFeedCnt;
-      pre = left;
-      left = left->right.get();
-    }
-    leftmost->right = std::move(pre->right); // delete all pieces except the last one.
-
-    // then handle the last piece.
-    if (right_node_offset != right->piece.length) // shrink it.
-    {
-      Piece& piece = right->piece;
-      const Piece original_piece = piece;
-      size_t lineIndex = getLineIndexFromOffset(buffers[piece.bufferIndex].lineStarts, right_node_offset);
-      piece.start = BufferPosition(lineIndex, right_node_offset - buffers[piece.bufferIndex].lineStarts[lineIndex]);
-      piece.length -= right_node_offset;
-      piece.lineFeedCnt = piece.end.index - lineIndex;
-
-      length -= original_piece.length - piece.length;
-      lineCount -= original_piece.lineFeedCnt - piece.lineFeedCnt;
-    }
-    else // delete whole piece.
-    {
-      const Piece& piece = right->piece;
-      length -= piece.length;
-      lineCount -= piece.lineFeedCnt;
-      leftmost->right = std::move(right->right);
-    }
-
+    parrent->right = nullptr;
   }
+  else
+  {
+    parrent->right = current_node->piece.length == 0 ? std::move(current_node->right) : std::move(current_node->left->right);
+  }
+
   return true;
 }
 
@@ -197,8 +138,8 @@ TreeNode* PieceTree::GetNodePosition(size_t offset, size_t& inPieceOffset) noexc
 {
   const size_t originalOffset = offset;
   if (offset > length) return nullptr;
-  // assume rootNode->right is not nullptr.
   TreeNode* ptr = rootNode->right.get();
+  if (offset == 0)return ptr;
   while (offset > ptr->piece.length)
   {
     offset -= ptr->piece.length;
@@ -214,20 +155,26 @@ TreeNode* PieceTree::SplitPiece(TreeNode* currNode, const size_t inPieceOffset)
   const Piece original_piece = currNode->piece;
   Piece& current_piece = currNode->piece;
 
-  const size_t lineIndex = getLineIndexFromOffset(currBuffer.lineStarts, inPieceOffset - 1);
-  current_piece.end = BufferPosition{lineIndex, inPieceOffset - currBuffer.lineStarts[lineIndex] - 1};
+  const size_t lineIndex = getLineIndexFromOffset(currBuffer.lineStarts, inPieceOffset);
+  current_piece.end = BufferPosition{lineIndex, inPieceOffset - currBuffer.lineStarts[lineIndex]};
   current_piece.length = inPieceOffset;
   current_piece.lineFeedCnt = lineIndex;
-
-  const size_t lineIndex2 = getLineIndexFromOffset(currBuffer.lineStarts, inPieceOffset);
-  Piece p2{
-     BufferPosition{lineIndex2, inPieceOffset - currBuffer.lineStarts[lineIndex2]}, // p1.end + 1
-     original_piece.end,
-     original_piece.bufferIndex,
-     original_piece.length - current_piece.length,
-     original_piece.lineFeedCnt - current_piece.lineFeedCnt
-  };
-
+  Piece p2;
+  if (inPieceOffset == 0)
+  {
+    p2 = original_piece;
+  }
+  else
+  {
+    const size_t lineIndex2 = getLineIndexFromOffset(currBuffer.lineStarts, inPieceOffset);
+    p2 = Piece{
+       BufferPosition{lineIndex2, inPieceOffset - currBuffer.lineStarts[lineIndex2]},
+       original_piece.end,
+       original_piece.bufferIndex,
+       original_piece.length - current_piece.length,
+       original_piece.lineFeedCnt - current_piece.lineFeedCnt
+    };
+  }
   auto Node2 = std::make_unique<TreeNode>(p2, currNode);
   Node2->right = std::move(currNode->right);
   if (Node2->right != nullptr) Node2->right->left = Node2.get();
@@ -274,6 +221,36 @@ std::vector<unsigned char> PieceTree::GetText(size_t offset, size_t text_length)
     current_node = current_node->right.get();
   }
   return text;
+}
+// |->to right   <-to left|
+void PieceTree::ShrinkPiece(TreeNode* current_node, size_t shrink_to_right, size_t shrink_to_left)
+{
+  Piece& piece = current_node->piece;
+  const Piece original_piece = piece;
+  auto lineStarts = buffers[piece.bufferIndex].lineStarts;
+  const size_t offset1 = lineStarts[piece.start.index] + piece.start.offset + shrink_to_right,
+    offset2 = lineStarts[piece.end.index] + piece.end.offset - shrink_to_left;
+
+  if (offset1 <= offset2)
+  {
+    const size_t lineIndex1 = getLineIndexFromOffset(lineStarts, offset1),
+      lineIndex2 = getLineIndexFromOffset(lineStarts, offset2);
+
+    const size_t line_offset1 = offset1 - lineStarts[lineIndex1],
+      line_offset2 = offset2 - lineStarts[lineIndex1];
+
+    piece.start = BufferPosition(lineIndex1, line_offset1);
+    piece.end = BufferPosition(lineIndex2, line_offset2);
+    piece.length = offset2 - offset1;
+    piece.lineFeedCnt = lineIndex2 - lineIndex1;
+
+    length -= original_piece.length - piece.length;
+    lineCount -= original_piece.lineFeedCnt - piece.lineFeedCnt;
+  }
+  else
+  {
+    throw;
+  }
 }
 
 std::vector<size_t> createLineStarts(const std::vector<unsigned char>& str)

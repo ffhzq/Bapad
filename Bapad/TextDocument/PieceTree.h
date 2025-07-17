@@ -73,4 +73,5 @@ struct PieceTree {
   TreeNode* GetNodePosition(size_t offset, size_t& inPieceOffset) noexcept;
   TreeNode* SplitPiece(TreeNode* currNode, const size_t inPieceOffset);
   std::vector<unsigned char> GetText(size_t offset, size_t text_length);
+  void ShrinkPiece(TreeNode* current_node, size_t shrink_to_right, size_t shrink_to_left);
 };
