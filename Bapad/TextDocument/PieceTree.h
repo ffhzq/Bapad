@@ -7,6 +7,8 @@ size_t getLineIndexFromOffset(const std::vector<size_t>& lineStarts, size_t inPi
 struct Buffer {
   std::vector<unsigned char> value;
   std::vector<size_t> lineStarts;
+  Buffer() : value(0), lineStarts{0,1}
+  {};
   Buffer(std::vector<unsigned char> input) : value(input), lineStarts(createLineStarts(value))
   {}
 };
@@ -56,6 +58,7 @@ struct PieceTree {
   size_t lineCount;
   size_t length;
 
+  PieceTree() noexcept;
   PieceTree(std::vector<unsigned char> input);
   ~PieceTree() noexcept = default;
 
@@ -65,6 +68,25 @@ struct PieceTree {
   PieceTree(PieceTree&&) = default;
   PieceTree& operator=(PieceTree&&) = default;
 
+  void Init(std::vector<unsigned char>& input)
+  {
+    buffers.push_back(Buffer());
+    rootNode = std::make_unique<TreeNode>();
+    buffers.emplace_back(Buffer(input)); // original
+    const Buffer& buffer = buffers.back();
+    const Piece piece{
+      BufferPosition(0,0), // startPos
+      BufferPosition(buffer.lineStarts.size() - 1, // endPos
+        buffer.value.size() - buffer.lineStarts.back()),
+      1, // BufferIndex
+      buffer.value.size(), // length
+      buffer.lineStarts.size() - 1}; // lineCount
+
+    rootNode.get()->left = nullptr;
+    rootNode.get()->right = std::make_unique<TreeNode>(piece, rootNode.get());
+    length += piece.length;
+    lineCount += piece.lineFeedCnt;
+  }
   bool InsertText(size_t offset, std::vector<unsigned char> input);
   bool EraseText(size_t offset, size_t erase_length);
   bool ReplaceText(size_t offset, std::vector<unsigned char> input, size_t erase_length);

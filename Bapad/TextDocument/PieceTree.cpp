@@ -12,24 +12,15 @@ enum class CharCode {
   CarriageReturn = 13,
 };
 
-PieceTree::PieceTree(std::vector<unsigned char> input) : buffers{}, rootNode(std::make_unique<TreeNode>()), length(0), lineCount(1)
+PieceTree::PieceTree() noexcept : buffers{}, rootNode(), length(0), lineCount(1)
 {
-  buffers.emplace_back(Buffer(std::vector<unsigned char>()));
-  buffers.emplace_back(Buffer(input));
+  auto input = std::vector<unsigned char>();
+  Init(input);
+}
 
-  const Buffer& buffer = buffers.back();
-  const Piece piece{
-    BufferPosition(0,0), // startPos
-    BufferPosition(buffer.lineStarts.size() - 1, // endPos
-      buffer.value.size() - buffer.lineStarts.back()),
-    buffers.size() - 1, // BufferIndex
-    buffer.value.size(), // length
-    buffer.lineStarts.size() - 1}; // lineCount
-
-  rootNode.get()->left = nullptr;
-  rootNode.get()->right = std::make_unique<TreeNode>(piece, rootNode.get());
-  length += piece.length;
-  lineCount += piece.lineFeedCnt;
+PieceTree::PieceTree(std::vector<unsigned char> input) : buffers{}, rootNode(), length(0), lineCount(1)
+{
+  Init(input);
 }
 
 
@@ -41,8 +32,15 @@ bool PieceTree::InsertText(size_t offset, std::vector<unsigned char> input)
   }
   size_t pieceOffset = 0;
   TreeNode* nodePos = GetNodePosition(offset, pieceOffset);
-  buffers.emplace_back(Buffer(input));
-  const Buffer& buffer = buffers.back();
+  auto& buffer = gsl::at(buffers, 0);
+  const size_t start_offset = buffer.value.size();
+  buffer.value.insert(buffer.value.end(), input.begin(), input.end());
+  auto lineStarts = createLineStarts(input);
+  for (auto& i : lineStarts)
+  {
+    i += start_offset;
+  }
+  buffer.lineStarts.insert(buffer.lineStarts.end(), lineStarts.begin() + 1, lineStarts.end());
 
   if (pieceOffset != nodePos->piece.length) // insert inside a piece, split then insert
   {
@@ -50,13 +48,17 @@ bool PieceTree::InsertText(size_t offset, std::vector<unsigned char> input)
     // then insert new node behind nodePos(node1)
   }
   //insert
+  const size_t offset1 = start_offset, offset2 = offset1 + input.size();
+  const size_t lineIndex1 = getLineIndexFromOffset(lineStarts, offset1),
+    lineIndex2 = getLineIndexFromOffset(lineStarts, offset2);
+  const size_t line_offset1 = offset1 - gsl::at(lineStarts, lineIndex1),
+    line_offset2 = offset2 - gsl::at(lineStarts, lineIndex1);
   const Piece piece{
-    BufferPosition(0,0), // startPos
-    BufferPosition(buffer.lineStarts.size() - 1, // endPos
-      buffer.value.size() - buffer.lineStarts.back()),
-    buffers.size() - 1, // BufferIndex
-    buffer.value.size(), // length
-    buffer.lineStarts.size() - 1}; // lineCount
+    BufferPosition(lineIndex1,line_offset1), // startPos
+    BufferPosition(lineIndex2,line_offset2),
+    0, // BufferIndex
+    input.size(), // length
+    lineStarts.size() - 1}; // lineCount
 
   auto NewNode = std::make_unique<TreeNode>(piece, nodePos);
   if (nodePos->right == nullptr)
