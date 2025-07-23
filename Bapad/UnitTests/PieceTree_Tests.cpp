@@ -159,16 +159,16 @@ TEST_F(PieceTreeTest, NonEmptyInputStringConstructor)
   EXPECT_EQ(initialPiece.lineFeedCnt, 1);
 
   // Check BufferPosition for start and end
-  EXPECT_EQ(initialPiece.start.index, 0);
-  EXPECT_EQ(initialPiece.start.offset, 0);
+  EXPECT_EQ(initialPiece.start.line, 0);
+  EXPECT_EQ(initialPiece.start.column, 0);
 
   // For end position: lineStarts.size() - 1 for index, initialPiece.size() - lineStarts.back() for offset
   // "Hello\nWorld" -> createLineStarts returns {0, 6}. Size is 2.
   // lineStarts.size() - 1 = 1
   // lineStarts.back() = 6
   // initialPiece.size() = 11
-  EXPECT_EQ(initialPiece.end.index, 1); // Index of the last line in piece (the second line, index 1)
-  EXPECT_EQ(initialPiece.end.offset, 5); // Offset of the start of the last line (the 'W' in World)
+  EXPECT_EQ(initialPiece.end.line, 1); // Index of the last line in piece (the second line, index 1)
+  EXPECT_EQ(initialPiece.end.column, 5); // Offset of the start of the last line (the 'W' in World)
 }
 
 
@@ -403,4 +403,30 @@ TEST_F(PieceTreeTest, GetText_FromEmptyTree) {
     auto pt = CreatePieceTree("");
     EXPECT_TRUE(pt->GetText(0, 10).empty());
     EXPECT_TRUE(pt->GetText(5, 5).empty());
+}
+
+// ===========================================================================
+// Tests for GetLine
+// ===========================================================================
+TEST_F(PieceTreeTest, GetLine_FromEmptyTree)
+{
+  auto pt = CreatePieceTree("");
+  EXPECT_TRUE(pt->GetLine(0).empty());
+}
+TEST_F(PieceTreeTest, GetLine_Complicated)
+{
+  auto pt = CreatePieceTree("123\n456\n789");
+  EXPECT_EQ(pt->lineCount, 3);
+  EXPECT_EQ(std::string("123\n"), UCVtoString(pt->GetLine(1)));
+  EXPECT_EQ(std::string("456\n"), UCVtoString(pt->GetLine(2)));
+  EXPECT_EQ(std::string("789"), UCVtoString(pt->GetLine(3)));
+
+  pt->InsertText(2, toUCharVector("c"));
+  EXPECT_EQ(std::string("12c3\n"), UCVtoString(pt->GetLine(1)));
+  pt->InsertText(2, toUCharVector("s"));
+  EXPECT_EQ(std::string("12sc3\n"), UCVtoString(pt->GetLine(1)));
+  pt->InsertText(2, toUCharVector("v"));
+  EXPECT_EQ(std::string("12vsc3\n"), UCVtoString(pt->GetLine(1)));
+  pt->InsertText(0, toUCharVector("1"));
+  EXPECT_EQ(std::string("012vsc3\n"), UCVtoString(pt->GetLine(1)));
 }
