@@ -415,7 +415,7 @@ ULONG TextView::RepositionCaret()
 
 
     // get start-of-line information from cursor-offset
-    TextIterator itor = pTextDoc->IterateLineByOffset(cursorOffset, &lineno, &charoff);
+    TextIterator itor = pTextDoc->IterateLineByCharOffset(cursorOffset, &lineno, &charoff);
 
     if (!itor)
         return 0;

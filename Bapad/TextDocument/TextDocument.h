@@ -19,7 +19,7 @@ public:
     bool LineInfoFromLineNumber(size_t lineno, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);
 
     TextIterator IterateLineByLineNumber(size_t lineno, size_t* linestart = 0, size_t* linelen = 0);
-    TextIterator IterateLineByOffset(size_t offset_chars, size_t* lineno, size_t* linestart = 0);
+    TextIterator IterateLineByCharOffset(size_t offset_chars, size_t* lineno, size_t* linestart = 0);
 
     size_t	InsertText(size_t offsetChars, wchar_t* text, size_t length);
     size_t	ReplaceText(size_t offsetChars, wchar_t * text, size_t length, size_t eraseLen);
@@ -44,6 +44,7 @@ private:
 
     size_t CharOffsetToByteOffsetAt(size_t offsetBytes, size_t charCount);
     size_t CharOffsetToByteOffset(size_t offsetChars);
+    size_t ByteOffsetToCharOffset(size_t offsetBytes);
     PieceTree docBuffer;// raw txt data
     
     int fileFormat;
