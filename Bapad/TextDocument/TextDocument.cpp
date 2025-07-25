@@ -308,5 +308,6 @@ size_t TextDocument::LineNumFromCharOffset(size_t offset)
   const auto byteOffset = CharOffsetToByteOffsetAt(0, offset);
   const auto nodePos = docBuffer.GetNodePosition(byteOffset);
   const auto lineIndex = GetLineIndexFromNodePosistion(gsl::at(docBuffer.buffers, nodePos.node->piece.bufferIndex).lineStarts, nodePos);
-  return lineIndex;
+  const auto lineNumber = nodePos.node->lf_left + (nodePos.node->piece.start.line - lineIndex);
+  return lineNumber;
 }
