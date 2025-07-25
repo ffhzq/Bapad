@@ -31,7 +31,7 @@ bool PieceTree::InsertText(size_t offset, std::vector<unsigned char> input)
     return false;
   }
   NodePosition node_pos = GetNodePosition(offset);
-  size_t pieceOffset = node_pos.in_piece_offset;
+  const size_t pieceOffset = node_pos.in_piece_offset;
   TreeNode* nodePos = node_pos.node;
   auto& buffer = gsl::at(buffers, 0);
   const size_t start_offset = buffer.value.size();
@@ -50,10 +50,10 @@ bool PieceTree::InsertText(size_t offset, std::vector<unsigned char> input)
   }
   //insert
   const size_t offset1 = start_offset, offset2 = offset1 + input.size();
-  const size_t lineIndex1 = getLineIndexFromOffset(lineStarts, offset1),
-    lineIndex2 = getLineIndexFromOffset(lineStarts, offset2);
-  const size_t line_offset1 = offset1 - gsl::at(lineStarts, lineIndex1),
-    line_offset2 = offset2 - gsl::at(lineStarts, lineIndex1);
+  const size_t lineIndex1 = GetLineIndexFromNodePosistion(buffer.lineStarts, NodePosition(nodePos, 0)),
+    lineIndex2 = GetLineIndexFromNodePosistion(buffer.lineStarts, NodePosition(nodePos, input.size()));
+  const size_t line_offset1 = offset1 - gsl::at(buffer.lineStarts, lineIndex1),
+    line_offset2 = offset2 - gsl::at(buffer.lineStarts, lineIndex1);
   const Piece piece{
     BufferPosition(lineIndex1,line_offset1), // startPos
     BufferPosition(lineIndex2,line_offset2),
@@ -139,11 +139,11 @@ bool PieceTree::ReplaceText(size_t offset, std::vector<unsigned char> input, siz
   return true;
 }
 
-NodePosition PieceTree::GetNodePositionAt(TreeNode* node, size_t offset)
+NodePosition PieceTree::GetNodePositionAt(TreeNode* node, size_t offset) noexcept
 {
   size_t inPieceOffset = offset;
   TreeNode* ptr = node;
-  if (inPieceOffset < ptr->piece.length) return NodePosition(ptr, inPieceOffset);
+  if (inPieceOffset <= ptr->piece.length) return NodePosition(ptr, inPieceOffset);
   while (ptr && inPieceOffset > ptr->piece.length)
   {
     inPieceOffset -= ptr->piece.length;
@@ -152,7 +152,7 @@ NodePosition PieceTree::GetNodePositionAt(TreeNode* node, size_t offset)
   return NodePosition(ptr, inPieceOffset);
 }
 
-NodePosition PieceTree::GetNodePosition(size_t offset) noexcept
+NodePosition PieceTree::GetNodePosition(size_t offset)
 {
   return GetNodePositionAt(rootNode->right.get(), offset);
 }
@@ -169,7 +169,7 @@ TreeNode* PieceTree::SplitPiece(TreeNode* currNode, const size_t inPieceOffset)
   const Piece original_piece = currNode->piece;
   Piece& current_piece = currNode->piece;
 
-  const size_t lineIndex = getLineIndexFromOffset(currBuffer.lineStarts, inPieceOffset);
+  const size_t lineIndex = GetLineIndexFromNodePosistion(currBuffer.lineStarts, NodePosition(currNode, inPieceOffset));
   current_piece.end = BufferPosition{lineIndex, inPieceOffset - gsl::at(currBuffer.lineStarts,lineIndex)};
   current_piece.length = inPieceOffset;
   current_piece.lineFeedCnt = lineIndex;
@@ -180,7 +180,7 @@ TreeNode* PieceTree::SplitPiece(TreeNode* currNode, const size_t inPieceOffset)
   }
   else
   {
-    const size_t lineIndex2 = getLineIndexFromOffset(currBuffer.lineStarts, inPieceOffset);
+    const size_t lineIndex2 = GetLineIndexFromNodePosistion(currBuffer.lineStarts, NodePosition(currNode, inPieceOffset));
     p2 = Piece{
        BufferPosition{lineIndex2, inPieceOffset - gsl::at(currBuffer.lineStarts,lineIndex2)},
        original_piece.end,
@@ -242,11 +242,11 @@ std::vector<unsigned char> PieceTree::GetTextAt(TreeNode* node, size_t offset, s
   return text;
 }
 // lineNumber starts from 1
-std::vector<unsigned char> PieceTree::GetLine(size_t lineNumber, const size_t endOffset)
+std::vector<unsigned char> PieceTree::GetLine(size_t lineNumber, const size_t endOffset, size_t* retValStartOffset)
 {
-  if (lineNumber > lineCount) return std::vector<unsigned char>();
+  if (lineNumber > lineCount || lineCount == 0 || lineNumber == 0) return std::vector<unsigned char>();
   TreeNode* node = rootNode->right.get();
-  //size_t nodeStartOffset = 0; search cache
+  size_t nodeStartOffset = 0; //search cache
   const size_t originalLineNumber = lineNumber;
   auto retVal = std::vector<unsigned char>();
   while (node)
@@ -257,8 +257,9 @@ std::vector<unsigned char> PieceTree::GetLine(size_t lineNumber, const size_t en
       const size_t AccValue = getAccumulatedValue(node, lineNumber - 1);
       const Buffer& buffer = gsl::at(buffers, node->piece.bufferIndex);
       const size_t startOffset = offsetInBuffer(node->piece.bufferIndex, node->piece.start);
-      //nodeStartOffset += node->size_left;
+      nodeStartOffset += node->size_left;
       const auto& beginItor = buffer.value.begin() + startOffset;
+      if (retValStartOffset)*retValStartOffset = nodeStartOffset;
       return std::vector<unsigned char>(beginItor + preAccValue, beginItor + AccValue - endOffset);
     }
     else if (node->piece.lineFeedCnt == lineNumber - 1) // lineContent in the last line of this piece.
@@ -274,7 +275,7 @@ std::vector<unsigned char> PieceTree::GetLine(size_t lineNumber, const size_t en
     {
       lineNumber -= node->piece.lineFeedCnt;
       node = node->right.get();
-      //nodeStartOffset += node->piece.length;
+      nodeStartOffset += node->piece.length;
     }
   }
   if (node) node = node->right.get();
@@ -313,8 +314,8 @@ void PieceTree::ShrinkPiece(TreeNode* current_node, size_t shrink_to_right, size
 
   if (offset1 <= offset2)
   {
-    const size_t lineIndex1 = getLineIndexFromOffset(lineStarts, offset1),
-      lineIndex2 = getLineIndexFromOffset(lineStarts, offset2);
+    const size_t lineIndex1 = GetLineIndexFromNodePosistion(lineStarts, NodePosition(current_node, shrink_to_right)),
+      lineIndex2 = GetLineIndexFromNodePosistion(lineStarts, NodePosition(current_node, piece.length - shrink_to_left));
 
     const size_t line_offset1 = offset1 - gsl::at(lineStarts, lineIndex1),
       line_offset2 = offset2 - gsl::at(lineStarts, lineIndex1);
@@ -333,7 +334,7 @@ void PieceTree::ShrinkPiece(TreeNode* current_node, size_t shrink_to_right, size
   }
 }
 
-void PieceTree::UpdateMetadata()
+void PieceTree::UpdateMetadata() noexcept
 {
   size_t size_delta = 0;
   size_t lf_delta = 0;
@@ -399,16 +400,18 @@ std::vector<size_t> createLineStarts(const std::vector<unsigned char>& str)
   return lineStarts;
 }
 
-size_t getLineIndexFromOffset(const std::vector<size_t>& lineStarts, size_t inPieceOffset)
+size_t GetLineIndexFromNodePosistion(const std::vector<size_t>& lineStarts, NodePosition nodePos)
 {
   if (lineStarts.empty())
   {
     throw;
   }
-  auto it = std::upper_bound(lineStarts.begin(), lineStarts.end(), inPieceOffset);
+  const size_t startLineOffset = gsl::at(lineStarts, nodePos.node->piece.start.line) + nodePos.node->piece.start.column;
+  const size_t offset = nodePos.in_piece_offset + startLineOffset;
+  const size_t startLine = nodePos.node->piece.start.line, endLine = nodePos.node->piece.end.line;
+  auto it = std::upper_bound(lineStarts.begin() + startLine, lineStarts.begin() + endLine + 1, offset);
 
   const size_t lineIndex = std::distance(lineStarts.begin(), it);
-
   if (it == lineStarts.begin())
   {
     return 0;
@@ -420,7 +423,7 @@ size_t getLineIndexFromOffset(const std::vector<size_t>& lineStarts, size_t inPi
 }
 
 
-Buffer::Buffer() : value(0), lineStarts{0}
+Buffer::Buffer() noexcept : value(), lineStarts{0}
 {}
 
 Buffer::Buffer(std::vector<unsigned char> input) : value(input), lineStarts(createLineStarts(value))

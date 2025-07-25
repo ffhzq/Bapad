@@ -134,145 +134,61 @@ const size_t TextDocument::GetDocLength() const noexcept
   return docBuffer.length;
 }
 
-size_t TextDocument::LineNumFromOffset(size_t offset)
-{
-  size_t lineNum = 0;
-  size_t byte_offset = 0;
-  auto pos = docBuffer.GetNodePosition(offset);
-  LineInfoFromOffset(offset, &lineNum, nullptr, nullptr, nullptr, nullptr);
-  return lineNum;
-}
-
-bool TextDocument::LineInfoFromOffset(size_t offset_chars, size_t* lineNo, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes)
-{
-  size_t low = 0;
-  size_t high = docBuffer.lineCount - 1;
-  size_t line = 0;
-
-  if (docBuffer.lineCount == 0)
-  {
-    if (lineNo != nullptr)          *lineNo = 0;
-    if (lineoffChars != nullptr)    *lineoffChars = 0;
-    if (linelenChars != nullptr)    *linelenChars = 0;
-    if (lineoffBytes != nullptr)    *lineoffBytes = 0;
-    if (linelenBytes != nullptr)    *linelenBytes = 0;
-
-    return false;
-  }
-
-  /*while (low <= high)
-  {
-    line = (high + low) / 2;
-
-    if (offset_chars >= charOffsetLineBuffer[line] && offset_chars < charOffsetLineBuffer[line + 1])
-    {
-      break;
-    }
-    else if (offset_chars < charOffsetLineBuffer[line])
-    {
-      high = line - 1;
-    }
-    else
-    {
-      low = line + 1;
-    }
-  }*/
-
-  //if (lineNo != nullptr)	        *lineNo = line;
-  //if (lineoffBytes != nullptr)	*lineoffBytes = byteOffsetLineBuffer[line];
-  //if (linelenBytes != nullptr)	*linelenBytes = byteOffsetLineBuffer[line + 1] - byteOffsetLineBuffer[line];
-  //if (lineoffChars != nullptr)	*lineoffChars = charOffsetLineBuffer[line];
-  //if (linelenChars != nullptr)	*linelenChars = charOffsetLineBuffer[line + 1] - charOffsetLineBuffer[line];
-
-  return true;
-}
-
-bool TextDocument::LineInfoFromLineNumber(size_t lineno, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes)
-{
-  if (lineno < docBuffer.lineCount)
-  {
-    //if (linelenChars != nullptr) *linelenChars = charOffsetLineBuffer[lineno + 1] - charOffsetLineBuffer[lineno];
-    //if (lineoffChars != nullptr) *lineoffChars = charOffsetLineBuffer[lineno];
-    //if (linelenBytes != nullptr) *linelenBytes = byteOffsetLineBuffer[lineno + 1] - byteOffsetLineBuffer[lineno];
-    //if (lineoffBytes != nullptr) *lineoffBytes = byteOffsetLineBuffer[lineno];
-
-    return true;
-  }
-  else
-  {
-    return false;
-  }
-}
-
-
 TextIterator TextDocument::IterateLineByLineNumber(size_t lineno, size_t* linestart, size_t* linelen)
 {
   size_t offset_bytes;
   size_t length_bytes;
+  size_t nodeOffset = 0;
+  auto retVal = docBuffer.GetLine(lineno + 1, 0, &nodeOffset);
+  const size_t lineStartCharOffset = ByteOffsetToCharOffset(nodeOffset),
+    lineLengthCharOffset = ByteOffsetToCharOffset(nodeOffset + retVal.size()) - lineStartCharOffset;
 
-  if (!LineInfoFromLineNumber(lineno, linestart, linelen, &offset_bytes, &length_bytes))
+  if (linestart) *linestart = lineStartCharOffset;
+  if (linelen) *linelen = lineLengthCharOffset;
+  if (retVal.empty())
     return TextIterator();
-
-  return TextIterator(offset_bytes, length_bytes, this);
+  return TextIterator(retVal, this, 0);
 }
 
 TextIterator TextDocument::IterateLineByCharOffset(size_t offset_chars, size_t* lineno, size_t* linestart_char)
 {
-  size_t offset_bytes = 0;
-  size_t length_bytes = 0;
+  if (offset_chars == 0) return TextIterator();
+  const size_t bytes_offset = CharOffsetToByteOffsetAt(0, offset_chars);
 
-  size_t bytes_offset = CharOffsetToByteOffset(offset_chars);
-
-  auto node_pos = docBuffer.GetNodePosition(bytes_offset);
-  TreeNode* node = node_pos.node;
-  size_t in_piece_offset = node_pos.in_piece_offset;
+  const auto node_pos = docBuffer.GetNodePosition(bytes_offset);
+  const TreeNode* node = node_pos.node;
+  if (node == nullptr)
+    return TextIterator();
+  const size_t in_piece_offset = node_pos.in_piece_offset;
   auto& lineStarts = gsl::at(docBuffer.buffers, node->piece.bufferIndex).lineStarts;
-  auto& piece = node->piece;
+  const auto& piece = node->piece;
   const size_t lineIndex_begin = piece.start.line, lineIndex_end = piece.end.line,
-    lineIndex_pos = getLineIndexFromOffset(lineStarts, in_piece_offset),
+    lineIndex_pos = GetLineIndexFromNodePosistion(lineStarts, node_pos),
     bytes_offset_pos_line_start = node->lf_left +
     gsl::at(lineStarts, lineIndex_pos) - (gsl::at(lineStarts, lineIndex_begin) + piece.start.column);
 
-  *lineno = lineIndex_pos - lineIndex_begin + node->lf_left;
-  *linestart_char = ByteOffsetToCharOffset(bytes_offset_pos_line_start);
-  return TextIterator();
-  length_bytes = gsl::at(lineStarts, lineIndex_pos + 1) - gsl::at(lineStarts, lineIndex_pos);
-  if (lineIndex_end == lineIndex_pos)// chars in other pieces
-  {
-    TreeNode* next = node->right.get();
-    while (next && next->lf_left == node->lf_left) // chars in pieces without lf
-    {
-      length_bytes += next->piece.length;
-    }
-    if (next) // the last of chars in this line's end.
-    {
-      const Piece& piece2 = next->piece;
-      const auto& linestarts2 = gsl::at(docBuffer.buffers, piece2.bufferIndex).lineStarts;
-      length_bytes += gsl::at(linestarts2,piece2.start.line+1)- gsl::at(linestarts2, piece2.start.line);
-    }
-  }
-  if (node == nullptr)
-    return TextIterator();
+  const size_t lineNumber = lineIndex_pos - lineIndex_begin + node->lf_left;
+  if (lineno) *lineno = lineNumber;
+  if (linestart_char) *linestart_char = ByteOffsetToCharOffset(bytes_offset_pos_line_start);
 
-  offset_bytes = bytes_offset_pos_line_start;
-
-  return TextIterator(offset_bytes, length_bytes, this);
+  auto lineContent = docBuffer.GetLine(lineNumber + 1);
+  return TextIterator(lineContent, this, 0);
 }
 
 
 size_t TextDocument::InsertText(size_t offsetChars, wchar_t* text, size_t length)
 {
-  const size_t offsetBytes = CharOffsetToByteOffset(offsetChars);
+  const size_t offsetBytes = CharOffsetToByteOffsetAt(0, offsetChars);
   return InsertTextRaw(offsetBytes, text, length);
 }
 size_t TextDocument::ReplaceText(size_t offsetChars, wchar_t* text, size_t length, size_t eraseLen)
 {
-  const size_t offsetBytes = CharOffsetToByteOffset(offsetChars);
+  const size_t offsetBytes = CharOffsetToByteOffsetAt(0, offsetChars);
   return ReplaceTextRaw(offsetBytes, text, length, eraseLen);
 }
 size_t TextDocument::EraseText(size_t offsetChars, size_t length)
 {
-  const size_t offsetBytes = CharOffsetToByteOffset(offsetChars);
+  const size_t offsetBytes = CharOffsetToByteOffsetAt(0, offsetChars);
   return EraseTextRaw(offsetBytes, length);
 }
 
@@ -321,12 +237,14 @@ size_t TextDocument::ReplaceTextRaw(size_t offsetBytes, wchar_t* text, size_t te
 size_t TextDocument::EraseTextRaw(size_t offsetBytes, size_t textLength)
 {
   const size_t eraseBytes = CharOffsetToByteOffsetAt(offsetBytes, textLength);
-  const size_t offset = offsetBytes;
-  docBuffer.EraseText(offset, eraseBytes);
-  return textLength;
+  if (docBuffer.EraseText(offsetBytes, eraseBytes))
+  {
+    return textLength;
+  }
+  return 0;
 }
 
-size_t TextDocument::CharOffsetToByteOffsetAt(size_t offsetBytes, size_t charCount)
+size_t TextDocument::CharOffsetToByteOffsetAt(const size_t startOffsetBytes, const size_t charCount)
 {
   switch (fileFormat)
   {
@@ -339,44 +257,19 @@ size_t TextDocument::CharOffsetToByteOffsetAt(size_t offsetBytes, size_t charCou
     break;
   }
   // case UTF-8
-  const size_t start = offsetBytes;
-  while (charCount && offsetBytes < docBuffer.length)//todo: +headrsize ?
+  size_t offsetBytes = startOffsetBytes;
+  size_t offsetChars = charCount;
+  wchar_t buf[LEN];
+  while (charCount && startOffsetBytes < docBuffer.length)
   {
-    wchar_t buf[LEN];
-    size_t charLen = (std::min)(charCount, LEN);//因为底层默认输入为UTF-16所以直接定义WCHAR数组
-    const size_t byteLen = GetText(offsetBytes, docBuffer.length - offsetBytes, buf, charLen);
-    charCount -= charLen;
+    size_t charLen = (std::min)(charCount, LEN);
+    const size_t byteLen = GetText(startOffsetBytes, docBuffer.length - startOffsetBytes, buf, charLen);
+    offsetChars -= charLen;
     offsetBytes += byteLen;
 
   }
-  return offsetBytes - start;
+  return offsetBytes - startOffsetBytes;
 
-}
-
-size_t TextDocument::CharOffsetToByteOffset(size_t offsetChars)
-{
-  switch (fileFormat)
-  {
-  case BCP_ASCII:
-    return offsetChars;
-  case BCP_UTF16:case BCP_UTF16BE:
-    return offsetChars * sizeof(wchar_t);
-
-  default:
-    break;
-  }
-  // case UTF-8 ....
-  size_t lineOffChars;
-  size_t lineOffBytes;
-  if (LineInfoFromOffset(offsetChars, nullptr, &lineOffChars, nullptr, &lineOffBytes, nullptr))
-  {
-    return CharOffsetToByteOffsetAt(lineOffBytes, offsetChars - lineOffChars)
-      + lineOffBytes;
-  }
-  else
-  {
-    return 0;
-  }
 }
 size_t TextDocument::ByteOffsetToCharOffset(size_t offsetBytes)
 {
@@ -394,7 +287,7 @@ size_t TextDocument::ByteOffsetToCharOffset(size_t offsetBytes)
   case BCP_UTF32BE:
     // bug! need to implement this. 
   default:
-    throw;
+    break;
   }
 
   return 0;
@@ -408,4 +301,12 @@ bool TextDocument::Clear()
   auto input = std::vector<unsigned char>();
   docBuffer.Init(input);
   return true;
+}
+
+size_t TextDocument::LineNumFromCharOffset(size_t offset)
+{
+  const auto byteOffset = CharOffsetToByteOffsetAt(0, offset);
+  const auto nodePos = docBuffer.GetNodePosition(byteOffset);
+  const auto lineIndex = GetLineIndexFromNodePosistion(gsl::at(docBuffer.buffers, nodePos.node->piece.bufferIndex).lineStarts, nodePos);
+  return lineIndex;
 }
