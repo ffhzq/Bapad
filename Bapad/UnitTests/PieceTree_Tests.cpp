@@ -423,10 +423,21 @@ TEST_F(PieceTreeTest, GetLine_Complicated)
 
   pt->InsertText(2, toUCharVector("c"));
   EXPECT_EQ(std::string("12c3\n"), UCVtoString(pt->GetLine(1)));
+  EXPECT_EQ(std::string("12c3\n"), UCVtoString(pt->GetText(0, 5)));
   pt->InsertText(2, toUCharVector("s"));
   EXPECT_EQ(std::string("12sc3\n"), UCVtoString(pt->GetLine(1)));
+  EXPECT_EQ(std::string("12sc3\n"), UCVtoString(pt->GetText(0, 6)));
   pt->InsertText(2, toUCharVector("v"));
   EXPECT_EQ(std::string("12vsc3\n"), UCVtoString(pt->GetLine(1)));
-  pt->InsertText(0, toUCharVector("1"));
+  EXPECT_EQ(std::string("12vsc3\n"), UCVtoString(pt->GetText(0, 7)));
+  pt->InsertText(0, toUCharVector("0"));
   EXPECT_EQ(std::string("012vsc3\n"), UCVtoString(pt->GetLine(1)));
+  EXPECT_EQ(std::string("012vsc3\n"), UCVtoString(pt->GetText(0, 8)));
+  pt->InsertText(0, toUCharVector("\n"));
+  pt->InsertText(0, toUCharVector("\r\n"));
+  pt->InsertText(0, toUCharVector("\r"));
+  EXPECT_EQ(std::string("\r"), UCVtoString(pt->GetLine(1)));
+  EXPECT_EQ(std::string("\r\n"), UCVtoString(pt->GetLine(2)));
+  EXPECT_EQ(std::string("\n"), UCVtoString(pt->GetLine(3)));
+  EXPECT_EQ(std::string("012vsc3\n"), UCVtoString(pt->GetLine(4)));
 }
