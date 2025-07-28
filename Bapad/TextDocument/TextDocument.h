@@ -14,9 +14,6 @@ public:
   bool Clear();
   size_t LineNumFromCharOffset(size_t offset);
 
-  //bool LineInfoFromCharOffset(size_t offset_chars, size_t* lineNo, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);//定位对应offset所在的行并返回行号、字符偏移量、行字符数、字节偏移量、行字节数这些信息
-  //bool LineInfoFromLineNumber(size_t lineno, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);
-
   TextIterator IterateLineByLineNumber(size_t lineno, size_t* linestart = nullptr, size_t* linelen = nullptr);
   TextIterator IterateLineByCharOffset(size_t offset_chars, size_t* lineno = nullptr, size_t* linestart = nullptr);
 

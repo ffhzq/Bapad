@@ -296,7 +296,7 @@ size_t TextDocument::ByteOffsetToCharOffset(size_t offsetBytes)
 bool TextDocument::Clear()
 {
   docBuffer.length = 0;
-  docBuffer.lineCount = 0;
+  docBuffer.lineCount = 1;
   docBuffer.buffers.clear();
   auto input = std::vector<unsigned char>();
   docBuffer.Init(input);
