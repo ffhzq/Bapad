@@ -121,6 +121,7 @@ const int TextDocument::GetFileFormat() const noexcept
 
 const size_t TextDocument::GetLineCount() const noexcept
 {
+  if (docBuffer.length == 0)return 0;
   return docBuffer.lineCount;
 }
 
@@ -165,13 +166,15 @@ TextIterator TextDocument::IterateLineByCharOffset(size_t offset_chars, size_t* 
   const size_t lineIndex_begin = piece.start.line, lineIndex_end = piece.end.line,
     lineIndex_pos = GetLineIndexFromNodePosistion(lineStarts, node_pos),
     bytes_offset_pos_line_start = node->lf_left +
-    gsl::at(lineStarts, lineIndex_pos) - (gsl::at(lineStarts, lineIndex_begin) + piece.start.column);
+    gsl::at(lineStarts, lineIndex_pos) + (gsl::at(lineStarts, lineIndex_begin) + piece.start.column);
 
   const size_t lineNumber = lineIndex_pos - lineIndex_begin + node->lf_left;
+  size_t lineStartByteOffset = 0;
+  auto lineContent = docBuffer.GetLine(lineNumber + 1, 0, &lineStartByteOffset);
   if (lineno) *lineno = lineNumber;
-  if (linestart_char) *linestart_char = ByteOffsetToCharOffset(bytes_offset_pos_line_start);
+  if (linestart_char) *linestart_char = ByteOffsetToCharOffset(lineStartByteOffset);
 
-  auto lineContent = docBuffer.GetLine(lineNumber + 1);
+  
   return TextIterator(lineContent, this, 0);
 }
 
