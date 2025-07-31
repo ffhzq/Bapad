@@ -7,33 +7,33 @@ struct _BOM_LOOKUP BOMLOOK[] =
 {
     // define longest headers first
     //bom, headerlen, encoding form
-    { 0x0000FEFF, 4, BCP_UTF32    },
-    { 0xFFFE0000, 4, BCP_UTF32BE  },
-    { 0xBFBBEF,	  3, BCP_UTF8	  },
-    { 0xFFFE,	  2, BCP_UTF16BE  },
-    { 0xFEFF,	  2, BCP_UTF16    },
-    { 0,          0, BCP_ASCII	  },
+    { 0x0000FEFF, 4, CP_TYPE::UTF32    },
+    { 0xFFFE0000, 4, CP_TYPE::UTF32BE  },
+    { 0xBFBBEF,	  3, CP_TYPE::UTF8	  },
+    { 0xFFFE,	  2, CP_TYPE::UTF16BE  },
+    { 0xFEFF,	  2, CP_TYPE::UTF16    },
+    { 0,          0, CP_TYPE::ANSI	  },
 };
 
 
 
-int DetectFileFormat(const unsigned char* docBuffer, const size_t docLengthByBytes, int& headerSize)
+CP_TYPE DetectFileFormat(const unsigned char* docBuffer, const size_t docLengthByBytes, int& headerSize)
 {
-    int res = -1;
+  CP_TYPE res = CP_TYPE::UNKNOWN;
     for (auto i : BOMLOOK)
     {
         if (docLengthByBytes >= i.headerLength
             && memcmp(&docBuffer[0], &i.bom, i.headerLength) == 0)
         {
             headerSize = i.headerLength;
-            res = i.type;
+            res = i.codePageType;
             break;
         }
     }
-    if (res == -1)
+    if (res == CP_TYPE::ANSI)
     {
         headerSize = 0;
-        res = IsUTF8(docBuffer, docLengthByBytes) ? BCP_UTF8 : BCP_ASCII;
+        res = IsUTF8(docBuffer, docLengthByBytes) ? CP_TYPE::UTF8 : CP_TYPE::ANSI;
     }
     return res;
 

@@ -185,7 +185,7 @@ LRESULT WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
 
 
         case TXM_GETFORMAT:
-            return pTextDoc->GetFileFormat();
+            return static_cast<int>(pTextDoc->GetFileFormat());
 
         default:
             break;

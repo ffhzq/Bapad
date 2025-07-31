@@ -308,3 +308,46 @@ LONG TextView::OnMouseWheel(int nDelta)
     RepositionCaret();
     return 0;
 }
+
+VOID TextView::ScrollToPosition(int xpos, size_t lineno)
+{
+  bool fRefresh = false;
+  RECT rect;
+  int  marginWidth = 0;
+
+  GetClientRect(hWnd, &rect);
+
+  xpos -= hScrollPos * fontWidth;
+  xpos += marginWidth;
+
+  if (xpos < marginWidth)
+  {
+    hScrollPos -= (marginWidth - xpos) / fontWidth;
+    fRefresh = true;
+  }
+
+  if (xpos >= rect.right)
+  {
+    hScrollPos += (xpos - rect.right) / fontWidth + 1;
+    fRefresh = true;
+  }
+
+  if (lineno < vScrollPos)
+  {
+    vScrollPos = lineno;
+    fRefresh = true;
+  }
+  else if (lineno > vScrollPos + windowLines - 1)
+  {
+    vScrollPos = lineno - windowLines + 1;
+    fRefresh = true;
+  }
+
+
+  if (fRefresh)
+  {
+    SetupScrollbars();
+    RefreshWindow();
+    RepositionCaret();
+  }
+}

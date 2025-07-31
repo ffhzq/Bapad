@@ -27,22 +27,25 @@ typedef unsigned char	UTF8;	// typically 8 bits
 #define UNI_SUR_LOW_END      (UTF32)0xDFFF
 
 // Bapad codepage
-constexpr auto BCP_ASCII = 0;
-constexpr auto BCP_UTF8 = 1;
-constexpr auto BCP_UTF16 = 2;
-constexpr auto BCP_UTF16BE = 3;
-constexpr auto BCP_UTF32 = 4;
-constexpr auto BCP_UTF32BE = 5;
+enum class CP_TYPE {
+  ANSI,
+  UTF8,
+  UTF16,
+  UTF16BE,
+  UTF32,
+  UTF32BE,
+  UNKNOWN = -1
+};
 
 //Byte Order Mark
 struct _BOM_LOOKUP
 {
     unsigned long  bom;
     int  headerLength;
-    int    type;
+    CP_TYPE codePageType;
 };
 
-int DetectFileFormat(const unsigned char* docBuffer, const size_t docLengthByBytes, int& headerSize);
+CP_TYPE DetectFileFormat(const unsigned char* docBuffer, const size_t docLengthByBytes, int& headerSize);
 
 //without side affect
 #define SwapWord(val) (((WORD)(val) << 8) | ((WORD)(val) >> 8))

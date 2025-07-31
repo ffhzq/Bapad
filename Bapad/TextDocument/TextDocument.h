@@ -1,6 +1,7 @@
 #pragma once
 #include "pch.h"
 #include "PieceTree.h"
+#include "formatConversion.h"
 
 class TextIterator;
 
@@ -21,7 +22,7 @@ public:
   size_t	ReplaceText(size_t offsetChars, wchar_t* text, size_t length, size_t eraseLen);
   size_t	EraseText(size_t offsetChars, size_t length);
 
-  const int GetFileFormat() const noexcept;
+  CP_TYPE GetFileFormat() const noexcept;
   const size_t GetLineCount() const noexcept;
   const size_t GetLongestLine(int tabwidth) const noexcept;
   const size_t GetDocLength() const noexcept;
@@ -44,7 +45,7 @@ private:
   size_t ByteOffsetToCharOffset(size_t offsetBytes);
   PieceTree docBuffer;// raw txt data
 
-  int fileFormat;
+  CP_TYPE fileFormat;
   int  headerSize;
 
 };
@@ -86,6 +87,10 @@ public:
     {
       return 0;
     }
+  }
+  std::vector<unsigned char> GetLine()
+  {
+    return lineContent;
   }
 
   operator bool() noexcept

@@ -405,48 +405,7 @@ LONG TextView::OnTimer(UINT nTimerId)
 //
 ULONG TextView::RepositionCaret()
 {
-  size_t		lineno = 0;
-  size_t		charoff = 0;
-  size_t		offset = 0;
-  LONGLONG	xpos = 0;
-  LONGLONG	ypos = 0;
-  ULONG64		len = 0;
-  wchar_t buf[TEXTBUFSIZE]{{0}};
-
-
-  // get start-of-line information from cursor-offset
-  TextIterator itor = pTextDoc->IterateLineByCharOffset(cursorOffset, &lineno, &charoff);
-
-  if (!itor)
-    return 0;
-
-  // make sure we are using the right font
-  HDC hdc = GetDC(hWnd);
-  SelectObject(hdc, fontAttr[0].hFont);
-
-
-
-  // y-coordinate from line-number
-  ypos = (lineno - vScrollPos) * lineHeight;
-
-  // now find the x-coordinate on the specified line
-  while ((len = itor.GetText(buf, TEXTBUFSIZE)) > 0 && charoff < cursorOffset)
-  {
-    len = min(cursorOffset - charoff, len);
-    xpos += BaTextWidth(hdc, buf, len, -xpos);
-    offset += len;
-
-  }
-
-  ReleaseDC(hWnd, hdc);
-
-  // take horizontal scrollbar into account
-  xpos -= hScrollPos * fontWidth;
-  //xpos += LeftMarginWidth();
-
-
-  SetCaretPos(static_cast<int>(xpos), static_cast<int>(ypos));
-  return 0;
+  UpdateCaretXY(caretPosX, currentLine); return 0;
 }
 
 //

@@ -59,7 +59,7 @@ private:
 
     void	Scroll(LONG64 dx, LONG64 dy);
     HRGN	ScrollRgn(LONG64 dx, LONG64 dy, bool fReturnUpdateRgn);
-
+    VOID  ScrollToPosition(int xpos, size_t lineno);
     HWND	hWnd;
 
     // Font-related data
@@ -86,8 +86,8 @@ private:
     size_t	selectionStart;
     size_t	selectionEnd;
     size_t	cursorOffset;
-    size_t caretPosX;
-    size_t anchorPosX;
+    int caretPosX;
+    int anchorPosX;
     size_t currentLine;
 
     COLORREF rgbColourList[TXC_MAX_COLOURS];
@@ -138,6 +138,6 @@ private:
     ULONG EnterText(WCHAR* inputText, ULONG inputTextLength);
     LRESULT NotifyParent(UINT nNotifyCode, NMHDR* optional = 0);
     void Smeg(BOOL fAdvancing);
-    VOID UpdateCaretXY(int xpos, ULONG lineno);
-    VOID UpdateCaretOffset(ULONG offset, BOOL fTrailing, int* outx = 0, ULONG* outlineno = 0);
+    void  UpdateCaretXY(int xpos, ULONG lineno);
+    void  UpdateCaretOffset(BOOL fAdvancing);
 };

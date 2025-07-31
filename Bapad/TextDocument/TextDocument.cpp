@@ -1,5 +1,4 @@
 #include "pch.h"
-#include "formatConversion.h"
 #include "TextDocument.h"
 
 constexpr size_t LEN = 0x100;
@@ -7,7 +6,7 @@ constexpr size_t LEN = 0x100;
 TextDocument::TextDocument() noexcept
   :
   docBuffer(),
-  fileFormat(0),
+  fileFormat(CP_TYPE::ANSI),
   headerSize(0)
 {}
 bool TextDocument::Initialize(wchar_t* filename)
@@ -67,20 +66,20 @@ size_t TextDocument::RawDataToUTF16(unsigned char* rawdata, size_t rawlen, wchar
   switch (fileFormat)
   {
     // convert from ANSI->UNICODE
-  case BCP_ASCII:
+  case CP_TYPE::ANSI:
 
     return AsciiToUTF16(rawdata, rawlen, reinterpret_cast<UTF16*>(utf16str), utf16len);
 
-  case BCP_UTF8:
+  case CP_TYPE::UTF8:
     return UTF8ToUTF16(rawdata, rawlen, reinterpret_cast<UTF16*>(utf16str), utf16len);
 
     // already unicode, do a straight memory copy
-  case BCP_UTF16:
+  case CP_TYPE::UTF16:
     rawlen /= sizeof(wchar_t);
     return CopyUTF16(reinterpret_cast<UTF16*>(rawdata), rawlen, reinterpret_cast<UTF16*>(utf16str), utf16len) * sizeof(wchar_t);
 
     // need to convert from big-endian to little-endian
-  case BCP_UTF16BE:
+  case CP_TYPE::UTF16BE:
     rawlen /= sizeof(wchar_t);
     return SwapUTF16(reinterpret_cast<UTF16*>(rawdata), rawlen, reinterpret_cast<UTF16*>(utf16str), utf16len) * sizeof(wchar_t);
   default:
@@ -94,16 +93,16 @@ size_t TextDocument::UTF16ToRawData(wchar_t* utf16Str, size_t utf16Len, unsigned
 {
   switch (fileFormat)
   {
-  case BCP_ASCII:
+  case CP_TYPE::ANSI:
     return UTF16ToAscii(reinterpret_cast<UTF16*>(utf16Str), utf16Len, rawData, rawLen);
-  case BCP_UTF8:
+  case CP_TYPE::UTF8:
     return UTF16ToUTF8(reinterpret_cast<UTF16*>(utf16Str), utf16Len, rawData, rawLen);
-  case BCP_UTF16:
+  case CP_TYPE::UTF16:
     rawLen /= sizeof(wchar_t);
     utf16Len = CopyUTF16(reinterpret_cast<UTF16*>(utf16Str), utf16Len, reinterpret_cast<UTF16*>(rawData), rawLen);
     rawLen *= sizeof(wchar_t);
     return utf16Len;
-  case BCP_UTF16BE:
+  case CP_TYPE::UTF16BE:
     rawLen /= sizeof(wchar_t);
     utf16Len = SwapUTF16(reinterpret_cast<UTF16*>(utf16Str), utf16Len, reinterpret_cast<UTF16*>(rawData), rawLen);
     rawLen *= sizeof(wchar_t);
@@ -114,7 +113,7 @@ size_t TextDocument::UTF16ToRawData(wchar_t* utf16Str, size_t utf16Len, unsigned
   }
 }
 
-const int TextDocument::GetFileFormat() const noexcept
+CP_TYPE TextDocument::GetFileFormat() const noexcept
 {
   return fileFormat;
 }
@@ -251,9 +250,9 @@ size_t TextDocument::CharOffsetToByteOffsetAt(const size_t startOffsetBytes, con
 {
   switch (fileFormat)
   {
-  case BCP_ASCII:
+  case  CP_TYPE::ANSI:
     return charCount;
-  case BCP_UTF16:case BCP_UTF16BE:
+  case CP_TYPE::UTF16:case CP_TYPE::UTF16BE:
     return charCount * sizeof(wchar_t);
 
   default:
@@ -278,16 +277,16 @@ size_t TextDocument::ByteOffsetToCharOffset(size_t offsetBytes)
 {
   switch (fileFormat)
   {
-  case BCP_ASCII:
+  case CP_TYPE::ANSI:
     return offsetBytes;
 
-  case BCP_UTF16:
-  case BCP_UTF16BE:
+  case CP_TYPE::UTF16:
+  case CP_TYPE::UTF16BE:
     return offsetBytes / sizeof(wchar_t);
 
-  case BCP_UTF8:
-  case BCP_UTF32:
-  case BCP_UTF32BE:
+  case CP_TYPE::UTF8:
+  case CP_TYPE::UTF32:
+  case CP_TYPE::UTF32BE:
     // bug! need to implement this. 
   default:
     break;

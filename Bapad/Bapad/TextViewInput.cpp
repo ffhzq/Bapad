@@ -59,47 +59,67 @@ LRESULT TextView::NotifyParent(UINT nNotifyCode, NMHDR* optional)
 
 void TextView::Smeg(BOOL fAdvancing)
 {
-    //pTextDoc->ReCalculateLineBuffer();
     lineCount = pTextDoc->GetLineCount();
     UpdateMetrics();
     SetupScrollbars();
-    //UpdateCaretOffset(cursorOffset, fAdvancing, caretPosX, currentLine);
 
+    UpdateCaretOffset(fAdvancing);
     anchorPosX = caretPosX;
-    //ScrollToPosition(caretPosX, currentLine);
-    //RepositionCaret();
+    ScrollToPosition(caretPosX, currentLine);
+    RepositionCaret();
 }
 
-/*
-VOID TextView::UpdateCaretOffset(ULONG offset, BOOL fTrailing, int* outx = 0, ULONG* outlineno = 0)
+
+void TextView::UpdateCaretOffset(BOOL fAdvancing)
 {
-    size_t lineno = 0;
-    int xpos = 0;
-    size_t off_chars;
-    USPDATA* uspData;
+  caretPosX = cursorOffset * fontWidth;
+  if (fAdvancing)
+  {
 
-    // get line information from cursor-offset
-    if (pTextDoc->LineInfoFromOffset(offset, &lineno, &off_chars, 0, 0, 0))
-    {
-        // locate the USPDATA for this line
-        if ((uspData = GetUspData(NULL, lineno)) != 0)
-        {
-            // convert character-offset to x-coordinate
-            off_chars = cursorOffset - off_chars;
+  }
 
-            if (fTrailing && off_chars > 0)
-                ScriptCPtoX(off_chars - 1, TRUE, off_chars, uspData, &xpos);
-            //UspOffsetToX(uspData, off_chars - 1, TRUE, &xpos);
-            else
-                ScriptCPtoX(off_chars, FALSE, off_chars, uspData, &xpos);
-            //UspOffsetToX(uspData, off_chars, FALSE, &xpos);
+  size_t		lineno = 0;
+  size_t		charoff = 0;
+  size_t		offset = 0;
+  LONGLONG	xpos = 0;
+  LONGLONG	ypos = 0;
+  ULONG64		len = 0;
+  wchar_t buf[TEXTBUFSIZE]{{0}};
 
-        // update caret position
-            UpdateCaretXY(xpos, lineno);
-        }
-    }
 
-    if (outx)	  *outx = xpos;
-    if (outlineno) *outlineno = lineno;
+  // get start-of-line information from cursor-offset
+  TextIterator itor = pTextDoc->IterateLineByCharOffset(cursorOffset, &lineno, &charoff);
+
+  if (!itor)
+    return ;
+
+  // make sure we are using the right font
+  HDC hdc = GetDC(hWnd);
+  SelectObject(hdc, fontAttr[0].hFont);
+
+
+
+  // y-coordinate from line-number
+  ypos = (lineno - vScrollPos) * lineHeight;
+
+  // now find the x-coordinate on the specified line
+  while ((len = itor.GetText(buf, TEXTBUFSIZE)) > 0 && charoff < cursorOffset)
+  {
+    len = min(cursorOffset - charoff, len);
+    xpos += BaTextWidth(hdc, buf, len, -xpos);
+    offset += len;
+
+  }
+
+  ReleaseDC(hWnd, hdc);
+
+  // take horizontal scrollbar into account
+  xpos -= hScrollPos * fontWidth;
+  //xpos += LeftMarginWidth();
+
+  caretPosX = xpos;
+
+  //SetCaretPos(static_cast<int>(xpos), static_cast<int>(ypos));
+
+
 }
-*/
