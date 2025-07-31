@@ -15,19 +15,20 @@ int TextView::BaTextWidth(HDC hdc, WCHAR* buf, int len, int nTabOrigin)
   for (int i = 0, lasti = 0; i <= len; i++)
   {
     const auto bufSpan = std::span(buf, len);
-    if (i == len || bufSpan[i] == '\t' || bufSpan[i] < 32)
+    if (i == len || gsl::at(bufSpan,i) == '\t' || gsl::at(bufSpan, i) < 32)
     {
-      GetTextExtentPoint32W(hdc, buf + lasti, i - lasti, &sz);
+      if (lasti == i) continue;
+      GetTextExtentPoint32W(hdc, &gsl::at(bufSpan, lasti), i - lasti, &sz);
       width += sz.cx;
 
-      if (i < len && bufSpan[i] == '\t')
+      if (i < len && gsl::at(bufSpan, i) == '\t')
       {
         width += TABWIDTHPIXELS - ((width - nTabOrigin) % TABWIDTHPIXELS);
         lasti = i + 1;
       }
-      else if (i < len && bufSpan[i] < 32)
+      else if (i < len && gsl::at(bufSpan, i) < 32)
       {
-        width += GetCtrlCharWidth(hdc, bufSpan[i], &gsl::at(fontAttr, 0));
+        width += GetCtrlCharWidth(hdc, gsl::at(bufSpan, i), &gsl::at(fontAttr, 0));
         lasti = i + 1;
       }
     }
@@ -66,7 +67,7 @@ LONG TextView::SetFont(HFONT hFont, size_t idx)
 
   FONT* font = &fontAttr[idx];
   // need a DC to query font data
-  HDC    hdc = GetDC(0);
+  HDC    hdc = GetDC(nullptr);
   HANDLE hold = SelectObject(hdc, hFont);
 
   // get font settings

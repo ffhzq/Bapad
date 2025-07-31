@@ -5,7 +5,7 @@
 //	
 struct  ATTR
 {
-    ATTR()
+    ATTR() noexcept
         :
         fg(0),
         bg(0),
@@ -23,9 +23,9 @@ struct  ATTR
 //
 struct FONT
 {
-    FONT()
+    FONT() noexcept
         :
-        hFont(0),
+        hFont(nullptr),
         tm({ 0 }),
         nInternalLeading(0),
         nDescent(0)
@@ -33,7 +33,7 @@ struct FONT
     }
     // Windows font information
     HFONT		hFont;
-    TEXTMETRIC	tm;
+    TEXTMETRICW	tm;
 
     // dimensions needed for control-character 'bitmaps'
     int			nInternalLeading;
