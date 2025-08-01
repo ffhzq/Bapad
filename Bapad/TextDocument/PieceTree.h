@@ -58,11 +58,26 @@ struct NodePosition {
     : node(node), in_piece_offset(in_piece_offset)
   {}
 };
+enum class ActionType {
+  ActionInvalid,
+  ActionInsertion,
+  ActionErase,
+  ActionReplace
+};
+struct EditAction {
+  std::vector<unsigned char> insertedText;
+  std::vector<unsigned char> erasedText;
+  size_t ActionOffsetBytes; // OffsetBytes in piece.
+  ActionType actionType;
+};
+
 
 class PieceTree {
 public:
   std::vector<Buffer> buffers;
   std::unique_ptr<TreeNode> rootNode;
+  std::stack<EditAction> undoStack;
+  std::stack<EditAction> redoStack;
   size_t lineCount;
   size_t length;
 

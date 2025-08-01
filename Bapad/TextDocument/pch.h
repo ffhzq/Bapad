@@ -14,6 +14,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <stack>
 #include <windows.h>
 
 #endif //PCH_H
