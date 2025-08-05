@@ -9,7 +9,7 @@ TextDocument::TextDocument() noexcept
   fileFormat(CP_TYPE::ANSI),
   headerSize(0)
 {}
-bool TextDocument::Initialize(wchar_t* filename)
+bool TextDocument::Initialize(const wchar_t* filename)
 {
   std::ifstream ifs(filename, std::ios::binary | std::ios::ate);
   if (!ifs.is_open())
@@ -30,7 +30,7 @@ bool TextDocument::Initialize(wchar_t* filename)
   }
   catch (const std::bad_alloc& e)
   {
-    return false;
+    throw e;
   }
   ifs.read(reinterpret_cast<char*>(&gsl::at(read_buffer, 0)), docLengthByBytes);
   if (!ifs)
@@ -136,8 +136,6 @@ const size_t TextDocument::GetDocLength() const noexcept
 
 TextIterator TextDocument::IterateLineByLineNumber(size_t lineno, size_t* linestart, size_t* linelen)
 {
-  size_t offset_bytes;
-  size_t length_bytes;
   size_t nodeOffset = 0;
   auto retVal = docBuffer.GetLine(lineno + 1, 0, &nodeOffset);
   const size_t lineStartCharOffset = ByteOffsetToCharOffset(nodeOffset),
@@ -173,7 +171,7 @@ TextIterator TextDocument::IterateLineByCharOffset(size_t offset_chars, size_t* 
   if (lineno) *lineno = lineNumber;
   if (linestart_char) *linestart_char = ByteOffsetToCharOffset(lineStartByteOffset);
 
-  
+
   return TextIterator(lineContent, this, 0);
 }
 
@@ -196,16 +194,16 @@ size_t TextDocument::EraseText(size_t offsetChars, size_t length)
 
 size_t TextDocument::InsertTextRaw(size_t offsetBytes, wchar_t* text, size_t textLength)
 {
-  unsigned char buf[LEN];
+  unsigned char buf[LEN]{0};
   size_t processedChars = 0, rawLen = 0, offset = offsetBytes, bufLen = LEN;
+  const gsl::span<wchar_t> textSpan(text, textLength);
   while (textLength)
   {
     rawLen = bufLen;
-    processedChars = UTF16ToRawData(text, textLength, buf, bufLen);
+    processedChars = UTF16ToRawData(&textSpan[processedChars], textLength, &buf[0], bufLen);
+    const auto bufSpan = gsl::span<unsigned char>(&buf[0], processedChars);
+    docBuffer.InsertText(offset, std::vector<unsigned char>(bufSpan.begin(), bufSpan.end()));
 
-    docBuffer.InsertText(offset, std::vector<unsigned char>(buf, buf + processedChars));
-
-    text += processedChars;
     textLength -= processedChars;
     rawLen += bufLen;
     offset += bufLen;
@@ -216,17 +214,17 @@ size_t TextDocument::InsertTextRaw(size_t offsetBytes, wchar_t* text, size_t tex
 size_t TextDocument::ReplaceTextRaw(size_t offsetBytes, wchar_t* text, size_t textLength, size_t eraseLen)
 {
 
-  unsigned char buf[LEN];
+  unsigned char buf[LEN]{0};
   size_t processedChars = 0, rawLen = 0, offset = offsetBytes, bufLen = LEN;
   size_t eraseBytes = CharOffsetToByteOffsetAt(offsetBytes, eraseLen);
+  const gsl::span<wchar_t> textSpan(text, textLength);
   while (textLength)
   {
     rawLen = bufLen;
-    processedChars = UTF16ToRawData(text, textLength, buf, bufLen);
+    processedChars = UTF16ToRawData(&textSpan[processedChars], textLength, &buf[0], bufLen);
+    const auto bufSpan = gsl::span<unsigned char>(&buf[0], processedChars);
+    docBuffer.ReplaceText(offset, std::vector<unsigned char>(bufSpan.begin(), bufSpan.end()), eraseBytes);
 
-    docBuffer.ReplaceText(offset, std::vector<unsigned char>(buf, buf + processedChars), eraseBytes);
-
-    text += processedChars;
     textLength -= processedChars;
     rawLen += bufLen;
     offset += bufLen;
@@ -261,11 +259,12 @@ size_t TextDocument::CharOffsetToByteOffsetAt(const size_t startOffsetBytes, con
   // case UTF-8
   size_t offsetBytes = startOffsetBytes;
   size_t offsetChars = charCount;
-  wchar_t buf[LEN];
+  wchar_t buf[LEN]{0};
   while (charCount && startOffsetBytes < docBuffer.length)
   {
     size_t charLen = (std::min)(charCount, LEN);
-    const size_t byteLen = GetText(startOffsetBytes, docBuffer.length - startOffsetBytes, buf, charLen);
+    const size_t textLen = docBuffer.length - startOffsetBytes;
+    const size_t byteLen = GetText(startOffsetBytes, textLen, &buf[0], charLen);
     offsetChars -= charLen;
     offsetBytes += byteLen;
 
@@ -273,7 +272,7 @@ size_t TextDocument::CharOffsetToByteOffsetAt(const size_t startOffsetBytes, con
   return offsetBytes - startOffsetBytes;
 
 }
-size_t TextDocument::ByteOffsetToCharOffset(size_t offsetBytes)
+size_t TextDocument::ByteOffsetToCharOffset(size_t offsetBytes) noexcept
 {
   switch (fileFormat)
   {

@@ -1,7 +1,7 @@
 #pragma once
 #include "pch.h"
-#include "PieceTree.h"
 #include "formatConversion.h"
+#include "PieceTree.h"
 
 class TextIterator;
 
@@ -10,7 +10,7 @@ class TextDocument {
 public:
   TextDocument() noexcept;
 
-  bool Initialize(wchar_t* filename);
+  bool Initialize(const wchar_t* filename);
 
   bool Clear();
   size_t LineNumFromCharOffset(size_t offset);
@@ -42,7 +42,7 @@ private:
   size_t	EraseTextRaw(size_t offsetBytes, size_t textLength);
 
   size_t CharOffsetToByteOffsetAt(const size_t startOffsetBytes, const size_t charCount);
-  size_t ByteOffsetToCharOffset(size_t offsetBytes);
+  size_t ByteOffsetToCharOffset(size_t offsetBytes) noexcept;
   PieceTree docBuffer;// raw txt data
 
   CP_TYPE fileFormat;
@@ -75,7 +75,8 @@ public:
     {
       memset(buf, 0, bufLen * sizeof(wchar_t));
       // get text from the TextDocument at the specified byte-offset
-      const auto startPos = lineContent.data() + processedBytes;
+      const gsl::span<unsigned char> lineSpan(lineContent);
+      unsigned char* startPos = &lineSpan[processedBytes];
       const size_t strLen = lineContent.size() - processedBytes;
       const size_t len = textDoc->RawDataToUTF16(startPos, strLen, buf, bufLen);
 

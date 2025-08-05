@@ -93,22 +93,22 @@ public:
 
   void Init(const std::vector<unsigned char>& input)
   {
-    buffers.push_back(Buffer());
-    rootNode = std::make_unique<TreeNode>();
-    buffers.emplace_back(Buffer(input)); // original
-    const Buffer& buffer = buffers.back();
-    const Piece piece{
-      BufferPosition(0,0), // startPos
-      BufferPosition(buffer.lineStarts.size() - 1, // endPos
-        buffer.value.size() - buffer.lineStarts.back()),
-      1, // BufferIndex
-      buffer.value.size(), // length
-      buffer.lineStarts.size() - 1}; // lineCount
+      buffers.push_back(Buffer());
+      rootNode = std::make_unique<TreeNode>();
+      buffers.emplace_back(Buffer(input)); // original
+      const Buffer& buffer = buffers.back();
+      const Piece piece{
+        BufferPosition(0,0), // startPos
+        BufferPosition(buffer.lineStarts.size() - 1, // endPos
+          buffer.value.size() - buffer.lineStarts.back()),
+        1, // BufferIndex
+        buffer.value.size(), // length
+        buffer.lineStarts.size() - 1}; // lineCount
 
-    rootNode.get()->left = nullptr;
-    rootNode.get()->right = std::make_unique<TreeNode>(piece, rootNode.get());
-    length += piece.length;
-    lineCount += piece.lineFeedCnt;
+      rootNode.get()->left = nullptr;
+      rootNode.get()->right = std::make_unique<TreeNode>(piece, rootNode.get());
+      length += piece.length;
+      lineCount += piece.lineFeedCnt;
   }
   bool InsertText(size_t offset, std::vector<unsigned char> input);
   bool EraseText(size_t offset, size_t erase_length);
@@ -124,9 +124,9 @@ public:
   std::vector<unsigned char> GetLine(size_t lineNumber, const size_t endOffset = 0, size_t* retValStartOffset = nullptr);
   void ShrinkPiece(TreeNode* current_node, size_t shrink_to_right, size_t shrink_to_left);
 
-  void UpdateMetadata() noexcept;
+  void UpdateMetadata() const noexcept;
 
-  size_t getAccumulatedValue(TreeNode* node, size_t index);
+  size_t getAccumulatedValue(const TreeNode* node, size_t index);
 };
 
 std::vector<size_t> createLineStarts(const std::vector<unsigned char>& str);

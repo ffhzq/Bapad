@@ -334,7 +334,7 @@ void PieceTree::ShrinkPiece(TreeNode* current_node, size_t shrink_to_right, size
   }
 }
 
-void PieceTree::UpdateMetadata() noexcept
+void PieceTree::UpdateMetadata() const noexcept 
 {
   size_t size_delta = 0;
   size_t lf_delta = 0;
@@ -352,7 +352,7 @@ void PieceTree::UpdateMetadata() noexcept
   }
 }
 
-size_t PieceTree::getAccumulatedValue(TreeNode* node, size_t index)
+size_t PieceTree::getAccumulatedValue(const TreeNode* node, size_t index)
 {
   if (index < 0)return 0;
   const Piece& piece = node->piece;
