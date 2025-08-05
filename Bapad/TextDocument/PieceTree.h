@@ -115,8 +115,8 @@ public:
   bool ReplaceText(size_t offset, std::vector<unsigned char> input, size_t erase_length);
 
   // use (TreeNode*, inPieceOffset) locate the insertion position.
-  NodePosition GetNodePositionAt(TreeNode* node, size_t offset)noexcept;
-  NodePosition GetNodePosition(size_t offset);
+  NodePosition GetNodePositionAt(TreeNode* node, size_t offset) noexcept;
+  NodePosition GetNodePosition(size_t offset) noexcept;
   size_t offsetInBuffer(size_t bufferIndex, BufferPosition pos);
   TreeNode* SplitPiece(TreeNode* currNode, const size_t inPieceOffset);
   std::vector<unsigned char> GetTextAt(TreeNode* node, size_t offset, size_t text_length);

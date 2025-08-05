@@ -109,7 +109,7 @@ bool PieceTree::EraseText(size_t offset, size_t erase_length)
     const size_t remain_bytes_to_be_erased = erase_length - bytes_erased;
     const size_t available_bytes_in_piece = piece.length - in_piece_offset_start;
     const size_t bytes_to_be_erased = (std::min)(available_bytes_in_piece, remain_bytes_to_be_erased);
-
+    if (available_bytes_in_piece == 0) continue;
     ShrinkPiece(current_node, bytes_to_be_erased, 0);
     bytes_erased += bytes_to_be_erased;
   }
@@ -143,7 +143,7 @@ NodePosition PieceTree::GetNodePositionAt(TreeNode* node, size_t offset) noexcep
 {
   size_t inPieceOffset = offset;
   TreeNode* ptr = node;
-  if (inPieceOffset <= ptr->piece.length) return NodePosition(ptr, inPieceOffset);
+  if (ptr == nullptr || inPieceOffset <= ptr->piece.length) return NodePosition(ptr, inPieceOffset);
   while (ptr && inPieceOffset > ptr->piece.length)
   {
     inPieceOffset -= ptr->piece.length;
@@ -152,7 +152,7 @@ NodePosition PieceTree::GetNodePositionAt(TreeNode* node, size_t offset) noexcep
   return NodePosition(ptr, inPieceOffset);
 }
 
-NodePosition PieceTree::GetNodePosition(size_t offset)
+NodePosition PieceTree::GetNodePosition(size_t offset) noexcept
 {
   return GetNodePositionAt(rootNode->right.get(), offset);
 }
