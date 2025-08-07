@@ -39,7 +39,7 @@ bool TextDocument::Initialize(const wchar_t* filename)
   }
 
   // Detect file format
-  fileFormat = DetectFileFormat(read_buffer.data(), docLengthByBytes, headerSize);
+  fileFormat = DetectFileFormat(read_buffer, headerSize);
   read_buffer.erase(read_buffer.begin(), read_buffer.begin() + headerSize);
   docBuffer = std::move(PieceTree(read_buffer));
 
@@ -49,8 +49,7 @@ bool TextDocument::Initialize(const wchar_t* filename)
 
 size_t TextDocument::GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t& bufLen)
 {
-  const size_t offset_plus = offset;
-  auto rawData = docBuffer.GetText(offset_plus, lenBytes);
+  auto rawData = docBuffer.GetText(offset, lenBytes);
   //size_t  len;
 
   if (offset >= docBuffer.length)
@@ -248,51 +247,124 @@ size_t TextDocument::CharOffsetToByteOffsetAt(const size_t startOffsetBytes, con
 {
   switch (fileFormat)
   {
-  case  CP_TYPE::ANSI:
-    return charCount;
   case CP_TYPE::UTF16:case CP_TYPE::UTF16BE:
     return charCount * sizeof(wchar_t);
-
+  case CP_TYPE::UTF32:
+  case CP_TYPE::UTF32BE:
+    throw;
   default:
     break;
   }
-  // case UTF-8
+  // case UTF-8 / ANSI
   size_t offsetBytes = startOffsetBytes;
   size_t offsetChars = charCount;
-  wchar_t buf[LEN]{0};
-  while (charCount && startOffsetBytes < docBuffer.length)
-  {
-    size_t charLen = (std::min)(charCount, LEN);
-    const size_t textLen = docBuffer.length - startOffsetBytes;
-    const size_t byteLen = GetText(startOffsetBytes, textLen, &buf[0], charLen);
-    offsetChars -= charLen;
-    offsetBytes += byteLen;
-
-  }
-  return offsetBytes - startOffsetBytes;
+  return CountByte(startOffsetBytes, charCount);
 
 }
 size_t TextDocument::ByteOffsetToCharOffset(size_t offsetBytes) noexcept
 {
   switch (fileFormat)
   {
-  case CP_TYPE::ANSI:
-    return offsetBytes;
-
   case CP_TYPE::UTF16:
   case CP_TYPE::UTF16BE:
     return offsetBytes / sizeof(wchar_t);
-
-  case CP_TYPE::UTF8:
   case CP_TYPE::UTF32:
   case CP_TYPE::UTF32BE:
     // bug! need to implement this. 
+    throw;
   default:
     break;
   }
+  return CountChar(offsetBytes);
 
-  return 0;
-
+}
+size_t TextDocument::CountByteAnsi(const size_t startByteOffset, const size_t charCount) noexcept
+{
+  auto rawText = docBuffer.GetText(startByteOffset, docBuffer.length - startByteOffset); // todo: iterate text piece by piece
+  gsl::span<unsigned char> textSpan(rawText);
+  size_t currentCharCount = 0;
+  size_t byteOffset = 0;
+  while (currentCharCount != charCount)
+  {
+    size_t charSize = IsDBCSLeadByte(textSpan[byteOffset]) ? 2 : 1;
+    byteOffset += charSize;
+    ++currentCharCount;
+  }
+  return byteOffset;
+}
+size_t TextDocument::CountByteUtf8(const size_t startByteOffset, const size_t charCount) noexcept
+{
+  auto rawText = docBuffer.GetText(startByteOffset, docBuffer.length - startByteOffset); // todo: iterate text piece by piece
+  gsl::span<unsigned char> textSpan(rawText);
+  size_t currentCharCount = 0;
+  size_t byteOffset = 0;
+  while (currentCharCount != charCount)
+  {
+    size_t charSize = GetUtf8CharSize(textSpan[byteOffset]);
+    byteOffset += charSize;
+    ++currentCharCount;
+  }
+  return byteOffset;
+}
+size_t TextDocument::CountByte(const size_t startByteOffset, const size_t charCount) noexcept
+{
+  size_t byteCount = 0;
+  switch (fileFormat)
+  {
+  case CP_TYPE::ANSI:
+    byteCount = CountByteAnsi(startByteOffset, charCount);
+    break;
+  case CP_TYPE::UTF8:
+    byteCount = CountByteUtf8(startByteOffset, charCount);
+    break;
+  default:
+    break;
+  }
+  return byteCount;
+}
+size_t TextDocument::CountCharAnsi(const size_t byteLength) noexcept
+{
+  auto rawText = docBuffer.GetText(0, byteLength);
+  gsl::span<unsigned char> textSpan(rawText);
+  size_t charCount = 0;
+  size_t byteOffset = 0;
+  while (byteOffset != byteLength)
+  {
+    size_t charSize = IsDBCSLeadByte(textSpan[byteOffset]) ? 2 : 1;
+    byteOffset += charSize;
+    ++charCount;
+  }
+  return charCount;
+}
+size_t TextDocument::CountCharUtf8(const size_t byteLength) noexcept
+{
+  auto rawText = docBuffer.GetText(0, byteLength);
+  gsl::span<unsigned char> textSpan(rawText);
+  size_t charCount = 0;
+  size_t byteOffset = 0;
+  while (byteOffset != byteLength)
+  {
+    size_t charSize = GetUtf8CharSize(textSpan[byteOffset]);
+    byteOffset += charSize;
+    ++charCount;
+  }
+  return charCount;
+}
+size_t TextDocument::CountChar(const size_t byteLength) noexcept
+{
+  size_t charCount = 0;
+  switch (fileFormat)
+  {
+  case CP_TYPE::ANSI:
+    charCount = CountCharAnsi(byteLength);
+    break;
+  case CP_TYPE::UTF8:
+    charCount = CountCharUtf8(byteLength);
+    break;
+  default:
+    break;
+  }
+  return charCount;
 }
 bool TextDocument::Clear()
 {
@@ -311,4 +383,14 @@ size_t TextDocument::LineNumFromCharOffset(size_t offset)
   const auto lineIndex = GetLineIndexFromNodePosistion(gsl::at(docBuffer.buffers, nodePos.node->piece.bufferIndex).lineStarts, nodePos);
   const auto lineNumber = nodePos.node->lf_left + (nodePos.node->piece.start.line - lineIndex);
   return lineNumber;
+}
+
+constexpr size_t GetUtf8CharSize(const unsigned char ch) noexcept
+{
+  const uint8_t byte = ch;
+  if ((byte & 0x80) == 0) return 1;       // 0xxxxxxx
+  if ((byte & 0xE0) == 0xC0) return 2;    // 110xxxxx
+  if ((byte & 0xF0) == 0xE0) return 3;    // 1110xxxx
+  if ((byte & 0xF8) == 0xF0) return 4;    // 11110xxx
+  return 1;
 }

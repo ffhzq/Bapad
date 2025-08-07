@@ -44,7 +44,7 @@ struct _BOM_LOOKUP {
   CP_TYPE codePageType;
 };
 
-CP_TYPE DetectFileFormat(const unsigned char* docBuffer, const size_t docLengthByBytes, int& headerSize) noexcept;
+CP_TYPE DetectFileFormat(std::vector<unsigned char> docBuffer, int& headerSize) noexcept;
 
 //without side affect
 #define SwapWord(val) (((WORD)(val) << 8) | ((WORD)(val) >> 8))
@@ -75,4 +75,4 @@ size_t  UTF16ToAscii(const unsigned short* utf16Str, size_t utf16Len, unsigned c
 size_t  CopyUTF16(const unsigned short* src, size_t srcLen, unsigned short* dest, size_t& destLen);
 size_t  SwapUTF16(unsigned short* src, size_t srcLen, unsigned short* dest, size_t& destLen);
 
-bool IsUTF8(const unsigned char* buffer, size_t len) noexcept;
+bool IsUTF8(std::vector<unsigned char> buffer) noexcept;

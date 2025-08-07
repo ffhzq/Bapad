@@ -3,6 +3,8 @@
 #include "formatConversion.h"
 #include "PieceTree.h"
 
+constexpr size_t GetUtf8CharSize(const unsigned char ch) noexcept;
+
 class TextIterator;
 
 class TextDocument {
@@ -43,6 +45,13 @@ private:
 
   size_t CharOffsetToByteOffsetAt(const size_t startOffsetBytes, const size_t charCount);
   size_t ByteOffsetToCharOffset(size_t offsetBytes) noexcept;
+
+  size_t CountByteAnsi(const size_t startByteOffset, const size_t charCount) noexcept;
+  size_t CountByteUtf8(const size_t startByteOffset, const size_t charCount) noexcept;
+  size_t CountByte(const size_t startByteOffset, const size_t charCount) noexcept; // charCount to byteCount
+  size_t CountCharAnsi(const size_t byteLength) noexcept;
+  size_t CountCharUtf8(const size_t byteLength) noexcept;
+  size_t CountChar(const size_t byteLength) noexcept; // byteCount to charCount;
   PieceTree docBuffer;// raw txt data
 
   CP_TYPE fileFormat;
@@ -71,7 +80,7 @@ public:
 
   size_t GetText(wchar_t* buf, size_t bufLen)
   {
-    if (textDoc)
+    if (textDoc && processedBytes < lineContent.size())
     {
       memset(buf, 0, bufLen * sizeof(wchar_t));
       // get text from the TextDocument at the specified byte-offset

@@ -7,20 +7,21 @@ struct _BOM_LOOKUP BOMLOOK[] =
 {
   // define longest headers first
   //bom, headerlen, encoding form
-  { 0x0000FEFF, 4, CP_TYPE::UTF32    },
-  { 0xFFFE0000, 4, CP_TYPE::UTF32BE  },
-  { 0xBFBBEF,	  3, CP_TYPE::UTF8	  },
-  { 0xFFFE,	  2, CP_TYPE::UTF16BE  },
-  { 0xFEFF,	  2, CP_TYPE::UTF16    },
-  { 0,          0, CP_TYPE::ANSI	  },
+  { 0x0000FEFF, 4, CP_TYPE::UTF32 },
+  { 0xFFFE0000, 4, CP_TYPE::UTF32BE },
+  { 0xBFBBEF, 3, CP_TYPE::UTF8 },
+  { 0xFFFE, 2, CP_TYPE::UTF16BE },
+  { 0xFEFF, 2, CP_TYPE::UTF16 },
+  { 0, 0, CP_TYPE::ANSI },
 };
 
 
 
-CP_TYPE DetectFileFormat(const unsigned char* docBuffer, const size_t docLengthByBytes, int& headerSize) noexcept
+CP_TYPE DetectFileFormat(std::vector<unsigned char> docBuffer, int& headerSize) noexcept
 {
   CP_TYPE res = CP_TYPE::UNKNOWN;
-  if (docBuffer == nullptr) return res;
+  if (docBuffer.empty()) return res;
+  const size_t docLengthByBytes = docBuffer.size();
   for (auto i : BOMLOOK)
   {
     if (docLengthByBytes >= i.headerLength
@@ -33,8 +34,11 @@ CP_TYPE DetectFileFormat(const unsigned char* docBuffer, const size_t docLengthB
   }
   if (res == CP_TYPE::ANSI)
   {
-    headerSize = 0;
-    res = IsUTF8(docBuffer, docLengthByBytes) ? CP_TYPE::UTF8 : CP_TYPE::ANSI;
+    if (IsUTF8(docBuffer))
+    {
+      res = CP_TYPE::UTF8;
+      headerSize = 0;
+    }
   }
   return res;
 
@@ -199,15 +203,17 @@ size_t UTF32ToUTF8(unsigned long ch32, unsigned char* utf8Str, const size_t utf8
 
 size_t AsciiToUTF16(unsigned char* asciiStr, size_t asciiLen, unsigned short* utf16Str, size_t& utf16Len)
 {
-  size_t len = (std::min)(utf16Len, asciiLen);
-  if (len > static_cast<size_t>((std::numeric_limits<int>::max)()))
+  if (asciiLen > static_cast<size_t>((std::numeric_limits<int>::max)()))
   {
     throw std::overflow_error(
       "Input ascii string too long, size_t doesn't fit into int.");
   }
-  MultiByteToWideChar(CP_ACP, 0, reinterpret_cast<CCHAR*>(asciiStr), gsl::narrow_cast<int>(len), reinterpret_cast<wchar_t*>(utf16Str), gsl::narrow_cast<int>(len));
-  utf16Len = len;
-  return len;
+  utf16Len = MultiByteToWideChar(CP_ACP, 0, reinterpret_cast<CCHAR*>(asciiStr), gsl::narrow_cast<int>(asciiLen), reinterpret_cast<wchar_t*>(utf16Str), gsl::narrow_cast<int>(utf16Len));
+  if (utf16Len == 0)
+  {
+    throw std::invalid_argument("WideChar Buffer size is too small.");
+  }
+  return asciiLen;
 }
 
 size_t UTF8ToUTF16(unsigned char* utf8Str, size_t utf8Len, unsigned short* utf16Str, size_t& utf16Len)
@@ -496,16 +502,18 @@ size_t UTF16ToAscii(const unsigned short* utf16Str, size_t utf16Len, unsigned ch
   return len;
 }
 
-bool IsUTF8(const unsigned char* buffer, size_t len) noexcept
+bool IsUTF8(std::vector<unsigned char> buffer) noexcept
 {
-  if (buffer == nullptr) return false;
+  if (buffer.empty()) return false;
+  const size_t len = buffer.size();
   /*
  1byte :0xxxxxxx
  2bytes:110xxxxx 10xxxxxx
  3bytes:1110xxxx 10xxxxxx 10xxxxxx
  4bytes:11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
  */
-  const gsl::span<const unsigned char> bufferSpan(buffer, len);
+  //const gsl::span<const unsigned char> bufferSpan(buffer);
+  unsigned char* bufferSpan = buffer.data();
   size_t i = 0;
   while (i < len)
   {

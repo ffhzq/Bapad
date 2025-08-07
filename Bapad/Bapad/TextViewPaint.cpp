@@ -98,10 +98,10 @@ VOID TextView::RefreshWindow()
 //	
 int TextView::BaTextOut(HDC hdc, int xpos, int ypos, WCHAR* szText, int nLen, int nTabOrigin, ATTR* attr)
 {
-    int   i;
-    int   xold = xpos;
-    int   lasti = 0;
-    SIZE  sz;
+    int i;
+    const int xold = xpos;
+    int lasti = 0;
+    SIZE sz;
 
     const int TABWIDTHPIXELS = tabWidthChars * fontWidth;
 
@@ -111,14 +111,13 @@ int TextView::BaTextOut(HDC hdc, int xpos, int ypos, WCHAR* szText, int nLen, in
     SetTextColor(hdc, attr->fg);
     SetBkColor(hdc, attr->bg);
     SelectObject(hdc, font->hFont);
-
     // loop over each character
     for (i = 0; i <= nLen; i++)
     {
         int  yoff = maxAscent + heightAbove - font->tm.tmAscent;
-
+        const auto ch = szText[i];
         // output any "deferred" text before handling tab/control chars
-        if (i == nLen || szText[i] == '\t' || szText[i] < 32)
+        if (i == nLen || ch == '\t' || ch < 32)
         {
             RECT rect;
 
@@ -136,7 +135,7 @@ int TextView::BaTextOut(HDC hdc, int xpos, int ypos, WCHAR* szText, int nLen, in
         if (i < nLen)
         {
             // TAB characters
-            if (szText[i] == '\t')
+            if (ch == '\t')
             {
                 // calculate distance in pixels to the next tab-stop
                 int width = TABWIDTHPIXELS - ((xpos - nTabOrigin) % TABWIDTHPIXELS);
@@ -148,9 +147,9 @@ int TextView::BaTextOut(HDC hdc, int xpos, int ypos, WCHAR* szText, int nLen, in
                 lasti = i + 1;
             }
             // ASCII-CONTROL characters
-            else if (szText[i] < 32)
+            else if (ch < 32)
             {
-                xpos += PaintCtrlChar(hdc, xpos, ypos, szText[i], font);
+                xpos += PaintCtrlChar(hdc, xpos, ypos, ch, font);
                 lasti = i + 1;
             }
         }
@@ -258,7 +257,7 @@ void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect)
         //
         //len = ApplyTextAttributes(nLineNo, fileoff+charoff, buff, len, attr);
         len = ApplyTextAttributes(nLineNo, charoff, buff, len, attr);
-
+        
         if (len == 0)
             Sleep(0);
 
@@ -275,7 +274,7 @@ void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect)
             {
                 xpos += BaTextOut(hdc, xpos, ypos, buff + lasti, i - lasti, xtab, &attr[lasti]);
 
-                lasti = i;
+                lasti = i; 
             }
         }
         charoff += len;

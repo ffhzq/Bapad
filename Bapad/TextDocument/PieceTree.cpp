@@ -198,7 +198,7 @@ TreeNode* PieceTree::SplitPiece(TreeNode* currNode, const size_t inPieceOffset)
 
 std::vector<unsigned char> PieceTree::GetText(size_t offset, size_t text_length)
 {
-  return GetTextAt(this->rootNode.get(), offset, text_length);
+  return GetTextAt(this->rootNode->right.get(), offset, text_length);
 }
 
 std::vector<unsigned char> PieceTree::GetTextAt(TreeNode* node, size_t offset, size_t text_length)
