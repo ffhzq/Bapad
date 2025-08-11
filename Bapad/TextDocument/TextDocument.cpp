@@ -193,45 +193,29 @@ size_t TextDocument::EraseText(size_t offsetChars, size_t length)
 
 size_t TextDocument::InsertTextRaw(size_t offsetBytes, wchar_t* text, size_t textLength)
 {
-  unsigned char buf[LEN]{0};
-  size_t processedChars = 0, rawLen = 0, offset = offsetBytes, bufLen = LEN;
   const gsl::span<wchar_t> textSpan(text, textLength);
-  while (textLength)
+  std::vector<wchar_t> textVec(textSpan.begin(),textSpan.end());
+  if (textLength)
   {
-    rawLen = bufLen;
-    processedChars = UTF16ToRawData(&textSpan[processedChars], textLength, &buf[0], bufLen);
-    const auto bufSpan = gsl::span<unsigned char>(&buf[0], processedChars);
-    docBuffer.InsertText(offset, std::vector<unsigned char>(bufSpan.begin(), bufSpan.end()));
-
-    textLength -= processedChars;
-    rawLen += bufLen;
-    offset += bufLen;
+    auto rawText = Utf16toRaw(textVec, this->fileFormat);
+    docBuffer.InsertText(offsetBytes, rawText);
+    return rawText.size();
   }
-  return rawLen;
+  return 0;
 
 }
 size_t TextDocument::ReplaceTextRaw(size_t offsetBytes, wchar_t* text, size_t textLength, size_t eraseLen)
 {
-
-  unsigned char buf[LEN]{0};
-  size_t processedChars = 0, rawLen = 0, offset = offsetBytes, bufLen = LEN;
-  size_t eraseBytes = CharOffsetToByteOffsetAt(offsetBytes, eraseLen);
+  const size_t eraseBytes = CharOffsetToByteOffsetAt(offsetBytes, eraseLen);
   const gsl::span<wchar_t> textSpan(text, textLength);
-  while (textLength)
+  std::vector<wchar_t> textVec(textSpan.begin(), textSpan.end());
+  if (textLength)
   {
-    rawLen = bufLen;
-    processedChars = UTF16ToRawData(&textSpan[processedChars], textLength, &buf[0], bufLen);
-    const auto bufSpan = gsl::span<unsigned char>(&buf[0], processedChars);
-    docBuffer.ReplaceText(offset, std::vector<unsigned char>(bufSpan.begin(), bufSpan.end()), eraseBytes);
-
-    textLength -= processedChars;
-    rawLen += bufLen;
-    offset += bufLen;
-    eraseBytes = 0;
+    auto rawText = Utf16toRaw(textVec, this->fileFormat);
+    docBuffer.ReplaceText(offsetBytes, rawText, eraseBytes);
+    return rawText.size();
   }
-  return rawLen;
-
-
+  return 0;
 }
 size_t TextDocument::EraseTextRaw(size_t offsetBytes, size_t textLength)
 {
@@ -256,8 +240,6 @@ size_t TextDocument::CharOffsetToByteOffsetAt(const size_t startOffsetBytes, con
     break;
   }
   // case UTF-8 / ANSI
-  size_t offsetBytes = startOffsetBytes;
-  size_t offsetChars = charCount;
   return CountByte(startOffsetBytes, charCount);
 
 }
@@ -281,12 +263,12 @@ size_t TextDocument::ByteOffsetToCharOffset(size_t offsetBytes) noexcept
 size_t TextDocument::CountByteAnsi(const size_t startByteOffset, const size_t charCount) noexcept
 {
   auto rawText = docBuffer.GetText(startByteOffset, docBuffer.length - startByteOffset); // todo: iterate text piece by piece
-  gsl::span<unsigned char> textSpan(rawText);
+  const gsl::span<unsigned char> textSpan(rawText);
   size_t currentCharCount = 0;
   size_t byteOffset = 0;
-  while (currentCharCount != charCount)
+  while (currentCharCount < charCount)
   {
-    size_t charSize = IsDBCSLeadByte(textSpan[byteOffset]) ? 2 : 1;
+    const size_t charSize = IsDBCSLeadByte(textSpan[byteOffset]) ? 2 : 1;
     byteOffset += charSize;
     ++currentCharCount;
   }
@@ -295,12 +277,12 @@ size_t TextDocument::CountByteAnsi(const size_t startByteOffset, const size_t ch
 size_t TextDocument::CountByteUtf8(const size_t startByteOffset, const size_t charCount) noexcept
 {
   auto rawText = docBuffer.GetText(startByteOffset, docBuffer.length - startByteOffset); // todo: iterate text piece by piece
-  gsl::span<unsigned char> textSpan(rawText);
+  const gsl::span<unsigned char> textSpan(rawText);
   size_t currentCharCount = 0;
   size_t byteOffset = 0;
-  while (currentCharCount != charCount)
+  while (currentCharCount < charCount)
   {
-    size_t charSize = GetUtf8CharSize(textSpan[byteOffset]);
+    const size_t charSize = GetUtf8CharSize(textSpan[byteOffset]);
     byteOffset += charSize;
     ++currentCharCount;
   }
@@ -325,12 +307,12 @@ size_t TextDocument::CountByte(const size_t startByteOffset, const size_t charCo
 size_t TextDocument::CountCharAnsi(const size_t byteLength) noexcept
 {
   auto rawText = docBuffer.GetText(0, byteLength);
-  gsl::span<unsigned char> textSpan(rawText);
+  const gsl::span<unsigned char> textSpan(rawText);
   size_t charCount = 0;
   size_t byteOffset = 0;
-  while (byteOffset != byteLength)
+  while (byteOffset < byteLength)
   {
-    size_t charSize = IsDBCSLeadByte(textSpan[byteOffset]) ? 2 : 1;
+    const size_t charSize = IsDBCSLeadByte(textSpan[byteOffset]) ? 2 : 1;
     byteOffset += charSize;
     ++charCount;
   }
@@ -339,12 +321,12 @@ size_t TextDocument::CountCharAnsi(const size_t byteLength) noexcept
 size_t TextDocument::CountCharUtf8(const size_t byteLength) noexcept
 {
   auto rawText = docBuffer.GetText(0, byteLength);
-  gsl::span<unsigned char> textSpan(rawText);
+  const gsl::span<unsigned char> textSpan(rawText);
   size_t charCount = 0;
   size_t byteOffset = 0;
-  while (byteOffset != byteLength)
+  while (byteOffset < byteLength)
   {
-    size_t charSize = GetUtf8CharSize(textSpan[byteOffset]);
+    const size_t charSize = GetUtf8CharSize(textSpan[byteOffset]);
     byteOffset += charSize;
     ++charCount;
   }

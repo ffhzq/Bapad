@@ -43,7 +43,7 @@ bool PieceTree::InsertText(size_t offset, std::vector<unsigned char> input)
   }
   buffer.lineStarts.insert(buffer.lineStarts.end(), lineStarts.begin() + 1, lineStarts.end());
 
-  if (pieceOffset != nodePos->piece.length) // insert inside a piece, split then insert
+  if (nodePos && pieceOffset != nodePos->piece.length) // insert inside a piece, split then insert
   {
     nodePos = SplitPiece(nodePos, pieceOffset);
     // then insert new node behind nodePos(node1)
@@ -196,12 +196,12 @@ TreeNode* PieceTree::SplitPiece(TreeNode* currNode, const size_t inPieceOffset)
   return currNode;
 }
 
-std::vector<unsigned char> PieceTree::GetText(size_t offset, size_t text_length)
+std::vector<unsigned char> PieceTree::GetText(size_t offset, size_t text_length) noexcept
 {
   return GetTextAt(this->rootNode->right.get(), offset, text_length);
 }
 
-std::vector<unsigned char> PieceTree::GetTextAt(TreeNode* node, size_t offset, size_t text_length)
+std::vector<unsigned char> PieceTree::GetTextAt(TreeNode* node, size_t offset, size_t text_length) noexcept
 {
   auto text = std::vector<unsigned char>();
   if (offset >= length) return text;

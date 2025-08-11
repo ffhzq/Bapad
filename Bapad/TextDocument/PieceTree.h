@@ -96,6 +96,7 @@ public:
       buffers.push_back(Buffer());
       rootNode = std::make_unique<TreeNode>();
       buffers.emplace_back(Buffer(input)); // original
+      if (input.empty()) return;
       const Buffer& buffer = buffers.back();
       const Piece piece{
         BufferPosition(0,0), // startPos
@@ -119,8 +120,8 @@ public:
   NodePosition GetNodePosition(size_t offset) noexcept;
   size_t offsetInBuffer(size_t bufferIndex, BufferPosition pos);
   TreeNode* SplitPiece(TreeNode* currNode, const size_t inPieceOffset);
-  std::vector<unsigned char> GetTextAt(TreeNode* node, size_t offset, size_t text_length);
-  std::vector<unsigned char> GetText(size_t offset, size_t text_length);
+  std::vector<unsigned char> GetTextAt(TreeNode* node, size_t offset, size_t text_length) noexcept;
+  std::vector<unsigned char> GetText(size_t offset, size_t text_length) noexcept;
   std::vector<unsigned char> GetLine(size_t lineNumber, const size_t endOffset = 0, size_t* retValStartOffset = nullptr);
   void ShrinkPiece(TreeNode* current_node, size_t shrink_to_right, size_t shrink_to_left);
 

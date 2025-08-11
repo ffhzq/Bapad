@@ -1,6 +1,6 @@
 #pragma once
 #include "pch.h"
-#include "formatConversion.h"
+#include "FormatConversionV2.h"
 #include "PieceTree.h"
 
 constexpr size_t GetUtf8CharSize(const unsigned char ch) noexcept;
@@ -77,32 +77,15 @@ public:
   TextIterator(TextIterator&&) = default;
   TextIterator& operator=(TextIterator&&) = default;
 
-
-  size_t GetText(wchar_t* buf, size_t bufLen)
+  std::vector<wchar_t> GetLine()
   {
-    if (textDoc && processedBytes < lineContent.size())
+    auto Utf16Text = std::vector<wchar_t>();
+    if (textDoc)
     {
-      memset(buf, 0, bufLen * sizeof(wchar_t));
-      // get text from the TextDocument at the specified byte-offset
-      const gsl::span<unsigned char> lineSpan(lineContent);
-      unsigned char* startPos = &lineSpan[processedBytes];
-      const size_t strLen = lineContent.size() - processedBytes;
-      const size_t len = textDoc->RawDataToUTF16(startPos, strLen, buf, bufLen);
-
-      // adjust the iterator's internal position
-      processedBytes += len;
-      return bufLen;
+      Utf16Text = RawToUtf16(lineContent, textDoc->GetFileFormat());
     }
-    else
-    {
-      return 0;
-    }
+    return Utf16Text;
   }
-  std::vector<unsigned char> GetLine()
-  {
-    return lineContent;
-  }
-
   operator bool() noexcept
   {
     return textDoc != nullptr ? true : false;

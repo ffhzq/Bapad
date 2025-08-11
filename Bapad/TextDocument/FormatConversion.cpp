@@ -25,7 +25,7 @@ CP_TYPE DetectFileFormat(std::vector<unsigned char> docBuffer, int& headerSize) 
   for (auto i : BOMLOOK)
   {
     if (docLengthByBytes >= i.headerLength
-      && memcmp(&docBuffer[0], &i.bom, i.headerLength) == 0)
+      && memcmp(&gsl::at(docBuffer, 0), &i.bom, i.headerLength) == 0)
     {
       headerSize = i.headerLength;
       res = i.codePageType;
@@ -273,7 +273,7 @@ size_t SwapUTF16(unsigned short* src, size_t srcLen, unsigned short* dest, size_
   const gsl::span<unsigned short> srcSpan(src, len);
   const gsl::span<unsigned short> destSpan(dest, len);
   for (size_t i = 0; i < len; i++)
-    std::swap(srcSpan[i], destSpan[i]);
+    destSpan[i] = SwapWord16(srcSpan[i]);
   destLen = len;
   if (srcLen != 0 && len == 0)
   {
@@ -490,16 +490,21 @@ size_t UTF16ToUTF8(unsigned short* utf16Str, size_t utf16Len, unsigned char* utf
 
 size_t UTF16ToAscii(const unsigned short* utf16Str, size_t utf16Len, unsigned char* asciiStr, size_t& asciiLen)
 {
-  size_t len = (std::min)(utf16Len, asciiLen);
+  const size_t originalBufferLength = asciiLen;
   constexpr size_t intMaxVal = static_cast<size_t>((std::numeric_limits<int>::max)());
-  if (len > intMaxVal)
+  if (utf16Len > intMaxVal)
   {
     throw std::overflow_error(
       "Input UTF16 string too long, size_t doesn't fit into int.");
   }
-  WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<LPCWCH>(utf16Str), gsl::narrow_cast<int>(len), reinterpret_cast<LPSTR>(asciiStr), gsl::narrow_cast<int>(asciiLen), nullptr, nullptr);
-  asciiLen = len;
-  return len;
+  asciiLen = WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<LPCWCH>(utf16Str), gsl::narrow_cast<int>(utf16Len), nullptr, 0, nullptr, nullptr);
+  if (asciiLen > originalBufferLength)
+  {
+    throw std::invalid_argument(
+      "Received string too long, size_t doesn't fit into int.");
+  }
+  WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<LPCWCH>(utf16Str), gsl::narrow_cast<int>(utf16Len), reinterpret_cast<LPSTR>(asciiStr), gsl::narrow_cast<int>(asciiLen), nullptr, nullptr);
+  return utf16Len;
 }
 
 bool IsUTF8(std::vector<unsigned char> buffer) noexcept
@@ -512,8 +517,8 @@ bool IsUTF8(std::vector<unsigned char> buffer) noexcept
  3bytes:1110xxxx 10xxxxxx 10xxxxxx
  4bytes:11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
  */
-  //const gsl::span<const unsigned char> bufferSpan(buffer);
-  unsigned char* bufferSpan = buffer.data();
+  const gsl::span<const unsigned char> bufferSpan(buffer);
+  //unsigned char* bufferSpan = buffer.data();
   size_t i = 0;
   while (i < len)
   {

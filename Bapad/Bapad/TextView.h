@@ -145,3 +145,7 @@ private:
   void  UpdateCaretXY(int xpos, ULONG lineno) noexcept;
   void  UpdateCaretOffset(BOOL fAdvancing);
 };
+
+size_t	StripCRLF(WCHAR* szText, size_t nLength);
+void	PaintRect(HDC hdc, int x, int y, int width, int height, COLORREF fill);
+void	DrawCheckedRect(HDC hdc, RECT* rect, COLORREF fg, COLORREF bg);

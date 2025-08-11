@@ -212,7 +212,6 @@ BOOL TextView::MouseCoordToFilePos(
   size_t charOff = 0;
   size_t fileoff = 0;
 
-  wchar_t buf[TEXTBUFSIZE];
   size_t  len;
   LONGLONG  curx = 0;
   RECT  rect;
@@ -221,15 +220,13 @@ BOOL TextView::MouseCoordToFilePos(
   GetClientRect(hWnd, &rect);
   rect.bottom -= rect.bottom % lineHeight;
 
-  //mx -= LeftMarginWidth();
-
   // clip mouse to edge of window
   if (mx < 0)				mx = 0;
   if (my < 0)				my = 0;
-  if (my >= rect.bottom)	my = rect.bottom - 1;
-  if (mx >= rect.right)	mx = rect.right - 1;
+  if (my >= rect.bottom)  my = rect.bottom - 1;
+  if (mx >= rect.right) mx = rect.right - 1;
 
-  // It's easy to find the line-number: just divide 'y' by the line-height
+
   nLineNo = static_cast<size_t>((my / lineHeight)) + vScrollPos;
 
   // make sure we don't go outside of the document
@@ -249,21 +246,18 @@ BOOL TextView::MouseCoordToFilePos(
   TextIterator itor = pTextDoc->IterateLineByLineNumber(nLineNo, &charOff);
   // character offset within the line is more complicated. We have to 
   // parse the text.
-  while ((len = itor.GetText(buf, TEXTBUFSIZE)) > 0)
+  auto buf = itor.GetLine();
+  len = buf.size();
+  if (len > 0)
   {
-    //len = StripCRLF(buf, len, true);
+    // len = StripCRLF(buf.data(), len);
 
     // find it's width
-    int width = BaTextWidth(hdc, buf, len, -(curx % TabWidth()));
+    int width = BaTextWidth(hdc, buf.data(), len, -(curx % TabWidth()));
 
     // does cursor fall within this segment?
     if (mx >= curx && mx < curx + width)
     {
-      //
-      //	We have a range of text, with the mouse 
-      //  somewhere in the middle. Perform a "binary chop" to
-      //  locate the exact character that the mouse is positioned over
-      //
       LONGLONG low = 0;
       LONGLONG high = len;
       LONGLONG lowx = 0;
@@ -273,7 +267,7 @@ BOOL TextView::MouseCoordToFilePos(
       {
         LONGLONG newlen = (high - low) / 2;
 
-        width = BaTextWidth(hdc, buf + low, newlen, -lowx - curx);
+        width = BaTextWidth(hdc, buf.data() + low, newlen, -lowx - curx);
 
         if (mx - curx < width + lowx)
         {
@@ -299,7 +293,7 @@ BOOL TextView::MouseCoordToFilePos(
         charOff += low;
       }
 
-      break;
+      //break;
     }
     else
     {

@@ -217,7 +217,7 @@ LONG TextView::OnVScroll(UINT nSBCode, UINT nPos)
         break;
 
     case SB_PAGEUP:
-        Scroll(0, -1 * static_cast<LONG64>(windowLines));
+        Scroll(0, -1 * (windowLines));
         break;
 
     case SB_THUMBPOSITION:

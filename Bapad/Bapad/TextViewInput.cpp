@@ -3,70 +3,70 @@
 
 LONG TextView::OnChar(UINT nChar, UINT nFlags)
 {
-    WCHAR ch = (WCHAR)nChar;
+  WCHAR ch = (WCHAR)nChar;
 
-    if (nChar < 32 && nChar != '\t' && nChar != '\r' && nChar != '\n')
-        return 0;
-    // change CR into a CR/LF sequence
-    if (nChar == '\r')
-        PostMessageW(hWnd, WM_CHAR, '\n', 1);
-    if (EnterText(&ch, 1))
-    {
-        NotifyParent(TVN_CHANGED);//用于通知文件被修改了
-    }
+  if (nChar < 32 && nChar != '\t' && nChar != '\r' && nChar != '\n')
     return 0;
+  // change CR into a CR/LF sequence
+  if (nChar == '\r')
+    PostMessageW(hWnd, WM_CHAR, '\n', 1);
+  if (EnterText(&ch, 1))
+  {
+    NotifyParent(TVN_CHANGED);//用于通知文件被修改了
+  }
+  return 0;
 }
 
 ULONG TextView::EnterText(WCHAR* inputText, ULONG inputTextLength)
 {
-    bool existSelectedText = selectionStart != selectionEnd;
+  bool existSelectedText = selectionStart != selectionEnd;
 
-    //INSERT MODE, TWO STEPS    ;  TODO:READONLY,OVERWRITE
-    //
-    if (existSelectedText)
-    {
-        size_t start = min(selectionStart, selectionEnd);
-        size_t end = max(selectionStart, selectionEnd);
-        size_t eraseLen = end - start;
-        pTextDoc->EraseText(start, eraseLen);
-        cursorOffset = start;
-    }
-    if (pTextDoc->InsertText(cursorOffset, inputText, inputTextLength) == 0)
-    {
-        return 0;
-    }
-    cursorOffset += inputTextLength;
-    selectionStart = selectionEnd = cursorOffset;
-    RefreshWindow();
-    Smeg(TRUE);
-    return inputTextLength;
+  //INSERT MODE, TWO STEPS    ;  TODO:READONLY,OVERWRITE
+  //
+  if (existSelectedText)
+  {
+    const size_t start = (std::min)(selectionStart, selectionEnd);
+    const size_t end = (std::max)(selectionStart, selectionEnd);
+    const size_t eraseLen = end - start;
+    pTextDoc->ReplaceText(start, inputText, inputTextLength, eraseLen);
+    cursorOffset = start;
+  }
+  else if (pTextDoc->InsertText(cursorOffset, inputText, inputTextLength) == 0)
+  {
+    return 0;
+  }
+  cursorOffset += inputTextLength;
+  selectionStart = selectionEnd = cursorOffset;
+  RefreshWindow();
+  Smeg(TRUE);
+  return inputTextLength;
 }
 
 LRESULT TextView::NotifyParent(UINT nNotifyCode, NMHDR* optional)
 {
-    UINT  nCtrlId = GetWindowLongW(hWnd, GWL_ID);
-    NMHDR nmhdr = { hWnd, nCtrlId, nNotifyCode };
-    NMHDR* nmptr = &nmhdr;
+  UINT  nCtrlId = GetWindowLongW(hWnd, GWL_ID);
+  NMHDR nmhdr = {hWnd, nCtrlId, nNotifyCode};
+  NMHDR* nmptr = &nmhdr;
 
-    if (optional)
-    {
-        nmptr = optional;
-        *nmptr = nmhdr;
-    }
+  if (optional)
+  {
+    nmptr = optional;
+    *nmptr = nmhdr;
+  }
 
-    return SendMessageW(GetParent(hWnd), WM_NOTIFY, (WPARAM)nCtrlId, (LPARAM)nmptr);
+  return SendMessageW(GetParent(hWnd), WM_NOTIFY, (WPARAM)nCtrlId, (LPARAM)nmptr);
 }
 
 void TextView::Smeg(BOOL fAdvancing)
 {
-    lineCount = pTextDoc->GetLineCount();
-    UpdateMetrics();
-    SetupScrollbars();
+  lineCount = pTextDoc->GetLineCount();
+  UpdateMetrics();
+  SetupScrollbars();
 
-    UpdateCaretOffset(fAdvancing);
-    anchorPosX = caretPosX;
-    ScrollToPosition(caretPosX, currentLine);
-    RepositionCaret();
+  UpdateCaretOffset(fAdvancing);
+  anchorPosX = caretPosX;
+  ScrollToPosition(caretPosX, currentLine);
+  RepositionCaret();
 }
 
 
@@ -84,14 +84,14 @@ void TextView::UpdateCaretOffset(BOOL fAdvancing)
   LONGLONG	xpos = 0;
   LONGLONG	ypos = 0;
   ULONG64		len = 0;
-  wchar_t buf[TEXTBUFSIZE]{{0}};
+  //wchar_t buf[TEXTBUFSIZE]{{0}};
 
 
   // get start-of-line information from cursor-offset
   TextIterator itor = pTextDoc->IterateLineByCharOffset(cursorOffset, &lineno, &charoff);
 
   if (!itor)
-    return ;
+    return;
 
   // make sure we are using the right font
   HDC hdc = GetDC(hWnd);
@@ -103,12 +103,13 @@ void TextView::UpdateCaretOffset(BOOL fAdvancing)
   ypos = (lineno - vScrollPos) * lineHeight;
 
   // now find the x-coordinate on the specified line
-  while ((len = itor.GetText(buf, TEXTBUFSIZE)) > 0 && charoff < cursorOffset)
+  auto buf = itor.GetLine();
+  len = buf.size();
+  if (len > 0 && charoff < cursorOffset)
   {
-    len = min(cursorOffset - charoff, len);
-    xpos += BaTextWidth(hdc, buf, len, -xpos);
+    len = (std::min)(cursorOffset - charoff, len);
+    xpos += BaTextWidth(hdc, buf.data(), len, -xpos);
     offset += len;
-
   }
 
   ReleaseDC(hWnd, hdc);
