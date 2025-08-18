@@ -6,9 +6,9 @@
 
 //#define LONGEST_LINE 0x100
 
-const int LONGEST_LINE = 0x100;
-const int TEXTBUFSIZE = 32;
-const int MAX_FONTS = 32;
+constexpr int LONGEST_LINE = 0x100;
+constexpr int TEXTBUFSIZE = 32;
+constexpr int MAX_FONTS = 32;
 
 
 class TextView {
@@ -28,76 +28,75 @@ public:
 
 private:
 
-  void	PaintLine(HDC hdc, ULONG64 nLineNo);
-  void	PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect);
+  void    PaintLine(HDC hdc, ULONG64 nLineNo);
+  void    PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect);
 
-  size_t	ApplyTextAttributes(size_t nLineNo, size_t offset, WCHAR* szText, int nTextLen, ATTR* attr);
-  int		BaTextOut(HDC hdc, int xpos, int ypos, WCHAR* szText, int nLen, int nTabOrigin, ATTR* attr);
+  size_t  ApplyTextAttributes(size_t nLineNo, size_t offset, std::vector<wchar_t>& szText, std::vector<ATTR>& attr);
+  int     BaTextOut(HDC hdc, int xpos, int ypos, gsl::span<wchar_t> szText, int nTabOrigin, const ATTR& attr);
 
-  int		PaintCtrlChar(HDC hdc, int xpos, int ypos, ULONG64 chValue, FONT* fa);
-  void	InitCtrlCharFontAttr(HDC hdc, FONT* fa);
+  int     PaintCtrlChar(HDC hdc, int xpos, int ypos, ULONG64 chValue, FONT* fa);
+  void    InitCtrlCharFontAttr(HDC hdc, FONT* fa);
 
-  void	RefreshWindow();
-  LONG	InvalidateRange(size_t nStart, size_t nFinish);
+  void    RefreshWindow();
+  LONG    InvalidateRange(size_t nStart, size_t nFinish);
 
-  int		GetCtrlCharWidth(HDC hdc, ULONG64 chValue, FONT* fa);
-  int		BaTextWidth(HDC hdc, WCHAR* buf, int len, int nTabOrigin);
-  int		TabWidth() const;
+  int     GetCtrlCharWidth(HDC hdc, ULONG64 chValue, FONT* fa);
+  int     BaTextWidth(HDC hdc, WCHAR* buf, int len, int nTabOrigin);
+  int     TabWidth() const;
 
-  BOOL	MouseCoordToFilePos(
+  BOOL    MouseCoordToFilePos(
     LONGLONG mx,
     LONGLONG my,
     size_t& pnLineNo,
-    size_t& pnCharOffset,
     size_t& pnFileOffset,
     LONGLONG& px);
-  ULONG  RepositionCaret();
+  ULONG   RepositionCaret();
 
 
-  COLORREF GetColour(UINT idx);
+  COLORREF  GetColour(UINT idx);
 
-  VOID	SetupScrollbars();
-  VOID	UpdateMetrics();
-  VOID	RecalculateLineHeight();
+  VOID    SetupScrollbars();
+  VOID    UpdateMetrics();
+  VOID    RecalculateLineHeight();
   bool    PinToBottomCorner();
 
-  void	Scroll(LONG64 dx, LONG64 dy);
-  HRGN	ScrollRgn(LONG64 dx, LONG64 dy, bool fReturnUpdateRgn);
-  VOID  ScrollToPosition(int xpos, size_t lineno);
-  HWND	hWnd;
+  void    Scroll(LONG64 dx, LONG64 dy);
+  HRGN    ScrollRgn(LONG64 dx, LONG64 dy, bool fReturnUpdateRgn);
+  VOID    ScrollToPosition(int xpos, size_t lineno);
+  HWND hWnd;
 
   // Font-related data
   std::vector<FONT> fontAttr;
-  HFONT	font;
-  int		fontWidth;
-  int		lineHeight;
-  int		maxAscent;
-  int		heightAbove;
-  int		heightBelow;
+  HFONT font;
+  int fontWidth;
+  int lineHeight;
+  int maxAscent;
+  int heightAbove;
+  int heightBelow;
 
   // Scrollbar related data
-  ULONG64		vScrollPos;
-  ULONG64		vScrollMax;
-  LONG64		hScrollPos;
-  LONG64		hScrollMax;
+  ULONG64 vScrollPos;
+  ULONG64 vScrollMax;
+  LONG64  hScrollPos;
+  LONG64  hScrollMax;
 
-  size_t		longestLine;
-  ULONG64		windowLines;
-  ULONG64		windowColumns;
+  size_t  longestLine;
+  ULONG64 windowLines;
+  ULONG64 windowColumns;
 
   // Display related data
   int tabWidthChars;
-  size_t	selectionStart;
-  size_t	selectionEnd;
-  size_t	cursorOffset;
-  int caretPosX;
-  int anchorPosX;
-  size_t currentLine;
+  size_t  selectionStart;
+  size_t  selectionEnd;
+  size_t  cursorOffset;
+  int     caretPosX;
+  int     anchorPosX;
+  size_t  currentLine;
 
-  COLORREF rgbColourList[TXC_MAX_COLOURS];
+  COLORREF  rgbColourList[TXC_MAX_COLOURS];
 
   // File-related data
-  size_t	lineCount;
+  size_t    lineCount;
 
 
   // Runtime related data
@@ -146,6 +145,6 @@ private:
   void  UpdateCaretOffset(BOOL fAdvancing);
 };
 
-size_t	StripCRLF(WCHAR* szText, size_t nLength);
+size_t	StripCRLF(std::vector<wchar_t>& szText, bool fAllow) noexcept;
 void	PaintRect(HDC hdc, int x, int y, int width, int height, COLORREF fill);
 void	DrawCheckedRect(HDC hdc, RECT* rect, COLORREF fg, COLORREF bg);

@@ -46,8 +46,8 @@ LONG TextView::OnSetFont(HFONT hFont)
   // default font is always #0
   SetFont(hFont, 0);
 
-  fontWidth = fontAttr[0].tm.tmAveCharWidth;
-
+  fontWidth = gsl::at(fontAttr,0).tm.tmAveCharWidth;
+  lineHeight = gsl::at(fontAttr, 0).tm.tmHeight;
   UpdateMetrics();
 
   return 0;
@@ -55,7 +55,7 @@ LONG TextView::OnSetFont(HFONT hFont)
 
 LONG TextView::AddFont(HFONT hFont)
 {
-  size_t idx = fontAttr.size();
+  const size_t idx = fontAttr.size();
   fontAttr.resize(idx + 1);
   SetFont(hFont, idx);
   UpdateMetrics();

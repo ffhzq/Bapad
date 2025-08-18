@@ -59,6 +59,7 @@ LRESULT TextView::NotifyParent(UINT nNotifyCode, NMHDR* optional)
 
 void TextView::Smeg(BOOL fAdvancing)
 {
+  return;
   lineCount = pTextDoc->GetLineCount();
   UpdateMetrics();
   SetupScrollbars();
@@ -69,23 +70,15 @@ void TextView::Smeg(BOOL fAdvancing)
   RepositionCaret();
 }
 
-
+// reposition caret posiiton based on cursor offset.
 void TextView::UpdateCaretOffset(BOOL fAdvancing)
 {
-  caretPosX = cursorOffset * fontWidth;
-  if (fAdvancing)
-  {
-
-  }
-
   size_t		lineno = 0;
   size_t		charoff = 0;
   size_t		offset = 0;
   LONGLONG	xpos = 0;
   LONGLONG	ypos = 0;
   ULONG64		len = 0;
-  //wchar_t buf[TEXTBUFSIZE]{{0}};
-
 
   // get start-of-line information from cursor-offset
   TextIterator itor = pTextDoc->IterateLineByCharOffset(cursorOffset, &lineno, &charoff);
@@ -93,11 +86,15 @@ void TextView::UpdateCaretOffset(BOOL fAdvancing)
   if (!itor)
     return;
 
+  if (fAdvancing && charoff > 0)
+  {
+    --charoff;
+  }
+
+
   // make sure we are using the right font
   HDC hdc = GetDC(hWnd);
-  SelectObject(hdc, fontAttr[0].hFont);
-
-
+  SelectObject(hdc, gsl::at(fontAttr, 0).hFont);
 
   // y-coordinate from line-number
   ypos = (lineno - vScrollPos) * lineHeight;

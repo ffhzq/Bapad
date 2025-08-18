@@ -52,13 +52,13 @@ std::vector<unsigned char> Utf16toRaw(std::vector<wchar_t>& utf16Data, const CP_
     assert(srcLen < static_cast<size_t>(INT_MAX));
     targetLength = WideCharToMultiByte(CP_ACP, 0, utf16Data.data(), gsl::narrow_cast<int>(srcLen), nullptr, 0, nullptr, nullptr);
     rawData.resize(targetLength);
-    WideCharToMultiByte(CP_ACP, 0, utf16Data.data(), gsl::narrow_cast<int>(srcLen), reinterpret_cast<char*>(rawData.data()), targetLength, nullptr, nullptr);
+    WideCharToMultiByte(CP_ACP, 0, utf16Data.data(), gsl::narrow_cast<int>(srcLen), reinterpret_cast<char*>(rawData.data()), gsl::narrow_cast<int>(targetLength), nullptr, nullptr);
     break;
   case CP_TYPE::UTF8:
     assert(srcLen < static_cast<size_t>(INT_MAX));
     targetLength = WideCharToMultiByte(CP_UTF8, 0, utf16Data.data(), gsl::narrow_cast<int>(srcLen), nullptr, 0, nullptr, nullptr);
     rawData.resize(targetLength);
-    WideCharToMultiByte(CP_UTF8, 0, utf16Data.data(), gsl::narrow_cast<int>(srcLen), reinterpret_cast<char*>(rawData.data()), targetLength, nullptr, nullptr);
+    WideCharToMultiByte(CP_UTF8, 0, utf16Data.data(), gsl::narrow_cast<int>(srcLen), reinterpret_cast<char*>(rawData.data()), gsl::narrow_cast<int>(targetLength), nullptr, nullptr);
     break;
   case CP_TYPE::UTF16:
     targetLength = srcLen * 2;

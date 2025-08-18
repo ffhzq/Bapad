@@ -79,12 +79,11 @@ public:
 
   std::vector<wchar_t> GetLine()
   {
-    auto Utf16Text = std::vector<wchar_t>();
     if (textDoc)
     {
-      Utf16Text = RawToUtf16(lineContent, textDoc->GetFileFormat());
+      return RawToUtf16(lineContent, textDoc->GetFileFormat());
     }
-    return Utf16Text;
+    return std::vector<wchar_t>();
   }
   operator bool() noexcept
   {

@@ -41,40 +41,57 @@ bool PieceTree::InsertText(size_t offset, std::vector<unsigned char> input)
   {
     i += start_offset;
   }
-  buffer.lineStarts.insert(buffer.lineStarts.end(), lineStarts.begin() + 1, lineStarts.end());
-
-  if (nodePos && pieceOffset != nodePos->piece.length) // insert inside a piece, split then insert
+  if (nodePos)
   {
-    nodePos = SplitPiece(nodePos, pieceOffset);
-    // then insert new node behind nodePos(node1)
-  }
-  //insert
-  const size_t offset1 = start_offset, offset2 = offset1 + input.size();
-  const size_t lineIndex1 = GetLineIndexFromNodePosistion(buffer.lineStarts, NodePosition(nodePos, 0)),
-    lineIndex2 = GetLineIndexFromNodePosistion(buffer.lineStarts, NodePosition(nodePos, input.size()));
-  const size_t line_offset1 = offset1 - gsl::at(buffer.lineStarts, lineIndex1),
-    line_offset2 = offset2 - gsl::at(buffer.lineStarts, lineIndex1);
-  const Piece piece{
-    BufferPosition(lineIndex1,line_offset1), // startPos
-    BufferPosition(lineIndex2,line_offset2),
-    0, // BufferIndex
-    input.size(), // length
-    lineStarts.size() - 1}; // lineCount
+    buffer.lineStarts.insert(buffer.lineStarts.end(), lineStarts.begin() + 1, lineStarts.end());
+    if (nodePos && pieceOffset != nodePos->piece.length) // insert inside a piece, split then insert
+    {
+      nodePos = SplitPiece(nodePos, pieceOffset);
+      // then insert new node behind nodePos(node1)
+    }
+    //insert
+    const size_t offset1 = start_offset, offset2 = offset1 + input.size();
+    const size_t lineIndex1 = GetLineIndexFromNodePosistion(buffer.lineStarts, NodePosition(nodePos, 0)),
+      lineIndex2 = GetLineIndexFromNodePosistion(buffer.lineStarts, NodePosition(nodePos, input.size()));
+    const size_t line_offset1 = offset1 - gsl::at(buffer.lineStarts, lineIndex1),
+      line_offset2 = offset2 - gsl::at(buffer.lineStarts, lineIndex1);
+    const Piece piece{
+      BufferPosition(lineIndex1,line_offset1), // startPos
+      BufferPosition(lineIndex2,line_offset2),
+      0, // BufferIndex
+      input.size(), // length
+      lineStarts.size() - 1}; // lineCount
 
-  auto NewNode = std::make_unique<TreeNode>(piece, nodePos);
-  if (nodePos->right == nullptr)
-  {
-    NewNode->right = nullptr;
+    auto NewNode = std::make_unique<TreeNode>(piece, nodePos);
+    if (nodePos->right == nullptr)
+    {
+      NewNode->right = nullptr;
+    }
+    else
+    {
+      NewNode->right = std::move(nodePos->right);
+      NewNode->right->left = NewNode.get();
+    }
+    nodePos->right = std::move(NewNode);
+
+    length += piece.length;
+    lineCount += piece.lineFeedCnt;
   }
   else
   {
-    NewNode->right = std::move(nodePos->right);
-    NewNode->right->left = NewNode.get();
-  }
-  nodePos->right = std::move(NewNode);
+    buffer.lineStarts.insert(buffer.lineStarts.end(), lineStarts.begin() + 1, lineStarts.end());
+    const Piece piece{
+      BufferPosition(buffer.lineStarts.size() - lineStarts.size(), 0), // startPos
+      BufferPosition(buffer.lineStarts.size() - 1, // endPos
+       buffer.value.size() - lineStarts.back()),
+      0, // BufferIndex
+      input.size(), // length
+      lineStarts.size() - 1}; // linefeed
 
-  length += piece.length;
-  lineCount += piece.lineFeedCnt;
+    rootNode.get()->right = std::make_unique<TreeNode>(piece, rootNode.get());
+    length = piece.length;
+    lineCount = piece.lineFeedCnt + 1;
+  }
   UpdateMetadata();
   return true;
 }
@@ -334,7 +351,7 @@ void PieceTree::ShrinkPiece(TreeNode* current_node, size_t shrink_to_right, size
   }
 }
 
-void PieceTree::UpdateMetadata() const noexcept 
+void PieceTree::UpdateMetadata() const noexcept
 {
   size_t size_delta = 0;
   size_t lf_delta = 0;

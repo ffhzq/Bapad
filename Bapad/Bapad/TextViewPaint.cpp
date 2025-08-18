@@ -4,15 +4,21 @@
 
 extern "C" COLORREF MixRGB(COLORREF, COLORREF);
 
-size_t TextView::ApplyTextAttributes(size_t nLineNo, size_t nOffset, WCHAR* szText, int nTextLen, ATTR* attr)
+size_t TextView::ApplyTextAttributes(size_t nLineNo, size_t nOffset, std::vector<wchar_t>& szText, std::vector<ATTR>& attr)
 {
-  size_t	 font = nLineNo % fontAttr.size();
-  COLORREF fg = RGB(rand() % 200, rand() % 200, rand() % 200);
-
+  size_t font = nLineNo % fontAttr.size();
+  const COLORREF fg = RGB(rand() % 200, rand() % 200, rand() % 200);
+  const int nTextLen = szText.size();
+  assert(nTextLen == attr.size());
+  if (attr.empty() || szText.empty())
+  {
+    return 0;
+  }
   int i;
 
-  size_t selstart = min(selectionStart, selectionEnd);
-  size_t selend = max(selectionStart, selectionEnd);
+  const size_t selstart = (std::min)(selectionStart, selectionEnd);
+  const size_t selend = (std::max)(selectionStart, selectionEnd);
+
 
 
   for (i = 0; i < nTextLen; i++)
@@ -22,58 +28,63 @@ size_t TextView::ApplyTextAttributes(size_t nLineNo, size_t nOffset, WCHAR* szTe
     {
       if (GetFocus() == hWnd)
       {
-        attr[i].fg = GetColour(TXC_HIGHLIGHTTEXT);
-        attr[i].bg = GetColour(TXC_HIGHLIGHT);
+        gsl::at(attr, i).fg = GetColour(TXC_HIGHLIGHTTEXT);
+        gsl::at(attr, i).bg = GetColour(TXC_HIGHLIGHT);
       }
       else
       {
-        attr[i].fg = GetColour(TXC_HIGHLIGHTTEXT2);
-        attr[i].bg = GetColour(TXC_HIGHLIGHT2);
+        gsl::at(attr, i).fg = GetColour(TXC_HIGHLIGHTTEXT2);
+        gsl::at(attr, i).bg = GetColour(TXC_HIGHLIGHT2);
       }
     }
     // normal text colours
     else
     {
-      attr[i].fg = GetColour(TXC_FOREGROUND);
-      attr[i].bg = GetColour(TXC_BACKGROUND);
+      gsl::at(attr, i).fg = GetColour(TXC_FOREGROUND);
+      gsl::at(attr, i).bg = GetColour(TXC_BACKGROUND);
     }
 
-    if (szText[i] == ' ')
+    if (gsl::at(szText, i) == ' ')
       font = (font + 1) % fontAttr.size();
 
-    attr[i].style = font;
+    gsl::at(attr, i).style = font;
   }
 
   //
   //	Turn any CR/LF at the end of a line into a single 'space' character
   //
-  return StripCRLF(szText, nTextLen);
+  return StripCRLF(szText, false);
 }
 
 //
 //	Strip CR/LF combinations from the end of a line and
 //  replace with a single space character (for drawing purposes)
+//  fAllow : flag of allowing to strip string
+//  bool -> int : true -> 1, false -> 0
 //
-size_t StripCRLF(WCHAR* szText, size_t nLength)
+size_t StripCRLF(std::vector<wchar_t>& szText, bool fAllow) noexcept
 {
+  if (szText.empty()) return 0;
+  size_t nLength = szText.size();
   if (nLength >= 2)
-  {
-    if (szText[nLength - 2] == '\r' && szText[nLength - 1] == '\n')
+  { // todo: distinguish CRLF LF CR modes.
+    if (gsl::at(szText, nLength - 2) == '\r' && gsl::at(szText, nLength - 1) == '\n')
     {
-      szText[nLength - 2] = ' ';
-      return --nLength;
+      gsl::at(szText, nLength - 2) = ' ';
+      nLength = nLength - (size_t(1) + static_cast<int>(fAllow));
+      return nLength;
     }
   }
 
   if (nLength >= 1)
   {
-    if (szText[nLength - 1] == '\r' || szText[nLength - 1] == '\n')
+    // todo: check CR LF
+    if (gsl::at(szText, nLength - 1) == '\r' || gsl::at(szText, nLength - 1) == '\n')
     {
-      szText[nLength - 1] = ' ';
-      nLength--;
+      gsl::at(szText, nLength - 1) = ' ';
+      nLength = nLength - (static_cast<int>(fAllow));
     }
   }
-
   return nLength;
 }
 
@@ -82,7 +93,7 @@ size_t StripCRLF(WCHAR* szText, size_t nLength)
 //
 VOID TextView::RefreshWindow()
 {
-  InvalidateRect(hWnd, NULL, FALSE);
+  InvalidateRect(hWnd, nullptr, FALSE);
 }
 
 
@@ -94,37 +105,40 @@ VOID TextView::RefreshWindow()
 //  it might contain ascii-control characters which must be output separately.
 //  because of this we'll just handle the tabs at the same time.
 //	
-int TextView::BaTextOut(HDC hdc, int xpos, int ypos, WCHAR* szText, int nLen, int nTabOrigin, ATTR* attr)
+int TextView::BaTextOut(HDC hdc, int xpos, int ypos, gsl::span<wchar_t> szText, int nTabOrigin, const ATTR& attr)
 {
-  int i;
+  const size_t nLen = szText.size();
   const int xold = xpos;
-  int lasti = 0;
   SIZE sz;
 
   const int TABWIDTHPIXELS = tabWidthChars * fontWidth;
 
-  FONT* font = &fontAttr[attr->style];
+  FONT& font = gsl::at(fontAttr, attr.style);
 
   // configure the device context
-  SetTextColor(hdc, attr->fg);
-  SetBkColor(hdc, attr->bg);
-  SelectObject(hdc, font->hFont);
+  SetTextColor(hdc, attr.fg);
+  SetBkColor(hdc, attr.bg);
+  SelectObject(hdc, font.hFont);
+
+  SetBkMode(hdc, OPAQUE);
+  constexpr DWORD flag = ETO_CLIPPED | ETO_OPAQUE;
+
   // loop over each character
-  for (i = 0; i <= nLen; i++)
+  for (size_t i = 0, lasti = 0; i <= nLen; i++)
   {
-    int  yoff = maxAscent + heightAbove - font->tm.tmAscent;
-    const auto ch = szText[i];
+    const int yoff = maxAscent + heightAbove - font.tm.tmAscent;
+
     // output any "deferred" text before handling tab/control chars
-    if (i == nLen || ch == '\t' || ch < 32)
+    if (i == nLen || szText[i] == '\t' || szText[i] < 32)
     {
       RECT rect;
 
       // get size of text
-      GetTextExtentPoint32W(hdc, szText + lasti, i - lasti, &sz);
+      GetTextExtentPoint32W(hdc, &szText[lasti], i - lasti, &sz);
       SetRect(&rect, xpos, ypos, xpos + sz.cx, ypos + lineHeight);
 
       // draw the text and erase it's background at the same time
-      ExtTextOutW(hdc, xpos, ypos + yoff, ETO_OPAQUE, &rect, szText + lasti, i - lasti, 0);
+      ExtTextOutW(hdc, xpos, ypos + yoff, flag, &rect, &szText[lasti], i - lasti, nullptr);
 
       xpos += sz.cx;
     }
@@ -133,21 +147,21 @@ int TextView::BaTextOut(HDC hdc, int xpos, int ypos, WCHAR* szText, int nLen, in
     if (i < nLen)
     {
       // TAB characters
-      if (ch == '\t')
+      if (szText[i] == '\t')
       {
         // calculate distance in pixels to the next tab-stop
-        int width = TABWIDTHPIXELS - ((xpos - nTabOrigin) % TABWIDTHPIXELS);
+        const int width = TABWIDTHPIXELS - ((xpos - nTabOrigin) % TABWIDTHPIXELS);
 
         // draw a blank space 
-        PaintRect(hdc, xpos, ypos, width, lineHeight, attr->bg);
+        PaintRect(hdc, xpos, ypos, width, lineHeight, attr.bg);
 
         xpos += width;
         lasti = i + 1;
       }
       // ASCII-CONTROL characters
-      else if (ch < 32)
+      else if (szText[i] < 32)
       {
-        xpos += PaintCtrlChar(hdc, xpos, ypos, ch, font);
+        xpos += PaintCtrlChar(hdc, xpos, ypos, szText[i], &font);
         lasti = i + 1;
       }
     }
@@ -202,22 +216,20 @@ void TextView::PaintLine(HDC hdc, ULONG64 nLineNo)
   GetClientRect(hWnd, &rect);
 
   // calculate rectangle for entire length of line in window
-  rect.left = (long)(-hScrollPos * fontWidth);
-  rect.top = (long)((nLineNo - vScrollPos) * lineHeight);
-  rect.right = (long)(rect.right);
-  rect.bottom = (long)(rect.top + lineHeight);
+  rect.left = (-hScrollPos * fontWidth);
+  rect.top = ((nLineNo - vScrollPos) * lineHeight);
+  rect.right = (rect.right);
+  rect.bottom = (rect.top + lineHeight);
 
   //	check we have data to draw on this line
   if (nLineNo >= lineCount)
   {
     SetBkColor(hdc, GetColour(TXC_BACKGROUND));
-    ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rect, 0, 0, 0);
+    ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rect, nullptr, 0, nullptr);
     return;
   }
 
-  //
   //	paint the line's text
-  //
   PaintText(hdc, nLineNo, &rect);
 }
 
@@ -226,25 +238,23 @@ void TextView::PaintLine(HDC hdc, ULONG64 nLineNo)
 //
 void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect)
 {
-  //wchar_t		buff[TEXTBUFSIZE]{0};
-  //ATTR		attr[TEXTBUFSIZE];
-  size_t		charoff = 0;
+  size_t  charoff = 0;
 
-  size_t		colNo = 0;
+  size_t  colNo = 0;
 
-  int			xpos = rect->left;
-  int			ypos = rect->top;
-  int			xtab = rect->left;
+  int xpos = rect->left;
+  const int ypos = rect->top;
+  const int xtab = rect->left;
 
 
   TextIterator itor = pTextDoc->IterateLineByLineNumber(nLineNo, &charoff);
 
-  
+
   auto buff = itor.GetLine();
   size_t len = buff.size();
   std::vector<ATTR> attr;
   attr.resize(len);
-  len = ApplyTextAttributes(nLineNo, charoff, buff.data(), len, attr.data());
+  len = ApplyTextAttributes(nLineNo, charoff, buff, attr);
 
   if (len == 0)
     Sleep(0);
@@ -256,12 +266,15 @@ void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect)
   {
     // if the colour or font changes, then need to output 
     if (i == len ||
-      attr[i].fg != attr[lasti].fg ||
-      attr[i].bg != attr[lasti].bg ||
-      attr[i].style != attr[lasti].style)
+      gsl::at(attr, i).fg != gsl::at(attr, lasti).fg ||
+      gsl::at(attr, i).bg != gsl::at(attr, lasti).bg ||
+      gsl::at(attr, i).style != gsl::at(attr, lasti).style)
     {
-      xpos += BaTextOut(hdc, xpos, ypos, buff.data() + lasti, i - lasti, xtab, &attr[lasti]);
-
+      if (i - lasti != 0)
+      {
+        const auto buffSpan = gsl::make_span(buff).subspan(lasti, i - lasti);
+        xpos += BaTextOut(hdc, xpos, ypos, buffSpan, xtab, gsl::at(attr, lasti));
+      }
       lasti = i;
     }
   }
@@ -273,15 +286,15 @@ void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect)
   //
   rect->left = xpos;
   SetBkColor(hdc, GetColour(TXC_BACKGROUND));
-  ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, rect, 0, 0, 0);
+  ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, rect, nullptr, 0, nullptr);
 }
 
 void PaintRect(HDC hdc, int x, int y, int width, int height, COLORREF fill)
 {
-  RECT rect = {x, y, x + width, y + height};
+  const RECT rect = {x, y, x + width, y + height};
 
   fill = SetBkColor(hdc, fill);
-  ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rect, 0, 0, 0);
+  ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rect, nullptr, 0, nullptr);
   SetBkColor(hdc, fill);
 }
 

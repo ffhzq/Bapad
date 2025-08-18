@@ -253,7 +253,7 @@ size_t TextDocument::ByteOffsetToCharOffset(size_t offsetBytes) noexcept
   case CP_TYPE::UTF32:
   case CP_TYPE::UTF32BE:
     // bug! need to implement this. 
-    throw;
+    terminate();
   default:
     break;
   }

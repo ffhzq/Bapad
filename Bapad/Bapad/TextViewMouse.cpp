@@ -22,12 +22,11 @@ LONG TextView::OnMouseActivate(HWND hwndTop, UINT nHitTest, UINT nMessage)
 LONG TextView::OnLButtonDown(UINT nFlags, int mx, int my)
 {
   size_t nLineNo;
-  size_t nCharOff;
   size_t nFileOff;
   LONGLONG   px;
 
   // map the mouse-coordinates to a real file-offset-coordinate
-  MouseCoordToFilePos(mx, my, nLineNo, nCharOff, nFileOff, px);
+  MouseCoordToFilePos(mx, my, nLineNo, nFileOff, px);
 
   SetCaretPos(px, (nLineNo - vScrollPos) * lineHeight);
 
@@ -168,7 +167,7 @@ LONG TextView::OnMouseMove(UINT nFlags, int mx, int my)
     }
 
     // get new cursor offset+coordinates
-    MouseCoordToFilePos(mx, my, nLineNo, nCharOff, nFileOff, cx);
+    MouseCoordToFilePos(mx, my, nLineNo, nFileOff, cx);
 
     // update the region of text that has changed selection state
     if (selectionEnd != nFileOff)
@@ -195,23 +194,23 @@ LONG TextView::OnMouseMove(UINT nFlags, int mx, int my)
 //	fonts introduced by syntax highlighting
 //
 BOOL TextView::MouseCoordToFilePos(
-  LONGLONG mx, LONGLONG my,
+  // [in]  mouse x-coord 
+  LONGLONG mx, 
 
-  // [in]  mouse x-coord
+  // [in]mouse y - coord
+  LONGLONG my,
+  // [out] line number
   size_t& pnLineNo,
 
-  // [out] line number
-  size_t& pnCharOffset,
+  // [out] char-offset from 0
+  size_t& pfnFileOffset,
 
-  // [out] char-offset from start of line
-  size_t& pfnFileOffset, LONGLONG& px				// [out] adjusted x coord of caret
+  // [out] adjusted x coord of caret
+  LONGLONG& px
 )
 {
   size_t nLineNo;
-
   size_t charOff = 0;
-  size_t fileoff = 0;
-
   size_t  len;
   LONGLONG  curx = 0;
   RECT  rect;
@@ -227,30 +226,27 @@ BOOL TextView::MouseCoordToFilePos(
   if (mx >= rect.right) mx = rect.right - 1;
 
 
-  nLineNo = static_cast<size_t>((my / lineHeight)) + vScrollPos;
+  nLineNo = gsl::narrow_cast<size_t>((my / lineHeight)) + vScrollPos;
 
   // make sure we don't go outside of the document
   if (nLineNo >= lineCount)
   {
     nLineNo = lineCount ? lineCount - 1 : 0;
-    fileoff = pTextDoc->GetDocLength();
+    charOff = pTextDoc->GetDocLength();
   }
 
   HDC    hdc = GetDC(hWnd);
-  HANDLE hOldFont = SelectObject(hdc, fontAttr[0].hFont);
-
-  pnCharOffset = 0;
+  HANDLE hOldFont = SelectObject(hdc, gsl::at(fontAttr,0).hFont);
 
   mx += hScrollPos * fontWidth;
 
   TextIterator itor = pTextDoc->IterateLineByLineNumber(nLineNo, &charOff);
-  // character offset within the line is more complicated. We have to 
-  // parse the text.
+  
   auto buf = itor.GetLine();
   len = buf.size();
   if (len > 0)
   {
-    // len = StripCRLF(buf.data(), len);
+    len = StripCRLF(buf, true);
 
     // find it's width
     int width = BaTextWidth(hdc, buf.data(), len, -(curx % TabWidth()));
@@ -265,7 +261,7 @@ BOOL TextView::MouseCoordToFilePos(
 
       while (low < high - 1)
       {
-        LONGLONG newlen = (high - low) / 2;
+        const LONGLONG newlen = (high - low) / 2;
 
         width = BaTextWidth(hdc, buf.data() + low, newlen, -lowx - curx);
 
@@ -292,8 +288,6 @@ BOOL TextView::MouseCoordToFilePos(
         curx += lowx;
         charOff += low;
       }
-
-      //break;
     }
     else
     {
@@ -307,9 +301,8 @@ BOOL TextView::MouseCoordToFilePos(
 
 
   pnLineNo = nLineNo;
-  pfnFileOffset = charOff;//fileoff + pnCharOffset;
-  px = curx - static_cast<LONGLONG>(hScrollPos) * static_cast<LONGLONG>(fontWidth);
-  //px += LeftMarginWidth();
+  pfnFileOffset = charOff;
+  px = curx - gsl::narrow_cast<LONGLONG>(hScrollPos) * static_cast<LONGLONG>(fontWidth);
   return 0;
 }
 
