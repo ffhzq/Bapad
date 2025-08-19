@@ -2,10 +2,10 @@
 #include "pch.h"
 
 struct Buffer {
-  std::vector<unsigned char> value;
+  std::vector<wchar_t> value;
   std::vector<size_t> lineStarts;
   Buffer() noexcept;
-  Buffer(std::vector<unsigned char> input);
+  Buffer(std::vector<wchar_t> input);
 };
 
 struct BufferPosition {
@@ -82,7 +82,7 @@ public:
   size_t length;
 
   PieceTree() noexcept;
-  PieceTree(std::vector<unsigned char> input);
+  PieceTree(std::vector<wchar_t> input);
   ~PieceTree() noexcept = default;
 
 
@@ -91,7 +91,7 @@ public:
   PieceTree(PieceTree&&) = default;
   PieceTree& operator=(PieceTree&&) = default;
 
-  void Init(const std::vector<unsigned char>& input)
+  void Init(const std::vector<wchar_t>& input)
   {
       buffers.push_back(Buffer());
       rootNode = std::make_unique<TreeNode>();
@@ -111,18 +111,18 @@ public:
       length += piece.length;
       lineCount += piece.lineFeedCnt;
   }
-  bool InsertText(size_t offset, std::vector<unsigned char> input);
+  bool InsertText(size_t offset, std::vector<wchar_t> input);
   bool EraseText(size_t offset, size_t erase_length);
-  bool ReplaceText(size_t offset, std::vector<unsigned char> input, size_t erase_length);
+  bool ReplaceText(size_t offset, std::vector<wchar_t> input, size_t erase_length);
 
   // use (TreeNode*, inPieceOffset) locate the insertion position.
   NodePosition GetNodePositionAt(TreeNode* node, size_t offset) noexcept;
   NodePosition GetNodePosition(size_t offset) noexcept;
   size_t offsetInBuffer(size_t bufferIndex, BufferPosition pos);
   TreeNode* SplitPiece(TreeNode* currNode, const size_t inPieceOffset);
-  std::vector<unsigned char> GetTextAt(TreeNode* node, size_t offset, size_t text_length) noexcept;
-  std::vector<unsigned char> GetText(size_t offset, size_t text_length) noexcept;
-  std::vector<unsigned char> GetLine(size_t lineNumber, const size_t endOffset = 0, size_t* retValStartOffset = nullptr);
+  std::vector<wchar_t> GetTextAt(TreeNode* node, size_t offset, size_t text_length);
+  std::vector<wchar_t> GetText(size_t offset, size_t text_length);
+  std::vector<wchar_t> GetLine(size_t lineNumber, const size_t endOffset, size_t * retValStartOffset);
   void ShrinkPiece(TreeNode* current_node, size_t shrink_to_right, size_t shrink_to_left);
 
   void UpdateMetadata() const noexcept;
@@ -130,6 +130,6 @@ public:
   size_t getAccumulatedValue(const TreeNode* node, size_t index);
 };
 
-std::vector<size_t> createLineStarts(const std::vector<unsigned char>& str);
+std::vector<size_t> createLineStarts(const std::vector<wchar_t>& str);
 size_t GetLineIndexFromNodePosistion(const std::vector<size_t>& lineStarts, NodePosition nodePos);
 

@@ -31,20 +31,14 @@ public:
 
 private:
 
-  // GetText: read 'lenBytes'or'bufLen'(use the smaller one) bytes wchar from the position (docBuffer+offset) to 'buf'
-  size_t  GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t& bufLen);
 
   // return processed raw charcount
   size_t  RawDataToUTF16(unsigned char* rawdata, size_t rawlen, wchar_t* utf16str, size_t& utf16len);
   // return processed UTF16 charcount
   size_t  UTF16ToRawData(wchar_t* utf16Str, size_t utf16Len, unsigned char* rawData, size_t& rawLen);
 
-  size_t	InsertTextRaw(size_t offsetBytes, wchar_t* text, size_t textLength);
-  size_t	ReplaceTextRaw(size_t offsetBytes, wchar_t* text, size_t textLength, size_t eraseLen);
-  size_t	EraseTextRaw(size_t offsetBytes, size_t textLength);
-
-  size_t CharOffsetToByteOffsetAt(const size_t startOffsetBytes, const size_t charCount);
-  size_t ByteOffsetToCharOffset(size_t offsetBytes) noexcept;
+  size_t CharOffsetToIndexOffsetAt(const size_t startOffset, const size_t charCount) noexcept;
+  size_t IndexOffsetToCharOffset(size_t offset) noexcept;
 
   size_t CountByteAnsi(const size_t startByteOffset, const size_t charCount) noexcept;
   size_t CountByteUtf8(const size_t startByteOffset, const size_t charCount) noexcept;
@@ -62,14 +56,13 @@ private:
 
 class TextIterator {
 private:
-  std::vector<unsigned char> lineContent;
+  std::vector<wchar_t> lineContent;
   TextDocument* textDoc;
-  size_t processedBytes;
 public:
-  TextIterator() noexcept :lineContent(), textDoc(nullptr), processedBytes(0)
+  TextIterator() noexcept :lineContent(), textDoc(nullptr)
   {}
-  TextIterator(const std::vector<unsigned char>& lineContent, TextDocument* textDoc, const size_t& processedBytes)
-    : lineContent(lineContent), textDoc(textDoc), processedBytes(processedBytes)
+  TextIterator(const std::vector<wchar_t>& lineContent, TextDocument* textDoc)
+    : lineContent(lineContent), textDoc(textDoc)
   {}
   ~TextIterator() noexcept = default;
   TextIterator(const TextIterator&) = default;
@@ -81,7 +74,7 @@ public:
   {
     if (textDoc)
     {
-      return RawToUtf16(lineContent, textDoc->GetFileFormat());
+      return lineContent;
     }
     return std::vector<wchar_t>();
   }

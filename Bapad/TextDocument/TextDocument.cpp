@@ -41,23 +41,11 @@ bool TextDocument::Initialize(const wchar_t* filename)
   // Detect file format
   fileFormat = DetectFileFormat(read_buffer, headerSize);
   read_buffer.erase(read_buffer.begin(), read_buffer.begin() + headerSize);
-  docBuffer = std::move(PieceTree(read_buffer));
+  auto utf16Text = RawToUtf16(read_buffer, fileFormat);
+  docBuffer = std::move(PieceTree(utf16Text));
 
   ifs.close();
   return true;
-}
-
-size_t TextDocument::GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t& bufLen)
-{
-  auto rawData = docBuffer.GetText(offset, lenBytes);
-  //size_t  len;
-
-  if (offset >= docBuffer.length)
-  {
-    bufLen = 0;
-    return 0;
-  }
-  return RawDataToUTF16(rawData.data(), lenBytes, buf, bufLen);
 }
 
 size_t TextDocument::RawDataToUTF16(unsigned char* rawdata, size_t rawlen, wchar_t* utf16str, size_t& utf16len)
@@ -137,20 +125,20 @@ TextIterator TextDocument::IterateLineByLineNumber(size_t lineno, size_t* linest
 {
   size_t nodeOffset = 0;
   auto retVal = docBuffer.GetLine(lineno + 1, 0, &nodeOffset);
-  const size_t lineStartCharOffset = ByteOffsetToCharOffset(nodeOffset),
-    lineLengthCharOffset = ByteOffsetToCharOffset(nodeOffset + retVal.size()) - lineStartCharOffset;
+  const size_t lineStartCharOffset = IndexOffsetToCharOffset(nodeOffset),
+    lineLengthCharOffset = IndexOffsetToCharOffset(nodeOffset + retVal.size()) - lineStartCharOffset;
 
   if (linestart) *linestart = lineStartCharOffset;
   if (linelen) *linelen = lineLengthCharOffset;
   if (retVal.empty())
     return TextIterator();
-  return TextIterator(retVal, this, 0);
+  return TextIterator(retVal, this);
 }
 
 TextIterator TextDocument::IterateLineByCharOffset(size_t offset_chars, size_t* lineno, size_t* linestart_char)
 {
   if (offset_chars == 0) return TextIterator();
-  const size_t bytes_offset = CharOffsetToByteOffsetAt(0, offset_chars);
+  const size_t bytes_offset = CharOffsetToIndexOffsetAt(0, offset_chars);
 
   const auto node_pos = docBuffer.GetNodePosition(bytes_offset);
   const TreeNode* node = node_pos.node;
@@ -168,101 +156,63 @@ TextIterator TextDocument::IterateLineByCharOffset(size_t offset_chars, size_t* 
   size_t lineStartByteOffset = 0;
   auto lineContent = docBuffer.GetLine(lineNumber + 1, 0, &lineStartByteOffset);
   if (lineno) *lineno = lineNumber;
-  if (linestart_char) *linestart_char = ByteOffsetToCharOffset(lineStartByteOffset);
+  if (linestart_char) *linestart_char = IndexOffsetToCharOffset(lineStartByteOffset);
 
 
-  return TextIterator(lineContent, this, 0);
+  return TextIterator(lineContent, this);
 }
-
 
 size_t TextDocument::InsertText(size_t offsetChars, wchar_t* text, size_t length)
 {
-  const size_t offsetBytes = CharOffsetToByteOffsetAt(0, offsetChars);
-  return InsertTextRaw(offsetBytes, text, length);
+  const size_t offsetBytes = CharOffsetToIndexOffsetAt(0, offsetChars);
+  const gsl::span<wchar_t> textSpan(text, length);
+  std::vector<wchar_t> textVec(textSpan.begin(), textSpan.end());
+  if (length)
+  {
+    docBuffer.InsertText(offsetBytes, textVec);
+    return textVec.size();
+  }
+  return 0;
 }
+
 size_t TextDocument::ReplaceText(size_t offsetChars, wchar_t* text, size_t length, size_t eraseLen)
 {
-  const size_t offsetBytes = CharOffsetToByteOffsetAt(0, offsetChars);
-  return ReplaceTextRaw(offsetBytes, text, length, eraseLen);
+  const size_t offsetBytes = CharOffsetToIndexOffsetAt(0, offsetChars);
+  const size_t eraseBytes = CharOffsetToIndexOffsetAt(offsetBytes, eraseLen);
+  const gsl::span<wchar_t> textSpan(text, length);
+  std::vector<wchar_t> textVec(textSpan.begin(), textSpan.end());
+  if (length)
+  {
+    docBuffer.ReplaceText(offsetBytes, textVec, eraseBytes);
+    return textVec.size();
+  }
+  return 0;
 }
+
 size_t TextDocument::EraseText(size_t offsetChars, size_t length)
 {
-  const size_t offsetBytes = CharOffsetToByteOffsetAt(0, offsetChars);
-  return EraseTextRaw(offsetBytes, length);
-}
-
-size_t TextDocument::InsertTextRaw(size_t offsetBytes, wchar_t* text, size_t textLength)
-{
-  const gsl::span<wchar_t> textSpan(text, textLength);
-  std::vector<wchar_t> textVec(textSpan.begin(),textSpan.end());
-  if (textLength)
+  const size_t offset = CharOffsetToIndexOffsetAt(0, offsetChars);
+  const size_t eraseLength = CharOffsetToIndexOffsetAt(offset, length);
+  if (docBuffer.EraseText(offset, eraseLength))
   {
-    auto rawText = Utf16toRaw(textVec, this->fileFormat);
-    docBuffer.InsertText(offsetBytes, rawText);
-    return rawText.size();
-  }
-  return 0;
-
-}
-size_t TextDocument::ReplaceTextRaw(size_t offsetBytes, wchar_t* text, size_t textLength, size_t eraseLen)
-{
-  const size_t eraseBytes = CharOffsetToByteOffsetAt(offsetBytes, eraseLen);
-  const gsl::span<wchar_t> textSpan(text, textLength);
-  std::vector<wchar_t> textVec(textSpan.begin(), textSpan.end());
-  if (textLength)
-  {
-    auto rawText = Utf16toRaw(textVec, this->fileFormat);
-    docBuffer.ReplaceText(offsetBytes, rawText, eraseBytes);
-    return rawText.size();
-  }
-  return 0;
-}
-size_t TextDocument::EraseTextRaw(size_t offsetBytes, size_t textLength)
-{
-  const size_t eraseBytes = CharOffsetToByteOffsetAt(offsetBytes, textLength);
-  if (docBuffer.EraseText(offsetBytes, eraseBytes))
-  {
-    return textLength;
+    return length;
   }
   return 0;
 }
 
-size_t TextDocument::CharOffsetToByteOffsetAt(const size_t startOffsetBytes, const size_t charCount)
+size_t TextDocument::CharOffsetToIndexOffsetAt(const size_t startOffset, const size_t charCount) noexcept
 {
-  switch (fileFormat)
-  {
-  case CP_TYPE::UTF16:case CP_TYPE::UTF16BE:
-    return charCount * sizeof(wchar_t);
-  case CP_TYPE::UTF32:
-  case CP_TYPE::UTF32BE:
-    throw;
-  default:
-    break;
-  }
-  // case UTF-8 / ANSI
-  return CountByte(startOffsetBytes, charCount);
-
+  // todo: utf16 char maybe 1 or 2 wchar_t long.
+  return charCount * sizeof(wchar_t);
 }
-size_t TextDocument::ByteOffsetToCharOffset(size_t offsetBytes) noexcept
+size_t TextDocument::IndexOffsetToCharOffset(size_t offset) noexcept
 {
-  switch (fileFormat)
-  {
-  case CP_TYPE::UTF16:
-  case CP_TYPE::UTF16BE:
-    return offsetBytes / sizeof(wchar_t);
-  case CP_TYPE::UTF32:
-  case CP_TYPE::UTF32BE:
-    // bug! need to implement this. 
-    terminate();
-  default:
-    break;
-  }
-  return CountChar(offsetBytes);
-
+  // todo: utf16 char maybe 1 or 2 wchar_t long.
+  return offset / sizeof(wchar_t);
 }
 size_t TextDocument::CountByteAnsi(const size_t startByteOffset, const size_t charCount) noexcept
 {
-  auto rawText = docBuffer.GetText(startByteOffset, docBuffer.length - startByteOffset); // todo: iterate text piece by piece
+  std::vector<unsigned char> rawText; //docBuffer.GetText(startByteOffset, docBuffer.length - startByteOffset); // todo: iterate text piece by piece
   const gsl::span<unsigned char> textSpan(rawText);
   size_t currentCharCount = 0;
   size_t byteOffset = 0;
@@ -276,7 +226,7 @@ size_t TextDocument::CountByteAnsi(const size_t startByteOffset, const size_t ch
 }
 size_t TextDocument::CountByteUtf8(const size_t startByteOffset, const size_t charCount) noexcept
 {
-  auto rawText = docBuffer.GetText(startByteOffset, docBuffer.length - startByteOffset); // todo: iterate text piece by piece
+  std::vector<unsigned char> rawText;// = docBuffer.GetText(startByteOffset, docBuffer.length - startByteOffset); // todo: iterate text piece by piece
   const gsl::span<unsigned char> textSpan(rawText);
   size_t currentCharCount = 0;
   size_t byteOffset = 0;
@@ -306,7 +256,7 @@ size_t TextDocument::CountByte(const size_t startByteOffset, const size_t charCo
 }
 size_t TextDocument::CountCharAnsi(const size_t byteLength) noexcept
 {
-  auto rawText = docBuffer.GetText(0, byteLength);
+  std::vector<unsigned char> rawText;// = docBuffer.GetText(0, byteLength);
   const gsl::span<unsigned char> textSpan(rawText);
   size_t charCount = 0;
   size_t byteOffset = 0;
@@ -320,7 +270,7 @@ size_t TextDocument::CountCharAnsi(const size_t byteLength) noexcept
 }
 size_t TextDocument::CountCharUtf8(const size_t byteLength) noexcept
 {
-  auto rawText = docBuffer.GetText(0, byteLength);
+  std::vector<unsigned char> rawText;// = docBuffer.GetText(0, byteLength);
   const gsl::span<unsigned char> textSpan(rawText);
   size_t charCount = 0;
   size_t byteOffset = 0;
@@ -353,15 +303,15 @@ bool TextDocument::Clear()
   docBuffer.length = 0;
   docBuffer.lineCount = 1;
   docBuffer.buffers.clear();
-  auto input = std::vector<unsigned char>();
+  auto input = std::vector<wchar_t>();
   docBuffer.Init(input);
   return true;
 }
 
 size_t TextDocument::LineNumFromCharOffset(size_t offset)
 {
-  const auto byteOffset = CharOffsetToByteOffsetAt(0, offset);
-  const auto nodePos = docBuffer.GetNodePosition(byteOffset);
+  const auto indexOffset = CharOffsetToIndexOffsetAt(0, offset);
+  const auto nodePos = docBuffer.GetNodePosition(indexOffset);
   const auto lineIndex = GetLineIndexFromNodePosistion(gsl::at(docBuffer.buffers, nodePos.node->piece.bufferIndex).lineStarts, nodePos);
   const auto lineNumber = nodePos.node->lf_left + (nodePos.node->piece.start.line - lineIndex);
   return lineNumber;
