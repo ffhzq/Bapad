@@ -38,7 +38,7 @@ ULONG TextView::EnterText(WCHAR* inputText, ULONG inputTextLength)
   cursorOffset += inputTextLength;
   selectionStart = selectionEnd = cursorOffset;
   RefreshWindow();
-  Smeg(TRUE);
+  SyncMetrics(TRUE);
   return inputTextLength;
 }
 
@@ -57,9 +57,8 @@ LRESULT TextView::NotifyParent(UINT nNotifyCode, NMHDR* optional)
   return SendMessageW(GetParent(hWnd), WM_NOTIFY, (WPARAM)nCtrlId, (LPARAM)nmptr);
 }
 
-void TextView::Smeg(BOOL fAdvancing)
-{
-  return;
+void TextView::SyncMetrics(BOOL fAdvancing)
+{ 
   lineCount = pTextDoc->GetLineCount();
   UpdateMetrics();
   SetupScrollbars();

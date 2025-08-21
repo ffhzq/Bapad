@@ -270,13 +270,13 @@ std::vector<wchar_t> PieceTree::GetLine(size_t lineNumber, const size_t endOffse
   {
     if (node->piece.lineFeedCnt > lineNumber - 1) // lineContent within this piece
     {
-      const size_t preAccValue = getAccumulatedValue(node, lineNumber - 2);
+      const size_t preAccValue = lineNumber < 2 ? 0 : getAccumulatedValue(node, lineNumber - 2);
       const size_t AccValue = getAccumulatedValue(node, lineNumber - 1);
       const Buffer& buffer = gsl::at(buffers, node->piece.bufferIndex);
       const size_t startOffset = offsetInBuffer(node->piece.bufferIndex, node->piece.start);
       nodeStartOffset += node->size_left;
       const auto& beginItor = buffer.value.begin() + startOffset;
-      if (retValStartOffset)*retValStartOffset = nodeStartOffset;
+      if (retValStartOffset) *retValStartOffset = preAccValue + node->size_left;
       return std::vector<wchar_t>(beginItor + preAccValue, beginItor + AccValue - endOffset);
     }
     else if (node->piece.lineFeedCnt == lineNumber - 1) // lineContent in the last line of this piece.
@@ -285,6 +285,7 @@ std::vector<wchar_t> PieceTree::GetLine(size_t lineNumber, const size_t endOffse
       const Buffer& buffer = gsl::at(buffers, node->piece.bufferIndex);
       const size_t startOffset = offsetInBuffer(node->piece.bufferIndex, node->piece.start);
       const auto& beginItor = buffer.value.begin() + startOffset;
+      if (retValStartOffset) *retValStartOffset = preAccValue + node->size_left;
       retVal = std::vector<wchar_t>(beginItor + preAccValue, beginItor + node->piece.length);
       break;
     }

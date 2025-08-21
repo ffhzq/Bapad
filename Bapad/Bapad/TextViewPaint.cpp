@@ -247,7 +247,7 @@ void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect)
   const int xtab = rect->left;
 
 
-  TextIterator itor = pTextDoc->IterateLineByLineNumber(nLineNo, &charoff);
+  TextIterator itor = pTextDoc->IterateLineByLineNumber(nLineNo, &charoff, nullptr);
 
 
   auto buff = itor.GetLine();

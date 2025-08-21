@@ -49,8 +49,8 @@ private:
     LONGLONG my,
     size_t& pnLineNo,
     size_t& pnFileOffset,
-    LONGLONG& px);
-  ULONG   RepositionCaret();
+    int& px);
+  void  RepositionCaret();
 
 
   COLORREF  GetColour(UINT idx);
@@ -140,11 +140,12 @@ private:
   LONG OnChar(UINT nChar, UINT nFlags);
   ULONG EnterText(WCHAR* inputText, ULONG inputTextLength);
   LRESULT NotifyParent(UINT nNotifyCode, NMHDR* optional = 0);
-  void Smeg(BOOL fAdvancing);
+  void  SyncMetrics(BOOL fAdvancing);
   void  UpdateCaretXY(int xpos, ULONG lineno) noexcept;
   void  UpdateCaretOffset(BOOL fAdvancing);
 };
 
-size_t	StripCRLF(std::vector<wchar_t>& szText, bool fAllow) noexcept;
-void	PaintRect(HDC hdc, int x, int y, int width, int height, COLORREF fill);
-void	DrawCheckedRect(HDC hdc, RECT* rect, COLORREF fg, COLORREF bg);
+size_t  StripCRLF(std::vector<wchar_t>& szText, bool fAllow) noexcept;
+void    PaintRect(HDC hdc, int x, int y, int width, int height, COLORREF fill);
+void    DrawCheckedRect(HDC hdc, RECT* rect, COLORREF fg, COLORREF bg);
+bool    IsKeyPressed(UINT nVirtKey) noexcept;

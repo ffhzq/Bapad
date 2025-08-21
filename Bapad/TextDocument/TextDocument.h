@@ -17,8 +17,8 @@ public:
   bool Clear();
   size_t LineNumFromCharOffset(size_t offset);
 
-  TextIterator IterateLineByLineNumber(size_t lineno, size_t* linestart = nullptr, size_t* linelen = nullptr);
-  TextIterator IterateLineByCharOffset(size_t offset_chars, size_t* lineno = nullptr, size_t* linestart = nullptr);
+  TextIterator IterateLineByLineNumber(size_t lineno, size_t* linestart, size_t* linelen);
+  TextIterator IterateLineByCharOffset(size_t offset_chars, size_t* lineno, size_t* linestart);
 
   size_t	InsertText(size_t offsetChars, wchar_t* text, size_t length);
   size_t	ReplaceText(size_t offsetChars, wchar_t* text, size_t length, size_t eraseLen);

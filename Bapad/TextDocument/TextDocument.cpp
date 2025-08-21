@@ -203,12 +203,12 @@ size_t TextDocument::EraseText(size_t offsetChars, size_t length)
 size_t TextDocument::CharOffsetToIndexOffsetAt(const size_t startOffset, const size_t charCount) noexcept
 {
   // todo: utf16 char maybe 1 or 2 wchar_t long.
-  return charCount * sizeof(wchar_t);
+  return charCount;
 }
 size_t TextDocument::IndexOffsetToCharOffset(size_t offset) noexcept
 {
   // todo: utf16 char maybe 1 or 2 wchar_t long.
-  return offset / sizeof(wchar_t);
+  return offset;
 }
 size_t TextDocument::CountByteAnsi(const size_t startByteOffset, const size_t charCount) noexcept
 {
