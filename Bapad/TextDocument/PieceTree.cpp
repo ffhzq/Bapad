@@ -12,13 +12,13 @@ enum class CharCode {
   CarriageReturn = 13,
 };
 
-PieceTree::PieceTree() noexcept : buffers{}, rootNode(), length(0), lineCount(1)
+PieceTree::PieceTree() noexcept : buffers{}, rootNode(), _lastChangeBufferPos(), length(0), lineCount(1)
 {
   auto input = std::vector<wchar_t>();
   Init(input);
 }
 
-PieceTree::PieceTree(std::vector<wchar_t> input) : buffers{}, rootNode(), length(0), lineCount(1)
+PieceTree::PieceTree(std::vector<wchar_t> input) : buffers{}, rootNode(), _lastChangeBufferPos(), length(0), lineCount(1)
 {
   Init(input);
 }
@@ -26,13 +26,14 @@ PieceTree::PieceTree(std::vector<wchar_t> input) : buffers{}, rootNode(), length
 
 bool PieceTree::InsertText(size_t offset, std::vector<wchar_t> input)
 {
-    if (offset > this->length)
+  if (offset > this->length)
   {
     return false;
   }
   NodePosition node_pos = GetNodePosition(offset);
   const size_t pieceOffset = node_pos.in_piece_offset;
   TreeNode* nodePos = node_pos.node;
+  const Piece& posPiece = nodePos->piece;
   auto& buffer = gsl::at(buffers, 0);
   const size_t start_offset = buffer.value.size();
   buffer.value.insert(buffer.value.end(), input.begin(), input.end());
@@ -41,27 +42,50 @@ bool PieceTree::InsertText(size_t offset, std::vector<wchar_t> input)
   {
     i += start_offset;
   }
+  buffer.lineStarts.insert(buffer.lineStarts.end(), lineStarts.begin() + 1, lineStarts.end());
   if (nodePos)
   {
-    buffer.lineStarts.insert(buffer.lineStarts.end(), lineStarts.begin() + 1, lineStarts.end());
-    if (nodePos && pieceOffset != nodePos->piece.length) // insert inside a piece, split then insert
+    if (nodePos && pieceOffset != posPiece.length) // insert inside a piece, split then insert
     {
-      nodePos = SplitPiece(nodePos, pieceOffset);
+      if (pieceOffset == 0) nodePos = nodePos->left;
+      else
+        nodePos = SplitPiece(nodePos, pieceOffset);
       // then insert new node behind nodePos(node1)
     }
     //insert
-    const size_t offset1 = start_offset, offset2 = offset1 + input.size();
-    const size_t lineIndex1 = GetLineIndexFromNodePosistion(buffer.lineStarts, NodePosition(nodePos, 0)),
-        lineIndex2 = GetLineIndexFromNodePosistion(buffer.lineStarts, NodePosition(nodePos, input.size()));
-    const size_t line_offset1 = offset1 - gsl::at(buffer.lineStarts, lineIndex1),
-      line_offset2 = offset2 - gsl::at(buffer.lineStarts, lineIndex1);
+
+    if (posPiece.bufferIndex == 0 &&
+      posPiece.end.line == _lastChangeBufferPos.line &&
+      posPiece.end.column == _lastChangeBufferPos.column &&
+      offset == posPiece.length + nodePos->size_left)
+    { // append to piece
+      // appendToNode(nodePos, input);
+      const size_t endIndex = buffer.lineStarts.size() - 1,
+        endColumn = buffer.value.size() - gsl::at(buffer.lineStarts, endIndex);
+      const BufferPosition newEnd{ endIndex,endColumn };
+      const size_t newLength = posPiece.length + input.size();
+      const size_t newLfCount = posPiece.lineFeedCnt + lineStarts.size() - 1;
+      nodePos->piece.end = newEnd;
+      nodePos->piece.length = newLength;
+      nodePos->piece.lineFeedCnt = newLfCount;
+      _lastChangeBufferPos = newEnd;
+      length += input.size();
+      lineCount += lineStarts.size() - 1;
+      UpdateMetadata();
+      return true;
+    }
+
+
+    const BufferPosition start = _lastChangeBufferPos;
     const Piece piece{
-      BufferPosition(lineIndex1,line_offset1), // startPos
-      BufferPosition(lineIndex2,line_offset2),
+      start, // startPos
+      BufferPosition(buffer.lineStarts.size() - 1, // endPos
+        buffer.value.size() - buffer.lineStarts.back()),
       0, // BufferIndex
       input.size(), // length
-      lineStarts.size() - 1}; // lineCount
-
+      lineStarts.size() - 1 }; // lineCount
+    _lastChangeBufferPos = piece.end;
+    if (nodePos == rootNode.get()) nodePos = rootNode->right.get();
     auto NewNode = std::make_unique<TreeNode>(piece, nodePos);
     if (nodePos->right == nullptr)
     {
@@ -77,17 +101,16 @@ bool PieceTree::InsertText(size_t offset, std::vector<wchar_t> input)
     length += piece.length;
     lineCount += piece.lineFeedCnt;
   }
-  else
+  else // if piece table empty
   {
-    buffer.lineStarts.insert(buffer.lineStarts.end(), lineStarts.begin() + 1, lineStarts.end());
     const Piece piece{
       BufferPosition(buffer.lineStarts.size() - lineStarts.size(), 0), // startPos
       BufferPosition(buffer.lineStarts.size() - 1, // endPos
        buffer.value.size() - lineStarts.back()),
       0, // BufferIndex
       input.size(), // length
-      lineStarts.size() - 1}; // linefeed
-
+      lineStarts.size() - 1 }; // linefeed
+    _lastChangeBufferPos = piece.end;
     rootNode.get()->right = std::make_unique<TreeNode>(piece, rootNode.get());
     length = piece.length;
     lineCount = piece.lineFeedCnt + 1;
@@ -120,11 +143,8 @@ bool PieceTree::EraseText(size_t offset, size_t erase_length)
       in_piece_offset_start = 0;
     }
 
-    const Piece& piece = current_node->piece;
-    const Buffer& buffer = gsl::at(buffers, piece.bufferIndex);
-    const auto& buffer_value = buffer.value;
     const size_t remain_bytes_to_be_erased = erase_length - bytes_erased;
-    const size_t available_bytes_in_piece = piece.length - in_piece_offset_start;
+    const size_t available_bytes_in_piece = current_node->piece.length - in_piece_offset_start;
     const size_t bytes_to_be_erased = (std::min)(available_bytes_in_piece, remain_bytes_to_be_erased);
     if (available_bytes_in_piece == 0) continue;
     ShrinkPiece(current_node, bytes_to_be_erased, 0);
@@ -144,7 +164,7 @@ bool PieceTree::EraseText(size_t offset, size_t erase_length)
 
 bool PieceTree::ReplaceText(size_t offset, std::vector<wchar_t> input, size_t erase_length)
 {
-    if (EraseText(offset, erase_length) == false)
+  if (EraseText(offset, erase_length) == false)
   {
     return false;
   }
@@ -187,7 +207,7 @@ TreeNode* PieceTree::SplitPiece(TreeNode* currNode, const size_t inPieceOffset)
   Piece& current_piece = currNode->piece;
 
   const size_t lineIndex = GetLineIndexFromNodePosistion(currBuffer.lineStarts, NodePosition(currNode, inPieceOffset));
-  current_piece.end = BufferPosition{lineIndex, inPieceOffset - gsl::at(currBuffer.lineStarts,lineIndex)};
+  current_piece.end = BufferPosition{ lineIndex, inPieceOffset - gsl::at(currBuffer.lineStarts,lineIndex) };
   current_piece.length = inPieceOffset;
   current_piece.lineFeedCnt = lineIndex;
   Piece p2;
@@ -281,7 +301,7 @@ std::vector<wchar_t> PieceTree::GetLine(size_t lineNumber, const size_t endOffse
     }
     else if (node->piece.lineFeedCnt == lineNumber - 1) // lineContent in the last line of this piece.
     {
-      const size_t preAccValue = getAccumulatedValue(node, lineNumber - 2);
+      const size_t preAccValue = lineNumber < 2 ? 0 : getAccumulatedValue(node, lineNumber - 2);
       const Buffer& buffer = gsl::at(buffers, node->piece.bufferIndex);
       const size_t startOffset = offsetInBuffer(node->piece.bufferIndex, node->piece.start);
       const auto& beginItor = buffer.value.begin() + startOffset;
@@ -389,7 +409,7 @@ size_t PieceTree::getAccumulatedValue(const TreeNode* node, size_t index)
 
 std::vector<size_t> createLineStarts(const std::vector<wchar_t>& str)
 {
-  std::vector<size_t> lineStarts{0}; // first line starts in 0.
+  std::vector<size_t> lineStarts{ 0 }; // first line starts in 0.
   const size_t length = str.size();
   for (size_t i = 0; i < length; ++i)
   {
@@ -441,8 +461,10 @@ size_t GetLineIndexFromNodePosistion(const std::vector<size_t>& lineStarts, Node
 }
 
 
-Buffer::Buffer() noexcept : value(), lineStarts{0}
-{}
+Buffer::Buffer() noexcept : value(), lineStarts{ 0 }
+{
+}
 
 Buffer::Buffer(std::vector<wchar_t> input) : value(input), lineStarts(createLineStarts(value))
-{}
+{
+}

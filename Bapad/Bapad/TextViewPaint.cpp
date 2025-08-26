@@ -8,20 +8,19 @@ size_t TextView::ApplyTextAttributes(size_t nLineNo, size_t nOffset, std::vector
 {
   size_t font = nLineNo % fontAttr.size();
   const COLORREF fg = RGB(rand() % 200, rand() % 200, rand() % 200);
-  const int nTextLen = szText.size();
+  const size_t nTextLen = szText.size();
   assert(nTextLen == attr.size());
   if (attr.empty() || szText.empty())
   {
     return 0;
   }
-  int i;
 
   const size_t selstart = (std::min)(selectionStart, selectionEnd);
   const size_t selend = (std::max)(selectionStart, selectionEnd);
 
 
 
-  for (i = 0; i < nTextLen; i++)
+  for (size_t i = 0; i < nTextLen; i++)
   {
     // apply highlight colours 
     if (nOffset + i >= selstart && nOffset + i < selend)
@@ -71,7 +70,7 @@ size_t StripCRLF(std::vector<wchar_t>& szText, bool fAllow) noexcept
     if (gsl::at(szText, nLength - 2) == '\r' && gsl::at(szText, nLength - 1) == '\n')
     {
       gsl::at(szText, nLength - 2) = ' ';
-      nLength = nLength - (size_t(1) + static_cast<int>(fAllow));
+      nLength = nLength - (size_t{ 1 } + static_cast<int>(fAllow));
       return nLength;
     }
   }

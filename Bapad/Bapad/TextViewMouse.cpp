@@ -52,17 +52,8 @@ LONG TextView::OnLButtonDown(UINT nFlags, int mx, int my)
 //
 LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
 {
-  size_t start = min(nStart, nFinish);
-  size_t finish = max(nStart, nFinish);
-
-  LONGLONG  xpos1 = 0, xpos2 = 0;
-  LONGLONG  ypos = 0;
-
-
-
-  RECT client = {0};
-  RECT  rect = {};
-
+  size_t start = (std::min)(nStart, nFinish);
+  const size_t finish = (std::max)(nStart, nFinish);
 
   // nothing to do?
   if (start == finish)
@@ -91,7 +82,9 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
   if (!itor || start >= finish)
     return 0;
 
-  ypos = (lineNo - vScrollPos) * lineHeight;
+  LONGLONG ypos = (lineNo - vScrollPos) * lineHeight;
+  RECT  rect = { 0 };
+  RECT client = { 0 };
   GetClientRect(hWnd, &client);
 
   while (itor && offChars < finish)
@@ -140,11 +133,10 @@ LONG TextView::OnMouseMove(UINT nFlags, int mx, int my)
 {
   if (mouseDown)
   {
-    size_t	nLineNo, nCharOff, nFileOff;
+    size_t	nLineNo, nFileOff;
     RECT	rect;
-    POINT	pt = {mx, my};
+    const POINT	pt = {mx, my};
     // caret coordinates
-    LONGLONG		cx;
 
     // get the non-scrolling area (an even no. of lines)
     GetClientRect(hWnd, &rect);
@@ -166,7 +158,7 @@ LONG TextView::OnMouseMove(UINT nFlags, int mx, int my)
       if (scrollTimer == 0)
       {
         scrollCounter = 0;
-        scrollTimer = SetTimer(hWnd, 1, 10, 0);
+        scrollTimer = SetTimer(hWnd, 1, 30, nullptr);
       }
     }
 
@@ -174,8 +166,9 @@ LONG TextView::OnMouseMove(UINT nFlags, int mx, int my)
     MouseCoordToFilePos(mx, my, nLineNo, nFileOff, caretPosX);
     anchorPosX = caretPosX;
     currentLine = nLineNo;
+    //caretPosX = mx + hScrollPos * fontWidth;
     // update the region of text that has changed selection state
-    if (selectionEnd != nFileOff)
+    //if (selectionEnd != nFileOff)
     {
       // redraw from old selection-pos to new position
       InvalidateRange(selectionEnd, nFileOff);
@@ -184,6 +177,8 @@ LONG TextView::OnMouseMove(UINT nFlags, int mx, int my)
       selectionEnd = nFileOff;
       cursorOffset = nFileOff;
     }
+
+    RefreshWindow();
     // always set the caret position because we might be scrolling
     UpdateCaretXY(caretPosX, currentLine);
   }

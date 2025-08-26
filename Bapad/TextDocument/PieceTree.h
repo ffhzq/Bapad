@@ -78,9 +78,10 @@ public:
   std::unique_ptr<TreeNode> rootNode;
   std::stack<EditAction> undoStack;
   std::stack<EditAction> redoStack;
+  BufferPosition _lastChangeBufferPos;
   size_t lineCount;
   size_t length;
-
+  
   PieceTree() noexcept;
   PieceTree(std::vector<wchar_t> input);
   ~PieceTree() noexcept = default;

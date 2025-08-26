@@ -36,14 +36,14 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
     }
 
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_BAPAD));
+    HACCEL hAccelTable = LoadAcceleratorsW(hInstance, MAKEINTRESOURCE(IDC_BAPAD));
 
     MSG msg;
 
     // Main message loop:
-    while (GetMessage(&msg, nullptr, 0, 0))
+    while (GetMessageW(&msg, nullptr, 0, 0))
     {
-        if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
+        if (!TranslateAcceleratorW(msg.hwnd, hAccelTable, &msg))
         {
             TranslateMessage(&msg);
             DispatchMessageW(&msg);
@@ -100,7 +100,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
 
     default:
-        return DefWindowProc(hWnd, message, wParam, lParam);
+        return DefWindowProcW(hWnd, message, wParam, lParam);
     }
     return 0;
 }
@@ -202,7 +202,7 @@ void SetWindowFileName(HWND hwnd, wchar_t* szFileName)
 {
     wchar_t ach[MAX_PATH + sizeof(CLASS_NAME) + 4];
 
-    wsprintf(ach, _T("%s - %s"), szFileName, CLASS_NAME);
+    wsprintfW(ach, _T("%s - %s"), szFileName, CLASS_NAME);
     SetWindowTextW(hwnd, ach);
 }
 

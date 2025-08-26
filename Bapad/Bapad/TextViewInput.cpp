@@ -19,7 +19,7 @@ LONG TextView::OnChar(UINT nChar, UINT nFlags)
 
 ULONG TextView::EnterText(WCHAR* inputText, ULONG inputTextLength)
 {
-  bool existSelectedText = selectionStart != selectionEnd;
+  const bool existSelectedText = selectionStart != selectionEnd;
 
   //INSERT MODE, TWO STEPS    ;  TODO:READONLY,OVERWRITE
   //

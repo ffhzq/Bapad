@@ -18,7 +18,7 @@ public:
   size_t LineNumFromCharOffset(size_t offset);
 
   TextIterator IterateLineByLineNumber(size_t lineno, size_t* linestart, size_t* linelen);
-  TextIterator IterateLineByCharOffset(size_t offset_chars, size_t* lineno, size_t* linestart);
+  TextIterator IterateLineByCharOffset(size_t charOffset, size_t* lineno, size_t* linestart);
 
   size_t	InsertText(size_t offsetChars, wchar_t* text, size_t length);
   size_t	ReplaceText(size_t offsetChars, wchar_t* text, size_t length, size_t eraseLen);
@@ -30,12 +30,6 @@ public:
   const size_t GetDocLength() const noexcept;
 
 private:
-
-
-  // return processed raw charcount
-  size_t  RawDataToUTF16(unsigned char* rawdata, size_t rawlen, wchar_t* utf16str, size_t& utf16len);
-  // return processed UTF16 charcount
-  size_t  UTF16ToRawData(wchar_t* utf16Str, size_t utf16Len, unsigned char* rawData, size_t& rawLen);
 
   size_t CharOffsetToIndexOffsetAt(const size_t startOffset, const size_t charCount) noexcept;
   size_t IndexOffsetToCharOffset(size_t offset) noexcept;
