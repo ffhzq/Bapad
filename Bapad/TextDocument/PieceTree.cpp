@@ -30,10 +30,9 @@ bool PieceTree::InsertText(size_t offset, std::vector<wchar_t> input)
   {
     return false;
   }
-  NodePosition node_pos = GetNodePosition(offset);
-  const size_t pieceOffset = node_pos.in_piece_offset;
-  TreeNode* nodePos = node_pos.node;
-  const Piece& posPiece = nodePos->piece;
+  NodePosition nodePosition = GetNodePosition(offset);
+  const size_t pieceOffset = nodePosition.in_piece_offset;
+  TreeNode* node = nodePosition.node;
   auto& buffer = gsl::at(buffers, 0);
   const size_t start_offset = buffer.value.size();
   buffer.value.insert(buffer.value.end(), input.begin(), input.end());
@@ -43,120 +42,110 @@ bool PieceTree::InsertText(size_t offset, std::vector<wchar_t> input)
     i += start_offset;
   }
   buffer.lineStarts.insert(buffer.lineStarts.end(), lineStarts.begin() + 1, lineStarts.end());
-  if (nodePos)
+  if (node != rootNode.get())
   {
-    if (nodePos && pieceOffset != posPiece.length) // insert inside a piece, split then insert
+    assert(node);
+    if (node && pieceOffset != node->piece.length) // insert inside a piece, split then insert
     {
-      if (pieceOffset == 0) nodePos = nodePos->left;
+      if (pieceOffset == 0) node = node->left;
       else
-        nodePos = SplitPiece(nodePos, pieceOffset);
-      // then insert new node behind nodePos(node1)
+        node = SplitPiece(node, pieceOffset);
     }
-    //insert
+    Piece& piece = node->piece;
 
-    if (posPiece.bufferIndex == 0 &&
-      posPiece.end.line == _lastChangeBufferPos.line &&
-      posPiece.end.column == _lastChangeBufferPos.column &&
-      offset == posPiece.length + nodePos->size_left)
+    if (piece.bufferIndex == 0 &&
+      piece.end.line == _lastChangeBufferPos.line &&
+      piece.end.column == _lastChangeBufferPos.column &&
+      offset == piece.length + node->size_left)
     { // append to piece
       // appendToNode(nodePos, input);
       const size_t endIndex = buffer.lineStarts.size() - 1,
         endColumn = buffer.value.size() - gsl::at(buffer.lineStarts, endIndex);
       const BufferPosition newEnd{ endIndex,endColumn };
-      const size_t newLength = posPiece.length + input.size();
-      const size_t newLfCount = posPiece.lineFeedCnt + lineStarts.size() - 1;
-      nodePos->piece.end = newEnd;
-      nodePos->piece.length = newLength;
-      nodePos->piece.lineFeedCnt = newLfCount;
+      const size_t newLength = piece.length + input.size();
+      const size_t newLfCount = piece.lineFeedCnt + lineStarts.size() - 1;
+      piece.end = newEnd;
+      piece.length = newLength;
+      piece.lineFeedCnt = newLfCount;
       _lastChangeBufferPos = newEnd;
       length += input.size();
       lineCount += lineStarts.size() - 1;
       UpdateMetadata();
       return true;
     }
-
-
-    const BufferPosition start = _lastChangeBufferPos;
-    const Piece piece{
-      start, // startPos
-      BufferPosition(buffer.lineStarts.size() - 1, // endPos
-        buffer.value.size() - buffer.lineStarts.back()),
-      0, // BufferIndex
-      input.size(), // length
-      lineStarts.size() - 1 }; // lineCount
-    _lastChangeBufferPos = piece.end;
-    if (nodePos == rootNode.get()) nodePos = rootNode->right.get();
-    auto NewNode = std::make_unique<TreeNode>(piece, nodePos);
-    if (nodePos->right == nullptr)
-    {
-      NewNode->right = nullptr;
-    }
-    else
-    {
-      NewNode->right = std::move(nodePos->right);
-      NewNode->right->left = NewNode.get();
-    }
-    nodePos->right = std::move(NewNode);
-
-    length += piece.length;
-    lineCount += piece.lineFeedCnt;
   }
-  else // if piece table empty
+
+  const BufferPosition start = _lastChangeBufferPos;
+  const Piece newPiece{
+    start, // startPos
+    BufferPosition(buffer.lineStarts.size() - 1, // endPos
+      buffer.value.size() - buffer.lineStarts.back()),
+    0, // BufferIndex
+    input.size(), // length
+    lineStarts.size() - 1 }; // lineCount
+  _lastChangeBufferPos = newPiece.end;
+  auto newNode = std::make_unique<TreeNode>(newPiece, node);
+  if (node->right == nullptr)
   {
-    const Piece piece{
-      BufferPosition(buffer.lineStarts.size() - lineStarts.size(), 0), // startPos
-      BufferPosition(buffer.lineStarts.size() - 1, // endPos
-       buffer.value.size() - lineStarts.back()),
-      0, // BufferIndex
-      input.size(), // length
-      lineStarts.size() - 1 }; // linefeed
-    _lastChangeBufferPos = piece.end;
-    rootNode.get()->right = std::make_unique<TreeNode>(piece, rootNode.get());
-    length = piece.length;
-    lineCount = piece.lineFeedCnt + 1;
+    newNode->right = nullptr;
   }
+  else
+  {
+    newNode->right = std::move(node->right);
+    newNode->right->left = newNode.get();
+  }
+  node->right = std::move(newNode);
+
+  length += newPiece.length;
+  lineCount += newPiece.lineFeedCnt;
   UpdateMetadata();
   return true;
 }
 
-bool PieceTree::EraseText(size_t offset, size_t erase_length)
+bool PieceTree::EraseText(size_t offset, size_t eraseLength)
 {
-  if (rootNode->right == nullptr || offset + erase_length > length) return false;
-  const size_t original_offset = offset, original_erase_length = erase_length;
+  if (rootNode->right == nullptr || offset + eraseLength > length) return false;
+  const size_t original_offset = offset, original_erase_length = eraseLength;
 
-  NodePosition current_node_pos = GetNodePosition(offset);
-  TreeNode* current_node = current_node_pos.node;
-  size_t in_piece_offset_start = current_node_pos.in_piece_offset;
-  TreeNode* parrent = current_node_pos.node->left;
+  const NodePosition startNodePosition = GetNodePosition(offset);
+  TreeNode* currentNode = startNodePosition.node;
+  if (currentNode == rootNode.get()) currentNode = currentNode->right.get();
+  if (!currentNode) return false;
 
-  if (current_node == rootNode.get() || parrent == nullptr) return false;
-  current_node = parrent;
-  size_t bytes_erased = 0;
-  while (current_node != nullptr && bytes_erased < erase_length)
+  // if erase from middle
+  if (startNodePosition.in_piece_offset != 0)
   {
-    current_node = current_node->right.get();
-    if (in_piece_offset_start != 0) // if erase from middle, then split piece from middle
+    currentNode = SplitPiece(currentNode, startNodePosition.in_piece_offset);
+    currentNode = currentNode->right.get();
+  }
+  TreeNode* parrentNode = currentNode->left;
+  currentNode = parrentNode;
+  size_t bytesErased = 0;
+  while (currentNode != nullptr && bytesErased < eraseLength)
+  {
+    currentNode = currentNode->right.get();
+    if (currentNode->piece.length == 0)
     {
-      current_node = SplitPiece(current_node, in_piece_offset_start);
-      parrent = current_node;
-      current_node = current_node->right.get();
-      in_piece_offset_start = 0;
+      continue;
     }
-
-    const size_t remain_bytes_to_be_erased = erase_length - bytes_erased;
-    const size_t available_bytes_in_piece = current_node->piece.length - in_piece_offset_start;
-    const size_t bytes_to_be_erased = (std::min)(available_bytes_in_piece, remain_bytes_to_be_erased);
-    if (available_bytes_in_piece == 0) continue;
-    ShrinkPiece(current_node, bytes_to_be_erased, 0);
-    bytes_erased += bytes_to_be_erased;
+    const size_t remainBytesToBeErased = eraseLength - bytesErased;
+    const size_t bytesToBeErased = (std::min)(currentNode->piece.length, remainBytesToBeErased);
+    ShrinkPiece(currentNode, bytesToBeErased, 0);
+    bytesErased += bytesToBeErased;
   }
-  if (current_node == nullptr)
-  {
-    parrent->right = nullptr;
+  if (parrentNode) {
+    // delete pieces
+    if (currentNode == nullptr)
+    {
+      parrentNode->right = nullptr;
+    }
+    else
+    {
+      parrentNode->right = currentNode->piece.length == 0 ? std::move(currentNode->right) : std::move(currentNode->left->right);
+    }
   }
-  else
-  {
-    parrent->right = current_node->piece.length == 0 ? std::move(current_node->right) : std::move(current_node->left->right);
+  else {
+    return false;
   }
   UpdateMetadata();
   return true;
@@ -191,7 +180,7 @@ NodePosition PieceTree::GetNodePositionAt(TreeNode* node, size_t offset) noexcep
 
 NodePosition PieceTree::GetNodePosition(size_t offset) noexcept
 {
-  return GetNodePositionAt(rootNode->right.get(), offset);
+  return GetNodePositionAt(rootNode.get(), offset);
 }
 
 size_t PieceTree::offsetInBuffer(size_t bufferIndex, BufferPosition pos)
@@ -206,20 +195,22 @@ TreeNode* PieceTree::SplitPiece(TreeNode* currNode, const size_t inPieceOffset)
   const Piece original_piece = currNode->piece;
   Piece& current_piece = currNode->piece;
 
-  const size_t lineIndex = GetLineIndexFromNodePosistion(currBuffer.lineStarts, NodePosition(currNode, inPieceOffset));
-  current_piece.end = BufferPosition{ lineIndex, inPieceOffset - gsl::at(currBuffer.lineStarts,lineIndex) };
+  const size_t newStartOffset = gsl::at(currBuffer.lineStarts, current_piece.start.line) + current_piece.start.column + inPieceOffset;
+  const size_t newLineIndex = GetLineIndexFromNodePosistion(currBuffer.lineStarts, NodePosition(currNode, newStartOffset));
+  current_piece.end = BufferPosition{ newLineIndex, newStartOffset - gsl::at(currBuffer.lineStarts,newLineIndex) };
   current_piece.length = inPieceOffset;
-  current_piece.lineFeedCnt = lineIndex;
+  current_piece.lineFeedCnt = newLineIndex;
   Piece p2;
   if (inPieceOffset == 0)
   {
+    throw;
     p2 = original_piece;
   }
   else
   {
     const size_t lineIndex2 = GetLineIndexFromNodePosistion(currBuffer.lineStarts, NodePosition(currNode, inPieceOffset));
     p2 = Piece{
-       BufferPosition{lineIndex2, inPieceOffset - gsl::at(currBuffer.lineStarts,lineIndex2)},
+       current_piece.end,
        original_piece.end,
        original_piece.bufferIndex,
        original_piece.length - current_piece.length,
@@ -230,6 +221,7 @@ TreeNode* PieceTree::SplitPiece(TreeNode* currNode, const size_t inPieceOffset)
   Node2->right = std::move(currNode->right);
   if (Node2->right != nullptr) Node2->right->left = Node2.get();
   currNode->right = std::move(Node2);
+  this->UpdateMetadata();
   return currNode;
 }
 

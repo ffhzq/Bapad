@@ -120,6 +120,7 @@ public:
   NodePosition GetNodePositionAt(TreeNode* node, size_t offset) noexcept;
   NodePosition GetNodePosition(size_t offset) noexcept;
   size_t offsetInBuffer(size_t bufferIndex, BufferPosition pos);
+  // Splits into two pieces in inPieceOffset, return the first piece.
   TreeNode* SplitPiece(TreeNode* currNode, const size_t inPieceOffset);
   std::vector<wchar_t> GetTextAt(TreeNode* node, size_t offset, size_t text_length);
   std::vector<wchar_t> GetText(size_t offset, size_t text_length);
