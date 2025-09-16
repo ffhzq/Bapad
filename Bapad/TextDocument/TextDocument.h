@@ -17,12 +17,12 @@ public:
   bool Clear();
   size_t LineNumFromCharOffset(size_t offset);
 
-  TextIterator IterateLineByLineNumber(size_t lineno, size_t* linestart, size_t* linelen);
-  TextIterator IterateLineByCharOffset(size_t charOffset, size_t* lineno, size_t* linestart);
+  TextIterator IterateLineByLineNumber(size_t lineno, size_t* linestartCharOffset, size_t* lineLengthCharOffset);
+  TextIterator IterateLineByCharOffset(size_t charOffset, size_t* lineno, size_t* linestartCharOffset);
 
-  size_t	InsertText(size_t offsetChars, wchar_t* text, size_t length);
-  size_t	ReplaceText(size_t offsetChars, wchar_t* text, size_t length, size_t eraseLen);
-  size_t	EraseText(size_t offsetChars, size_t length);
+  size_t  InsertText(size_t offsetChars, wchar_t* text, size_t length);
+  size_t  ReplaceText(size_t offsetChars, wchar_t* text, size_t length, size_t eraseLen);
+  size_t  EraseText(size_t offsetChars, size_t length);
 
   CP_TYPE GetFileFormat() const noexcept;
   const size_t GetLineCount() const noexcept;

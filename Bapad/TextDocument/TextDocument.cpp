@@ -83,7 +83,7 @@ TextIterator TextDocument::IterateLineByLineNumber(size_t lineno, size_t* linest
   return TextIterator(retVal, this);
 }
 
-TextIterator TextDocument::IterateLineByCharOffset(size_t charOffset, size_t* lineno, size_t* linestart_char)
+TextIterator TextDocument::IterateLineByCharOffset(size_t charOffset, size_t* lineno, size_t* linestartCharOffset)
 {
   if (charOffset == 0) return TextIterator();
   const size_t indexOffset = CharOffsetToIndexOffsetAt(0, charOffset);
@@ -101,7 +101,7 @@ TextIterator TextDocument::IterateLineByCharOffset(size_t charOffset, size_t* li
   size_t lineStartIndexOffset = 0;
   auto lineContent = docBuffer.GetLine(lineNumber + 1, 0, &lineStartIndexOffset);
   if (lineno) *lineno = lineNumber;
-  if (linestart_char) *linestart_char = IndexOffsetToCharOffset(lineStartIndexOffset);
+  if (linestartCharOffset) *linestartCharOffset = IndexOffsetToCharOffset(lineStartIndexOffset);
 
 
   return TextIterator(lineContent, this);

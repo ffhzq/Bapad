@@ -3,17 +3,18 @@
 
 LONG TextView::OnChar(UINT nChar, UINT nFlags)
 {
-  WCHAR ch = (WCHAR)nChar;
-
+  WCHAR ch[2]{ nChar , 0 };
+  int inputLength = 1;
   if (nChar < 32 && nChar != '\t' && nChar != '\r' && nChar != '\n')
     return 0;
   // change CR into a CR/LF sequence
   if (nChar == '\r')
-    PostMessageW(hWnd, WM_CHAR, '\n', 1);
-  if (EnterText(&ch, 1))
   {
-    NotifyParent(TVN_CHANGED);//用于通知文件被修改了
+    ch[1] = '\n';
+    inputLength += 1;
   }
+  if (EnterText(&ch[0], inputLength))
+    NotifyParent(TVN_CHANGED);//用于通知文件被修改了
   return 0;
 }
 
@@ -21,8 +22,7 @@ ULONG TextView::EnterText(WCHAR* inputText, ULONG inputTextLength)
 {
   const bool existSelectedText = selectionStart != selectionEnd;
 
-  //INSERT MODE, TWO STEPS    ;  TODO:READONLY,OVERWRITE
-  //
+
   if (existSelectedText)
   {
     const size_t start = (std::min)(selectionStart, selectionEnd);
@@ -45,7 +45,7 @@ ULONG TextView::EnterText(WCHAR* inputText, ULONG inputTextLength)
 LRESULT TextView::NotifyParent(UINT nNotifyCode, NMHDR* optional)
 {
   UINT  nCtrlId = GetWindowLongW(hWnd, GWL_ID);
-  NMHDR nmhdr = {hWnd, nCtrlId, nNotifyCode};
+  NMHDR nmhdr = { hWnd, nCtrlId, nNotifyCode };
   NMHDR* nmptr = &nmhdr;
 
   if (optional)
@@ -58,12 +58,13 @@ LRESULT TextView::NotifyParent(UINT nNotifyCode, NMHDR* optional)
 }
 
 void TextView::SyncMetrics(BOOL fAdvancing)
-{ 
+{
   lineCount = pTextDoc->GetLineCount();
   UpdateMetrics();
   SetupScrollbars();
 
   UpdateCaretOffset(fAdvancing);
+
   anchorPosX = caretPosX;
   ScrollToPosition(caretPosX, currentLine);
   RepositionCaret();
@@ -72,26 +73,24 @@ void TextView::SyncMetrics(BOOL fAdvancing)
 // reposition caret posiiton based on cursor offset.
 void TextView::UpdateCaretOffset(BOOL fAdvancing)
 {
-  size_t		lineno = 0;
-  size_t		charoff = 0;
-  size_t		offset = 0;
-  LONGLONG	xpos = 0;
-  LONGLONG	ypos = 0;
-  ULONG64		len = 0;
+  size_t  lineno = 0;
+  size_t  charOffset = 0;
+  size_t  offset = 0;
+  LONGLONG  xpos = 0;
+  LONGLONG  ypos = 0;
+  ULONG64 len = 0;
 
   // get start-of-line information from cursor-offset
-  TextIterator itor = pTextDoc->IterateLineByCharOffset(cursorOffset, &lineno, &charoff);
+  TextIterator itor = pTextDoc->IterateLineByCharOffset(cursorOffset, &lineno, &charOffset);
 
   if (!itor)
     return;
-
-  if (fAdvancing && charoff > 0)
+  if (fAdvancing && charOffset > 0)
   {
-    --charoff;
+    --charOffset;
   }
 
 
-  // make sure we are using the right font
   HDC hdc = GetDC(hWnd);
   SelectObject(hdc, gsl::at(fontAttr, 0).hFont);
 
@@ -101,9 +100,9 @@ void TextView::UpdateCaretOffset(BOOL fAdvancing)
   // now find the x-coordinate on the specified line
   auto buf = itor.GetLine();
   len = buf.size();
-  if (len > 0 && charoff < cursorOffset)
+  if (len > 0 && charOffset < cursorOffset)
   {
-    len = (std::min)(cursorOffset - charoff, len);
+    len = (std::min)(cursorOffset - charOffset, len);
     xpos += BaTextWidth(hdc, buf.data(), len, -xpos);
     offset += len;
   }
@@ -115,7 +114,7 @@ void TextView::UpdateCaretOffset(BOOL fAdvancing)
   //xpos += LeftMarginWidth();
 
   caretPosX = xpos;
-
+  UpdateCaretXY(xpos, lineno);
   //SetCaretPos(static_cast<int>(xpos), static_cast<int>(ypos));
 
 
