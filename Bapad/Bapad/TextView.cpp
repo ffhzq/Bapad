@@ -134,7 +134,7 @@ LRESULT WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
     return OnSetFont(reinterpret_cast<HFONT>(wParam));
 
   case WM_SIZE:
-    return OnSize(wParam, LOWORD(lParam), HIWORD(lParam));
+    return OnSize(static_cast<UINT>(wParam), LOWORD(lParam), HIWORD(lParam));
 
   case WM_VSCROLL:
     return OnVScroll(LOWORD(wParam), HIWORD(wParam));
@@ -146,7 +146,7 @@ LRESULT WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
     return OnMouseActivate(reinterpret_cast<HWND>(wParam), LOWORD(lParam), HIWORD(lParam));
 
   case WM_MOUSEWHEEL:
-    return OnMouseWheel(HIWORD(wParam));
+    return OnMouseWheel(static_cast<short>(HIWORD(wParam)));
 
   case WM_SETFOCUS:
     return OnSetFocus(reinterpret_cast<HWND>(wParam));
@@ -155,13 +155,13 @@ LRESULT WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
     return OnKillFocus(reinterpret_cast<HWND>(wParam));
 
   case WM_LBUTTONDOWN:
-    return OnLButtonDown(wParam, LOWORD(lParam), HIWORD(lParam));
+    return OnLButtonDown(wParam, static_cast<short>(LOWORD(lParam)), static_cast<short>(HIWORD(lParam)));
 
   case WM_LBUTTONUP:
-    return OnLButtonUp(wParam, LOWORD(lParam), HIWORD(lParam));
+    return OnLButtonUp(wParam, static_cast<short>(LOWORD(lParam)), static_cast<short>(HIWORD(lParam)));
 
   case WM_MOUSEMOVE:
-    return OnMouseMove(wParam, LOWORD(lParam), HIWORD(lParam));
+    return OnMouseMove(wParam, static_cast<short>(LOWORD(lParam)), static_cast<short>(HIWORD(lParam)));
 
   case WM_TIMER:
     return OnTimer(wParam);
