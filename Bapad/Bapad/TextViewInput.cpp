@@ -74,48 +74,35 @@ void TextView::SyncMetrics(BOOL fAdvancing)
 void TextView::UpdateCaretOffset(BOOL fAdvancing)
 {
   size_t  lineno = 0;
-  size_t  charOffset = 0;
-  size_t  offset = 0;
-  LONGLONG  xpos = 0;
-  LONGLONG  ypos = 0;
-  ULONG64 len = 0;
-
-  // get start-of-line information from cursor-offset
-  TextIterator itor = pTextDoc->IterateLineByCharOffset(cursorOffset, &lineno, &charOffset);
-
+  size_t  linestartCharOffset = 0;
+  TextIterator itor = pTextDoc->IterateLineByCharOffset(cursorOffset, &lineno, &linestartCharOffset);
   if (!itor)
     return;
-  if (fAdvancing && charOffset > 0)
-  {
-    --charOffset;
-  }
-
 
   HDC hdc = GetDC(hWnd);
   SelectObject(hdc, gsl::at(fontAttr, 0).hFont);
-
-  // y-coordinate from line-number
-  ypos = (lineno - vScrollPos) * lineHeight;
-
-  // now find the x-coordinate on the specified line
+  // find the x-coordinate on the specified line
   auto buf = itor.GetLine();
-  len = buf.size();
-  if (len > 0 && charOffset < cursorOffset)
+  size_t len = buf.size();
+  LONGLONG  xpos = 0;
+  if (len > 0 && linestartCharOffset < cursorOffset)
   {
-    len = (std::min)(cursorOffset - charOffset, len);
+    len = (std::min)(cursorOffset - linestartCharOffset, len);
+    if (fAdvancing && len > 0)
+    {
+      --len;
+    }
     xpos += BaTextWidth(hdc, buf.data(), len, -xpos);
-    offset += len;
   }
 
   ReleaseDC(hWnd, hdc);
 
   // take horizontal scrollbar into account
   xpos -= hScrollPos * fontWidth;
-  //xpos += LeftMarginWidth();
 
   caretPosX = xpos;
+  currentLine = lineno;
   UpdateCaretXY(xpos, lineno);
-  //SetCaretPos(static_cast<int>(xpos), static_cast<int>(ypos));
 
 
 }
