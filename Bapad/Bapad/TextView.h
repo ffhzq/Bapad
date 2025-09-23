@@ -17,10 +17,10 @@ public:
   TextView(HWND hwnd);
   ~TextView();
 
-  TextView(const TextView&) = delete;                // copy constructor
-  TextView& operator=(const TextView&) = delete;     // copy assignment
-  TextView(TextView&&) = delete;            // move constructor
-  TextView& operator=(TextView&&) = delete; // move assignment
+  TextView(const TextView&) = delete;
+  TextView& operator=(const TextView&) = delete;
+  TextView(TextView&&) = delete;
+  TextView& operator=(TextView&&) = delete;
 
   LRESULT WINAPI WndProc(UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -133,10 +133,8 @@ private:
   LONG AddFont(HFONT);
   LONG SetFont(HFONT, size_t idx);
   LONG SetLineSpacing(int nAbove, int nBelow);
-  //LONG SetLongLine(int nLength);
   COLORREF SetColour(UINT idx, COLORREF rgbColour);
 
-  //input
   LONG OnChar(UINT nChar, UINT nFlags);
   ULONG EnterText(WCHAR* inputText, ULONG inputTextLength);
   LRESULT NotifyParent(UINT nNotifyCode, NMHDR* optional = 0);

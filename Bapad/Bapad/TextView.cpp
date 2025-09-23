@@ -45,16 +45,11 @@ TextView::TextView(HWND hwnd)
   OnSetFont(hFont);
 
   UpdateMetrics();
-  //SetupScrollbars();
 }
 
-//
-//	Destructor for TextView class
-//
 TextView::~TextView()
 {
   this->pTextDoc.reset(nullptr);
-  //DestroyCursor(m_hMarginCursor);
 }
 
 VOID TextView::UpdateMetrics()
@@ -258,7 +253,8 @@ VOID TextView::UpdateCaretXY(int xpos, ULONG lineno) noexcept
   // set caret position if within window viewport
   if (hideCaret == false)
   {
-    SetCaretPos(xpos, (lineno - vScrollPos) * lineHeight);
+    const int ypos = (lineno - vScrollPos) * lineHeight;
+    SetCaretPos(xpos, ypos);
   }
 
 }

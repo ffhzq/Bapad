@@ -70,7 +70,6 @@ void TextView::SyncMetrics(BOOL fAdvancing)
   RepositionCaret();
 }
 
-// reposition caret posiiton based on cursor offset.
 void TextView::UpdateCaretOffset(BOOL fAdvancing)
 {
   size_t  lineno = 0;

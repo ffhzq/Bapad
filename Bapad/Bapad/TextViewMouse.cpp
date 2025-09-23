@@ -59,10 +59,6 @@ LONG TextView::InvalidateRange(size_t nStart, size_t nFinish)
   if (start == finish)
     return 0;
 
-  //
-  //	Find the line number and character offset of specified file-offset
-  //
-
   size_t lineNo = pTextDoc->LineNumFromCharOffset(start);
   size_t offChars = 0, lenChars = 0;
 
@@ -348,39 +344,18 @@ LONG TextView::OnTimer(UINT nTimerId)
   //
   if (hrgnUpdate != nullptr)
   {
-    // We perform a "fake" WM_MOUSEMOVE for two reasons:
-    //
-    // 1. To get the cursor/caret/selection offsets set to the correct place
-    //    *before* we redraw (so everything is synchronized correctly)
-    //
-    // 2. To invalidate any areas due to mouse-movement which won't
-    //    get done until the next WM_MOUSEMOVE - and then it would
-    //    be too late because we need to redraw *now*
-    //
     OnMouseMove(0, pt.x, pt.y);
 
-    // invalidate the area returned by ScrollRegion
     InvalidateRgn(hWnd, hrgnUpdate, FALSE);
     DeleteObject(hrgnUpdate);
 
-    // the next time we process WM_PAINT everything 
-    // should get drawn correctly!!
     UpdateWindow(hWnd);
   }
-
-  // keep track of how many WM_TIMERs we process because
-  // we might want to skip the next one
   scrollCounter++;
 
   return 0;
 }
 
-
-//
-//	Set the caret position based on m_nCursorOffset,
-//	typically used whilst scrolling 
-//	(i.e. not due to mouse clicks/keyboard input)
-//
 void TextView::RepositionCaret()
 {
   UpdateCaretXY(caretPosX, currentLine);

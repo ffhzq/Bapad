@@ -1,8 +1,5 @@
 #include "TextView.h"
 
-//
-//	Set scrollbar positions and range
-//
 VOID TextView::SetupScrollbars()
 {
     SCROLLINFO si = { sizeof(si) };
@@ -166,15 +163,8 @@ HRGN TextView::ScrollRgn(LONG64 dx, LONG64 dy, bool fReturnUpdateRgn)
     return NULL;
 }
 
-
-//
-//	Scroll viewport in specified direction
-//
 VOID TextView::Scroll(LONG64 dx, LONG64 dy)
 {
-
-    // do a "normal" scroll - don't worry about invalid regions,
-    // just scroll the whole window 
     ScrollRgn(dx, dy, false);
 }
 
@@ -185,9 +175,6 @@ LONG GetTrackPos32(HWND hwnd, int nBar)
     return si.nTrackPos;
 }
 
-//
-//	Vertical scrollbar support
-//
 LONG TextView::OnVScroll(UINT nSBCode, UINT nPos)
 {
     auto oldpos = vScrollPos;
@@ -239,9 +226,6 @@ LONG TextView::OnVScroll(UINT nSBCode, UINT nPos)
     return 0;
 }
 
-//
-//	Horizontal scrollbar support
-//
 LONG TextView::OnHScroll(UINT nSBCode, UINT nPos)
 {
     auto oldpos = hScrollPos;
