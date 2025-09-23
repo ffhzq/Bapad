@@ -90,7 +90,6 @@ private:
   size_t  selectionEnd;
   size_t  cursorOffset;
   int     caretPosX;
-  int     anchorPosX;
   size_t  currentLine;
 
   COLORREF  rgbColourList[TXC_MAX_COLOURS];

@@ -65,7 +65,6 @@ void TextView::SyncMetrics(BOOL fAdvancing)
 
   UpdateCaretOffset(fAdvancing);
 
-  anchorPosX = caretPosX;
   ScrollToPosition(caretPosX, currentLine);
   RepositionCaret();
 }

@@ -26,7 +26,6 @@ LONG TextView::OnLButtonDown(UINT nFlags, int mx, int my)
 
   // map the mouse-coordinates to a real file-offset-coordinate
   MouseCoordToFilePos(mx, my, nLineNo, nFileOff, caretPosX);
-  anchorPosX = caretPosX;
 
   UpdateCaretXY(caretPosX, nLineNo);
   
@@ -160,7 +159,6 @@ LONG TextView::OnMouseMove(UINT nFlags, int mx, int my)
 
     // get new cursor offset+coordinates
     MouseCoordToFilePos(mx, my, nLineNo, nFileOff, caretPosX);
-    anchorPosX = caretPosX;
     currentLine = nLineNo;
     //caretPosX = mx + hScrollPos * fontWidth;
     // update the region of text that has changed selection state
