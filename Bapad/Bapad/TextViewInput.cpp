@@ -81,16 +81,17 @@ void TextView::UpdateCaretOffset(BOOL fAdvancing)
   SelectObject(hdc, gsl::at(fontAttr, 0).hFont);
   // find the x-coordinate on the specified line
   auto buf = itor.GetLine();
-  size_t len = buf.size();
+  const size_t len = buf.size();
   LONGLONG  xpos = 0;
-  if (len > 0 && linestartCharOffset < cursorOffset)
+
+  if (!buf.empty() && linestartCharOffset < cursorOffset)
   {
-    len = (std::min)(cursorOffset - linestartCharOffset, len);
-    if (fAdvancing && len > 0)
+    size_t offsetChars = cursorOffset - linestartCharOffset;
+    if (fAdvancing && offsetChars > 0)
     {
-      --len;
+      ++offsetChars;
     }
-    xpos += BaTextWidth(hdc, buf.data(), len, -xpos);
+    xpos += BaTextWidth(hdc, buf, -xpos);
   }
 
   ReleaseDC(hWnd, hdc);

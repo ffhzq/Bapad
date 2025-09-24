@@ -2,19 +2,17 @@
 
 
 //
-//	Wrapper for GetTextExtentPoint32. Takes into account
-//	control-characters, tabs etc.
+//	Wrapper for GetTextExtentPoint32.
 //
-int TextView::BaTextWidth(HDC hdc, WCHAR* buf, int len, int nTabOrigin)
+int TextView::BaTextWidth(HDC hdc, std::span<wchar_t> bufSpan, int nTabOrigin)
 {
-  SIZE	sz;
-  int		width = 0;
+  SIZE  sz;
+  int width = 0;
 
   const int TABWIDTHPIXELS = tabWidthChars * fontWidth;
-
+  const size_t len = bufSpan.size();
   for (int i = 0, lasti = 0; i <= len; i++)
   {
-    const auto bufSpan = std::span(buf, len);
     if (i == len || gsl::at(bufSpan,i) == '\t' || gsl::at(bufSpan, i) < 32)
     {
       if (lasti == i) continue;

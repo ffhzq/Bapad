@@ -234,7 +234,7 @@ BOOL TextView::MouseCoordToFilePos( LONGLONG mx, // [in]  mouse x-coord
     len = StripCRLF(buf, true);
 
     // find it's width
-    int width = BaTextWidth(hdc, buf.data(), len, -(curx % TabWidth()));
+    int width = BaTextWidth(hdc, buf, -(curx % TabWidth()));
 
     // does cursor fall within this segment?
     if (mx >= curx && mx < curx + width)
@@ -246,18 +246,20 @@ BOOL TextView::MouseCoordToFilePos( LONGLONG mx, // [in]  mouse x-coord
 
       while (low < high - 1)
       {
-        const LONGLONG newlen = (high - low) / 2;
-
-        width = BaTextWidth(hdc, buf.data() + low, newlen, -lowx - curx);
+        const LONGLONG newLen = (high - low) / 2;
+        std::span<wchar_t> bufSpan(buf);
+        bufSpan = bufSpan.subspan(low,newLen);
+        assert(newLen == bufSpan.size());
+        width = BaTextWidth(hdc, bufSpan, -lowx - curx);
 
         if (mx - curx < width + lowx)
         {
-          high = low + newlen;
+          high = low + newLen;
           highx = lowx + width;
         }
         else
         {
-          low = low + newlen;
+          low = low + newLen;
           lowx = lowx + width;
         }
       }
