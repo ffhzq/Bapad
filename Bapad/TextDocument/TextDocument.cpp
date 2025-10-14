@@ -61,7 +61,7 @@ const size_t TextDocument::GetLineCount() const noexcept
 
 const size_t TextDocument::GetLongestLine(int tabwidth) const noexcept
 {
-  return size_t{100};
+  return docBuffer.getLongestLine();//size_t{100};
 }
 
 const size_t TextDocument::GetDocLength() const noexcept

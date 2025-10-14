@@ -19,6 +19,8 @@ VOID TextView::SetupScrollbars()
     //
     //	Horizontal scrollbar
     //
+    longestLine = pTextDoc->GetLongestLine(4);
+
     si.nPos = static_cast<int>(hScrollPos);		// scrollbar thumb position
     si.nPage = windowColumns;	// number of lines in a page
     si.nMin = 0;

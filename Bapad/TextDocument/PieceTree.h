@@ -119,17 +119,19 @@ public:
   // use (TreeNode*, inPieceOffset) locate the insertion position.
   NodePosition GetNodePositionAt(TreeNode* node, size_t offset) noexcept;
   NodePosition GetNodePosition(size_t offset) noexcept;
-  size_t offsetInBuffer(size_t bufferIndex, BufferPosition pos);
+  size_t offsetInBuffer(size_t bufferIndex, BufferPosition pos) const;
   // Splits into two pieces in inPieceOffset, return the first piece.
   TreeNode* SplitPiece(TreeNode* currNode, const size_t inPieceOffset);
   std::vector<wchar_t> GetTextAt(TreeNode* node, size_t offset, size_t text_length);
   std::vector<wchar_t> GetText(size_t offset, size_t text_length);
-  std::vector<wchar_t> GetLine(size_t lineNumber, const size_t endOffset, size_t * retValStartOffset);
+  std::vector<wchar_t> GetLine(size_t lineNumber, const size_t endOffset, size_t * retValStartOffset) const;
   void ShrinkPiece(TreeNode* current_node, size_t shrink_to_right, size_t shrink_to_left);
 
   void UpdateMetadata() const noexcept;
 
-  size_t getAccumulatedValue(const TreeNode* node, size_t index);
+  size_t getAccumulatedValue(const TreeNode* node, size_t index) const;
+
+  size_t getLongestLine() const;
 };
 
 std::vector<size_t> createLineStarts(const std::vector<wchar_t>& str);

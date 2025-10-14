@@ -183,7 +183,7 @@ NodePosition PieceTree::GetNodePosition(size_t offset) noexcept
   return GetNodePositionAt(rootNode.get(), offset);
 }
 
-size_t PieceTree::offsetInBuffer(size_t bufferIndex, BufferPosition pos)
+size_t PieceTree::offsetInBuffer(size_t bufferIndex, BufferPosition pos) const
 {
   const auto& lineStarts = gsl::at(buffers, bufferIndex).lineStarts;
   return gsl::at(lineStarts, pos.line) + pos.column;
@@ -271,7 +271,7 @@ std::vector<wchar_t> PieceTree::GetTextAt(TreeNode* node, size_t offset, size_t 
   return text;
 }
 // lineNumber starts from 1
-std::vector<wchar_t> PieceTree::GetLine(size_t lineNumber, const size_t endOffset, size_t* retValStartOffset)
+std::vector<wchar_t> PieceTree::GetLine(size_t lineNumber, const size_t endOffset, size_t* retValStartOffset) const
 {
   if (lineNumber > lineCount || lineCount == 0 || lineNumber == 0) return std::vector<wchar_t>();
   TreeNode* node = rootNode->right.get();
@@ -382,7 +382,7 @@ void PieceTree::UpdateMetadata() const noexcept
   }
 }
 
-size_t PieceTree::getAccumulatedValue(const TreeNode* node, size_t index)
+size_t PieceTree::getAccumulatedValue(const TreeNode* node, size_t index) const
 {
   if (index < 0)return 0;
   const Piece& piece = node->piece;
@@ -397,6 +397,17 @@ size_t PieceTree::getAccumulatedValue(const TreeNode* node, size_t index)
   {
     return gsl::at(lineStarts, expectedLineStartIndex) - startOffset;
   }
+}
+
+size_t PieceTree::getLongestLine() const
+{// todo: brute force
+  size_t longestLineSize = 0;
+  for (size_t i = 1; i <= lineCount; ++i)
+  {
+    auto lineContent(GetLine(i, 0, nullptr));
+    longestLineSize = (std::max)(lineContent.size(), longestLineSize);
+  }
+  return longestLineSize;
 }
 
 std::vector<size_t> createLineStarts(const std::vector<wchar_t>& str)
