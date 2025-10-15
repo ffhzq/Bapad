@@ -49,42 +49,7 @@ size_t TextView::ApplyTextAttributes(size_t nLineNo, size_t nOffset, std::vector
     gsl::at(attr, i).style = font;
   }
 
-  //
-  //	Turn any CR/LF at the end of a line into a single 'space' character
-  //
-  return StripCRLF(szText, false);
-}
-
-//
-//	Strip CR/LF combinations from the end of a line and
-//  replace with a single space character (for drawing purposes)
-//  fAllow : flag of allowing to strip string
-//  bool -> int : true -> 1, false -> 0
-//
-size_t StripCRLF(std::vector<wchar_t>& szText, bool fAllow) noexcept
-{
-  if (szText.empty()) return 0;
-  size_t nLength = szText.size();
-  if (nLength >= 2)
-  { // todo: distinguish CRLF LF CR modes.
-    if (gsl::at(szText, nLength - 2) == '\r' && gsl::at(szText, nLength - 1) == '\n')
-    {
-      gsl::at(szText, nLength - 2) = ' ';
-      nLength = nLength - (size_t{ 1 } + static_cast<int>(fAllow));
-      return nLength;
-    }
-  }
-
-  if (nLength >= 1)
-  {
-    // todo: check CR LF
-    if (gsl::at(szText, nLength - 1) == '\r' || gsl::at(szText, nLength - 1) == '\n')
-    {
-      gsl::at(szText, nLength - 1) = ' ';
-      nLength = nLength - (static_cast<int>(fAllow));
-    }
-  }
-  return nLength;
+  return nTextLen;
 }
 
 //
@@ -133,6 +98,7 @@ int TextView::BaTextOut(HDC hdc, int xpos, int ypos, gsl::span<wchar_t> szText, 
       RECT rect;
 
       // get size of text
+      if (i - lasti == 0)continue;
       GetTextExtentPoint32W(hdc, &szText[lasti], i - lasti, &sz);
       SetRect(&rect, xpos, ypos, xpos + sz.cx, ypos + lineHeight);
 
@@ -160,7 +126,7 @@ int TextView::BaTextOut(HDC hdc, int xpos, int ypos, gsl::span<wchar_t> szText, 
       // ASCII-CONTROL characters
       else if (szText[i] < 32)
       {
-        xpos += PaintCtrlChar(hdc, xpos, ypos, szText[i], &font);
+        xpos += 0;//PaintCtrlChar(hdc, xpos, ypos, szText[i], &font);
         lasti = i + 1;
       }
     }

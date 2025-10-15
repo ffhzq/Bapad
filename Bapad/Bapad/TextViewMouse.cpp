@@ -231,7 +231,6 @@ BOOL TextView::MouseCoordToFilePos( LONGLONG mx, // [in]  mouse x-coord
   len = buf.size();
   if (len > 0)
   {
-    len = StripCRLF(buf, true);
 
     // find it's width
     int width = BaTextWidth(hdc, buf, -(curx % TabWidth()));

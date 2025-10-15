@@ -26,7 +26,9 @@ int TextView::BaTextWidth(HDC hdc, std::span<wchar_t> bufSpan, int nTabOrigin)
       }
       else if (i < len && gsl::at(bufSpan, i) < 32)
       {
-        width += GetCtrlCharWidth(hdc, gsl::at(bufSpan, i), &gsl::at(fontAttr, 0));
+        // width += GetCtrlCharWidth(hdc, gsl::at(bufSpan, i), &gsl::at(fontAttr, 0));
+        GetTextExtentPoint32W(hdc, &gsl::at(bufSpan, i), 1, &sz);
+        width += sz.cx;
         lasti = i + 1;
       }
     }
