@@ -140,9 +140,17 @@ private:
   void  SyncMetrics(BOOL fAdvancing);
   void  UpdateCaretXY(int xpos, ULONG lineno) noexcept;
   void  UpdateCaretOffset(BOOL fAdvancing);
+
+  // Cursor move
+  void MoveCharNext();
+  void MoveCharPre();
+  void MoveLineUp(int numOfLines);
+  void MoveLineDown(int numOfLines);
+  void MoveLineStart(int lineNumber);
+  void MoveLineEnd(int lineNumber);
+
 };
 
-size_t  StripCRLF(std::vector<wchar_t>& szText, bool fAllow) noexcept;
 void    PaintRect(HDC hdc, int x, int y, int width, int height, COLORREF fill);
 void    DrawCheckedRect(HDC hdc, RECT* rect, COLORREF fg, COLORREF bg);
 bool    IsKeyPressed(UINT nVirtKey) noexcept;

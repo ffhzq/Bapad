@@ -74,8 +74,8 @@ void TextView::UpdateCaretOffset(BOOL fAdvancing)
   size_t  lineno = 0;
   size_t  linestartCharOffset = 0;
   TextIterator itor = pTextDoc->IterateLineByCharOffset(cursorOffset, &lineno, &linestartCharOffset);
-  if (!itor)
-    return;
+  //if (!itor)
+    //return;
 
   HDC hdc = GetDC(hWnd);
   SelectObject(hdc, gsl::at(fontAttr, 0).hFont);
@@ -87,11 +87,12 @@ void TextView::UpdateCaretOffset(BOOL fAdvancing)
   if (!buf.empty() && linestartCharOffset < cursorOffset)
   {
     size_t offsetChars = cursorOffset - linestartCharOffset;
-    if (fAdvancing && offsetChars > 0)
-    {
-      ++offsetChars;
-    }
-    xpos += BaTextWidth(hdc, buf, -xpos);
+    //if (fAdvancing && offsetChars > 0)
+    //{
+    //  ++offsetChars;
+    //}
+    std::span<wchar_t> bufSpan(buf.begin(), offsetChars);
+    xpos += BaTextWidth(hdc, bufSpan, -xpos);
   }
 
   ReleaseDC(hWnd, hdc);

@@ -170,6 +170,37 @@ LRESULT WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
   case WM_CHAR:
     return OnChar(wParam, lParam);
 
+  case WM_KEYDOWN:
+
+    switch (wParam) {
+    case VK_UP:
+      MoveLineUp(1);
+      break;
+    case VK_DOWN:
+      MoveLineDown(1);
+      break;
+    case VK_LEFT:
+      MoveCharPre();
+      break;
+    case VK_RIGHT:
+      MoveCharNext();
+      break;
+    case VK_PRIOR:
+      MoveLineUp(windowLines);
+      break;
+    case VK_NEXT:
+      MoveLineDown(windowLines);
+      break;
+    case VK_HOME:
+      MoveLineStart(currentLine);
+      break;
+    case VK_END:
+      MoveLineEnd(currentLine);
+      break;
+
+    default:break;
+    }
+    break;
   case TXM_SETLINESPACING:
     return SetLineSpacing(wParam, lParam);
 

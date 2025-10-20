@@ -85,7 +85,7 @@ TextIterator TextDocument::IterateLineByLineNumber(size_t lineno, size_t* linest
 
 TextIterator TextDocument::IterateLineByCharOffset(size_t charOffset, size_t* lineno, size_t* linestartCharOffset)
 {
-  if (charOffset == 0) return TextIterator();
+  //if (charOffset == 0) return TextIterator();
   const size_t indexOffset = CharOffsetToIndexOffsetAt(0, charOffset);
 
   const auto node_pos = docBuffer.GetNodePosition(indexOffset);
