@@ -19,12 +19,12 @@ VOID TextView::SetupScrollbars()
     //
     //	Horizontal scrollbar
     //
-    longestLine = pTextDoc->GetLongestLine(4);
+    longestLine = GetLongestLine();
 
-    si.nPos = static_cast<int>(hScrollPos);		// scrollbar thumb position
-    si.nPage = windowColumns;	// number of lines in a page
+    si.nPos = gsl::narrow_cast<int>(hScrollPos);
+    si.nPage = windowColumns;
     si.nMin = 0;
-    si.nMax = longestLine - 1;	// total number of lines in file
+    si.nMax = longestLine - 1;
 
     SetScrollInfo(hWnd, SB_HORZ, &si, TRUE);
 
@@ -62,8 +62,8 @@ bool TextView::PinToBottomCorner()
 //
 LONG TextView::OnSize(UINT nFlags, int width, int height)
 {
-    windowLines = min((unsigned)height / lineHeight, lineCount);
-    windowColumns = min(width / fontWidth, longestLine);
+  windowLines = height / lineHeight;//min((unsigned)height / lineHeight, lineCount);
+  windowColumns = width / fontWidth;//min(width / fontWidth, longestLine);
 
     if (PinToBottomCorner())
     {

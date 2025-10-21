@@ -97,9 +97,6 @@ void TextView::UpdateCaretOffset(BOOL fAdvancing)
 
   ReleaseDC(hWnd, hdc);
 
-  // take horizontal scrollbar into account
-  xpos -= hScrollPos * fontWidth;
-
   caretPosX = xpos;
   currentLine = lineno;
   UpdateCaretXY(xpos, lineno);

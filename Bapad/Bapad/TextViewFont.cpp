@@ -133,3 +133,19 @@ int TextView::TabWidth() const
 {
   return tabWidthChars * fontWidth;
 }
+
+int TextView::GetLongestLine()
+{ // todo: cache length, check if text be inserted or replaced
+  HDC hdc = GetDC(hWnd);
+  HANDLE hFont = SelectObject(hdc, gsl::at(fontAttr, 0).hFont);
+  int longestLinePixel = 0;
+  for (size_t i = 0; i < lineCount; ++i)
+  {
+    auto itor = pTextDoc->IterateLineByLineNumber(i,nullptr,nullptr);
+    auto lineContent(itor.GetLine());
+    const int textLength = BaTextWidth(hdc, lineContent, 0);
+    longestLinePixel = (std::max)(textLength / fontWidth, longestLinePixel);
+  }
+  ReleaseDC(hWnd, hdc);
+  return longestLinePixel;
+}

@@ -288,7 +288,7 @@ BOOL TextView::MouseCoordToFilePos( LONGLONG mx, // [in]  mouse x-coord
 
   pnLineNo = nLineNo;
   pfnFileOffset = charOff;
-  px = curx - gsl::narrow_cast<LONGLONG>(hScrollPos) * static_cast<LONGLONG>(fontWidth);
+  px = curx;// -gsl::narrow_cast<LONGLONG>(hScrollPos) * static_cast<LONGLONG>(fontWidth);
   return 0;
 }
 

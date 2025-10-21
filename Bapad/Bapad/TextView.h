@@ -43,6 +43,7 @@ private:
   int     GetCtrlCharWidth(HDC hdc, ULONG64 chValue, FONT* fa);
   int     BaTextWidth(HDC hdc, std::span<wchar_t> bufSpan, int nTabOrigin);
   int     TabWidth() const;
+  int     GetLongestLine();
 
   BOOL    MouseCoordToFilePos(
     LONGLONG mx,
