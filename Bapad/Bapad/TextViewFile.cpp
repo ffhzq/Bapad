@@ -12,12 +12,6 @@ LONG TextView::OpenFile(WCHAR* szFileName)
     {
         lineCount = pTextDoc->GetLineCount();
         longestLine = GetLongestLine();
-
-        vScrollPos = 0;
-        hScrollPos = 0;
-
-        selectionStart = 0;
-        selectionEnd = 0;
         UpdateMetrics();
         return TRUE;
     }
@@ -38,7 +32,10 @@ LONG TextView::ClearFile()
 
     vScrollPos = 0;
     hScrollPos = 0; 
+
     cursorOffset = 0;
+    selectionStart = 0;
+    selectionEnd = 0;
 
     currentLine = 0;
     caretPosX = 0;
