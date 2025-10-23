@@ -39,17 +39,30 @@ TextView::TextView(HWND hwnd)
 
 
   // Set the default font
-  auto hFont = static_cast<HFONT>(GetStockObject(ANSI_FIXED_FONT));
+  LOGFONTW lf = { 0 };
+  //lf.lfHeight = -12;
+  lf.lfWeight = FW_NORMAL;
+  lf.lfCharSet = GB2312_CHARSET;
+  lf.lfPitchAndFamily = FIXED_PITCH | FF_MODERN;
+  wcscpy_s(&lf.lfFaceName[0], LF_FACESIZE, L"Sarasa Fixed SC");
+
+  auto hFont = CreateFontIndirectW(&lf); // release in ~TextView()
   if (hFont == nullptr)
     hFont = static_cast<HFONT>(GetStockObject(SYSTEM_FONT));
   OnSetFont(hFont);
 
   UpdateMetrics();
+
+
 }
 
 TextView::~TextView()
 {
   this->pTextDoc.reset(nullptr);
+  for (auto& i : fontAttr)
+  {
+    DeleteDC(reinterpret_cast<HDC>(i.hFont));
+  }
 }
 
 VOID TextView::UpdateMetrics()
