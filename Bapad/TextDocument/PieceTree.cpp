@@ -161,7 +161,6 @@ bool PieceTree::ReplaceText(size_t offset, std::vector<wchar_t> input, size_t er
   {
     return false;
   }
-  UpdateMetadata();
   return true;
 }
 
@@ -195,11 +194,11 @@ TreeNode* PieceTree::SplitPiece(TreeNode* currNode, const size_t inPieceOffset)
   const Piece original_piece = currNode->piece;
   Piece& current_piece = currNode->piece;
 
-  const size_t newStartOffset = gsl::at(currBuffer.lineStarts, current_piece.start.line) + current_piece.start.column + inPieceOffset;
-  const size_t newLineIndex = GetLineIndexFromNodePosistion(currBuffer.lineStarts, NodePosition(currNode, newStartOffset));
+  const size_t newStartOffset = offsetInBuffer(currNode->piece.bufferIndex, current_piece.start) + inPieceOffset;
+  const size_t newLineIndex = GetLineIndexFromNodePosistion(currBuffer.lineStarts, NodePosition(currNode, inPieceOffset));
   current_piece.end = BufferPosition{ newLineIndex, newStartOffset - gsl::at(currBuffer.lineStarts,newLineIndex) };
   current_piece.length = inPieceOffset;
-  current_piece.lineFeedCnt = newLineIndex;
+  current_piece.lineFeedCnt = newLineIndex - original_piece.start.line;
   Piece p2;
   if (inPieceOffset == 0)
   {
@@ -208,7 +207,6 @@ TreeNode* PieceTree::SplitPiece(TreeNode* currNode, const size_t inPieceOffset)
   }
   else
   {
-    const size_t lineIndex2 = GetLineIndexFromNodePosistion(currBuffer.lineStarts, NodePosition(currNode, inPieceOffset));
     p2 = Piece{
        current_piece.end,
        original_piece.end,
@@ -348,7 +346,7 @@ void PieceTree::ShrinkPiece(TreeNode* current_node, size_t shrink_to_right, size
       lineIndex2 = GetLineIndexFromNodePosistion(lineStarts, NodePosition(current_node, piece.length - shrink_to_left));
 
     const size_t line_offset1 = offset1 - gsl::at(lineStarts, lineIndex1),
-      line_offset2 = offset2 - gsl::at(lineStarts, lineIndex1);
+      line_offset2 = offset2 - gsl::at(lineStarts, lineIndex2);
 
     piece.start = BufferPosition(lineIndex1, line_offset1);
     piece.end = BufferPosition(lineIndex2, line_offset2);
