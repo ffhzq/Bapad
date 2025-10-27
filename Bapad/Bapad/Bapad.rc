@@ -61,6 +61,21 @@ BEGIN
     END
 END
 
+IDR_CONTEXTMENU MENU
+BEGIN
+POPUP "Context" 
+BEGIN
+MENUITEM "Undo\tCtrl+Z", CMD_UNDO
+MENUITEM "Redo\tCtrl+Y", CMD_REDO
+
+MENUITEM SEPARATOR
+
+MENUITEM "Cut\tCtrl+X", CMD_CUT
+MENUITEM "Copy\tCtrl+C", CMD_COPY
+MENUITEM "Paste\tCtrl+V", CMD_PASTE
+
+END
+END
 
 /////////////////////////////////////////////////////////////////////////////
 //

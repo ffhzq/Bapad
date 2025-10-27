@@ -13,11 +13,6 @@
 #define IDI_SMALL				108
 #define IDC_BAPAD				109
 
-#define IDM_FILE_NEW                    40001
-#define IDM_FILE_OPEN                   40002
-#define IDM_FILE_EXIT                   40003
-#define IDM_HELP_ABOUT                  40004
-#define IDM_VIEW_FONT                   40005
 
 #define IDC_MYICON				2
 #ifndef IDC_STATIC
@@ -38,6 +33,7 @@
 #define IDD_FONT                        107
 #define IDD_DIALOG2                     108
 #define IDD_FONTEXTRA                   112
+#define IDR_CONTEXTMENU                 113
 #define IDC_COMBO1                      1000
 #define IDC_FONTLIST                    1000
 #define IDC_COMBO2                      1001
@@ -75,11 +71,11 @@
 #define IDC_CHECK5                      1028
 
 
-/*#define IDM_FILE_NEW                    40001
+#define IDM_FILE_NEW                    40001
 #define IDM_FILE_OPEN                   40002
 #define IDM_FILE_EXIT                   40003
 #define IDM_HELP_ABOUT                  40004
-#define IDM_VIEW_FONT                   40005*/
+#define IDM_VIEW_FONT                   40005
 #define IDM_VIEW_LINENUMBERS            40006
 #define IDM_VIEW_LONGLINES              40007
 #define IDM_VIEW_SAVENOW                40008
@@ -89,6 +85,13 @@
 #define IDM_VIEW_UTF8                   40013
 #define IDM_VIEW_UTF16                  40014
 #define IDM_VIEW_UTF16BE                40015
+
+#define CMD_UNDO           40016
+#define CMD_REDO           40017
+#define CMD_CUT            40018
+#define CMD_COPY           40019
+#define CMD_PASTE          40020
+#define CMD_SELECT_ALL     40021
 /////////////////
 ////////////////////////////////////////////////////////////
 

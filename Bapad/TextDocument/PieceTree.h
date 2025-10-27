@@ -58,26 +58,12 @@ struct NodePosition {
     : node(node), in_piece_offset(in_piece_offset)
   {}
 };
-enum class ActionType {
-  ActionInvalid,
-  ActionInsertion,
-  ActionErase,
-  ActionReplace
-};
-struct EditAction {
-  std::vector<unsigned char> insertedText;
-  std::vector<unsigned char> erasedText;
-  size_t ActionOffsetBytes; // OffsetBytes in piece.
-  ActionType actionType;
-};
 
 
 class PieceTree {
 public:
   std::vector<Buffer> buffers;
   std::unique_ptr<TreeNode> rootNode;
-  std::stack<EditAction> undoStack;
-  std::stack<EditAction> redoStack;
   BufferPosition _lastChangeBufferPos;
   size_t lineCount;
   size_t length;
@@ -112,9 +98,9 @@ public:
       length += piece.length;
       lineCount += piece.lineFeedCnt;
   }
-  bool InsertText(size_t offset, std::vector<wchar_t> input);
+  bool InsertText(size_t offset, const std::vector<wchar_t>& input);
   bool EraseText(size_t offset, size_t erase_length);
-  bool ReplaceText(size_t offset, std::vector<wchar_t> input, size_t erase_length);
+  bool ReplaceText(size_t offset,const std::vector<wchar_t>& input, size_t erase_length);
 
   // use (TreeNode*, inPieceOffset) locate the insertion position.
   NodePosition GetNodePositionAt(TreeNode* node, size_t offset) noexcept;

@@ -11,20 +11,24 @@ COLORREF  RealizeColour(COLORREF col);
 //
 //	TextView Window Messages defined here
 //
-#define TXM_BASE				 (WM_USER)
-#define TXM_OPENFILE			 (TXM_BASE + 0)
-#define TXM_CLEAR				 (TXM_BASE + 1)
-#define TXM_SETLINESPACING		 (TXM_BASE + 2)
-#define TXM_ADDFONT				 (TXM_BASE + 3)
-#define TXM_SETCOLOR			 (TXM_BASE + 5)
-#define TXM_SETSTYLE			 (TXM_BASE + 6)
-#define TXM_GETSTYLE			 (TXM_BASE + 7)
-#define TXM_SETCARETWIDTH		 (TXM_BASE + 8)
-#define TXM_SETIMAGELIST		 (TXM_BASE + 9)
-#define TXM_SETLONGLINE			 (TXM_BASE + 10)
-#define TXM_SETLINEIMAGE		 (TXM_BASE + 11)
-#define TXM_GETFORMAT			 (TXM_BASE + 12)
-
+#define TXM_BASE                  (WM_USER)
+#define TXM_OPENFILE              (TXM_BASE + 0)
+#define TXM_CLEAR                 (TXM_BASE + 1)
+#define TXM_SETLINESPACING        (TXM_BASE + 2)
+#define TXM_ADDFONT               (TXM_BASE + 3)
+#define TXM_SETCOLOR              (TXM_BASE + 5)
+#define TXM_SETSTYLE              (TXM_BASE + 6)
+#define TXM_GETSTYLE              (TXM_BASE + 7)
+#define TXM_SETCARETWIDTH         (TXM_BASE + 8)
+#define TXM_SETIMAGELIST          (TXM_BASE + 9)
+#define TXM_SETLONGLINE           (TXM_BASE + 10)
+#define TXM_SETLINEIMAGE          (TXM_BASE + 11)
+#define TXM_GETFORMAT             (TXM_BASE + 12)
+#define TXM_UNDO                  (TXM_BASE + 13)
+#define TXM_REDO                  (TXM_BASE + 14)
+#define TXM_CANUNDO               (TXM_BASE + 15)
+#define TXM_CANREDO               (TXM_BASE + 16)
+#define TXM_SETCONTEXTMENU        (TXM_BASE + 17)
 //
 //	TextView Macros defined here
 //

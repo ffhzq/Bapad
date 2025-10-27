@@ -25,6 +25,9 @@ TextView::TextView(HWND hwnd)
   selectionStart(0),
   selectionEnd(0),
   cursorOffset(0),
+  currentLine(0),
+  caretPosX(0),
+  hUserMenu(nullptr),
   //
   pTextDoc(std::make_unique<TextDocument>())
 {
@@ -63,6 +66,7 @@ TextView::~TextView()
   {
     DeleteDC(reinterpret_cast<HDC>(i.hFont));
   }
+  DestroyMenu(hUserMenu);
 }
 
 VOID TextView::UpdateMetrics()
@@ -132,6 +136,7 @@ LRESULT CALLBACK TextViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM 
 
 LRESULT WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
 {
+  int newCursorPos = -1;
   switch (msg)
   {
     // Draw contents of TextView whenever window needs updating
@@ -152,6 +157,9 @@ LRESULT WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
 
   case WM_MOUSEACTIVATE:
     return OnMouseActivate(reinterpret_cast<HWND>(wParam), LOWORD(lParam), HIWORD(lParam));
+
+  case WM_CONTEXTMENU:
+    return OnContextMenu(reinterpret_cast<HWND>(wParam), static_cast<short>(LOWORD(lParam)), static_cast<short>(HIWORD(lParam)));
 
   case WM_MOUSEWHEEL:
     return OnMouseWheel(static_cast<short>(HIWORD(wParam)));
@@ -223,11 +231,39 @@ LRESULT WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
   case TXM_SETCOLOR:
     return SetColour(wParam, lParam);
 
+  case WM_UNDO: case TXM_UNDO: case EM_UNDO:
+    newCursorPos = pTextDoc->Undo();
+    if (newCursorPos == -1)
+      return FALSE;
+    else
+    {
+      cursorOffset = newCursorPos;
+      SyncMetrics(TRUE);
+      return TRUE;
+    }
+  case TXM_REDO: case EM_REDO:
+    newCursorPos = pTextDoc->Redo();
+    if (newCursorPos == -1)
+      return FALSE;
+    else
+    {
+      cursorOffset = newCursorPos;
+      SyncMetrics(TRUE);
+      return TRUE;
+    }
 
+  case TXM_CANUNDO: case EM_CANUNDO:
+    return pTextDoc->CanUndo();
+
+  case TXM_CANREDO: case EM_CANREDO:
+    return pTextDoc->CanRedo();
 
   case TXM_GETFORMAT:
     return static_cast<int>(pTextDoc->GetFileFormat());
 
+  case TXM_SETCONTEXTMENU:
+    hUserMenu = reinterpret_cast<HMENU>(wParam);
+    return 0;
   default:
     break;
   }

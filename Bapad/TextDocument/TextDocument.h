@@ -6,6 +6,18 @@
 constexpr size_t GetUtf8CharSize(const unsigned char ch) noexcept;
 
 class TextIterator;
+enum class ActionType {
+  ActionInvalid,
+  ActionInsert,
+  ActionErase,
+  ActionReplace
+};
+struct EditAction {
+  std::vector<wchar_t> insertedText;
+  std::vector<wchar_t> erasedText;
+  size_t actionOffsetBytes; // OffsetBytes in piece.
+  ActionType actionType;
+};
 
 class TextDocument {
   friend class TextIterator;
@@ -24,6 +36,11 @@ public:
   size_t  ReplaceText(size_t offsetChars, wchar_t* text, size_t length, size_t eraseLen);
   size_t  EraseText(size_t offsetChars, size_t length);
 
+  bool CanUndo() const noexcept;
+  bool CanRedo() const noexcept;
+  int Undo();
+  int Redo();
+
   CP_TYPE GetFileFormat() const noexcept;
   const size_t GetLineCount() const noexcept;
   const size_t GetLongestLine(int tabwidth) const noexcept;
@@ -40,8 +57,12 @@ private:
   size_t CountCharAnsi(const size_t byteLength) noexcept;
   size_t CountCharUtf8(const size_t byteLength) noexcept;
   size_t CountChar(const size_t byteLength) noexcept; // byteCount to charCount;
-  PieceTree docBuffer;// raw txt data
+  
+  int DoCommand(EditAction action, std::stack<EditAction> & record);
 
+  PieceTree docBuffer;// raw txt data
+  std::stack<EditAction> undoStack;
+  std::stack<EditAction> redoStack;
   CP_TYPE fileFormat;
   int  headerSize;
 
@@ -77,5 +98,3 @@ public:
     return textDoc != nullptr ? true : false;
   }
 };
-
-

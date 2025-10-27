@@ -24,7 +24,7 @@ PieceTree::PieceTree(std::vector<wchar_t> input) : buffers{}, rootNode(), _lastC
 }
 
 
-bool PieceTree::InsertText(size_t offset, std::vector<wchar_t> input)
+bool PieceTree::InsertText(size_t offset, const std::vector<wchar_t>& input)
 {
   if (offset > this->length)
   {
@@ -151,7 +151,7 @@ bool PieceTree::EraseText(size_t offset, size_t eraseLength)
   return true;
 }
 
-bool PieceTree::ReplaceText(size_t offset, std::vector<wchar_t> input, size_t erase_length)
+bool PieceTree::ReplaceText(size_t offset, const std::vector<wchar_t> & input, size_t erase_length)
 {
   if (EraseText(offset, erase_length) == false)
   {
@@ -193,7 +193,7 @@ TreeNode* PieceTree::SplitPiece(TreeNode* currNode, const size_t inPieceOffset)
   const Buffer& currBuffer = gsl::at(buffers, currNode->piece.bufferIndex);
   const Piece original_piece = currNode->piece;
   Piece& current_piece = currNode->piece;
-
+  
   const size_t newStartOffset = offsetInBuffer(currNode->piece.bufferIndex, current_piece.start) + inPieceOffset;
   const size_t newLineIndex = GetLineIndexFromNodePosistion(currBuffer.lineStarts, NodePosition(currNode, inPieceOffset));
   current_piece.end = BufferPosition{ newLineIndex, newStartOffset - gsl::at(currBuffer.lineStarts,newLineIndex) };

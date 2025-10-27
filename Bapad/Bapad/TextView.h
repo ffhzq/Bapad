@@ -2,7 +2,6 @@
 #include "..\TextDocument\TextDocument.h"
 #include "FontStruct.h"
 #include "TextViewWin32.h"
-#include "usp10.h"
 
 //#define LONGEST_LINE 0x100
 
@@ -23,8 +22,8 @@ public:
   TextView& operator=(TextView&&) = delete;
 
   LRESULT WINAPI WndProc(UINT msg, WPARAM wParam, LPARAM lParam);
-
-
+  HMENU CreateContextMenu();
+  LONG OnContextMenu(HWND hwndParam, int x, int y);
 
 private:
 
@@ -65,7 +64,7 @@ private:
   HRGN    ScrollRgn(LONG64 dx, LONG64 dy, bool fReturnUpdateRgn);
   VOID    ScrollToPosition(int xpos, size_t lineno);
   HWND hWnd;
-
+  HMENU hUserMenu;
   // Font-related data
   std::vector<FONT> fontAttr;
   HFONT font;

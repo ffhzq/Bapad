@@ -112,9 +112,13 @@ size_t TextDocument::InsertText(size_t offsetChars, wchar_t* text, size_t length
   const size_t indexOffset = CharOffsetToIndexOffsetAt(0, offsetChars);
   const gsl::span<wchar_t> textSpan(text, length);
   std::vector<wchar_t> textVec(textSpan.begin(), textSpan.end());
-  if (length)
+  if (length && docBuffer.InsertText(indexOffset, textVec))
   {
-    docBuffer.InsertText(indexOffset, textVec);
+    EditAction action;
+    action.actionOffsetBytes = indexOffset;
+    action.actionType = ActionType::ActionInsert;
+    action.insertedText = (textVec);//std::move
+    undoStack.push(action);
     return textVec.size();
   }
   return 0;
@@ -126,9 +130,15 @@ size_t TextDocument::ReplaceText(size_t offsetChars, wchar_t* text, size_t lengt
   const size_t eraseBytes = CharOffsetToIndexOffsetAt(indexOffset, eraseLen);
   const gsl::span<wchar_t> textSpan(text, length);
   std::vector<wchar_t> textVec(textSpan.begin(), textSpan.end());
-  if (length)
+  auto erasedText = docBuffer.GetText(indexOffset, eraseBytes);
+  if (length && docBuffer.ReplaceText(indexOffset, textVec, eraseBytes))
   {
-    docBuffer.ReplaceText(indexOffset, textVec, eraseBytes);
+    EditAction action;
+    action.actionOffsetBytes = indexOffset;
+    action.actionType = ActionType::ActionReplace;
+    action.insertedText = (textVec);
+    action.erasedText = (erasedText);
+    undoStack.push(action);
     return textVec.size();
   }
   return 0;
@@ -138,8 +148,14 @@ size_t TextDocument::EraseText(size_t offsetChars, size_t length)
 {
   const size_t offset = CharOffsetToIndexOffsetAt(0, offsetChars);
   const size_t eraseLength = CharOffsetToIndexOffsetAt(offset, length);
+  auto erasedText = docBuffer.GetText(offset, eraseLength);
   if (docBuffer.EraseText(offset, eraseLength))
   {
+    EditAction action;
+    action.actionOffsetBytes = offset;
+    action.actionType = ActionType::ActionErase;
+    action.erasedText = (erasedText);
+    undoStack.push(action);
     return length;
   }
   return 0;
@@ -243,6 +259,33 @@ size_t TextDocument::CountChar(const size_t byteLength) noexcept
   }
   return charCount;
 }
+int TextDocument::DoCommand(EditAction action, std::stack<EditAction>& record)
+{
+  int newCursorOffset = -1;
+  switch (action.actionType)
+  {
+  case ActionType::ActionInsert:
+    docBuffer.EraseText(action.actionOffsetBytes, action.insertedText.size());
+    action.actionType = ActionType::ActionErase;
+    break;
+  case ActionType::ActionErase:
+    docBuffer.InsertText(action.actionOffsetBytes, action.erasedText);
+    action.actionType = ActionType::ActionInsert;
+    break;
+  case ActionType::ActionReplace:
+    docBuffer.ReplaceText(action.actionOffsetBytes, action.erasedText, action.insertedText.size());
+    action.actionType = ActionType::ActionReplace;
+    break;
+  case ActionType::ActionInvalid:
+    throw;
+  default:
+    throw;
+  }
+  newCursorOffset = action.actionOffsetBytes + action.erasedText.size();
+  std::swap(action.erasedText, action.insertedText);
+  record.push(action);
+  return newCursorOffset;
+}
 bool TextDocument::Clear()
 {
   docBuffer._lastChangeBufferPos = BufferPosition(0, 0);
@@ -251,6 +294,8 @@ bool TextDocument::Clear()
   docBuffer.buffers.clear();
   auto input = std::vector<wchar_t>();
   docBuffer.Init(input);
+  std::stack<EditAction>().swap(undoStack);
+  std::stack<EditAction>().swap(redoStack);
   return true;
 }
 
@@ -262,6 +307,35 @@ size_t TextDocument::LineNumFromCharOffset(size_t offset)
   const auto lineNumber = nodePos.node->lf_left + (nodePos.node->piece.start.line - lineIndex);
   return lineNumber;
 }
+
+bool TextDocument::CanUndo() const noexcept
+{
+  return undoStack.size() != 0;
+}
+
+bool TextDocument::CanRedo() const noexcept
+{
+  return redoStack.size() != 0;
+}
+
+int TextDocument::Undo()
+{
+  if (!CanUndo())
+    return -1;
+  EditAction action = undoStack.top();
+  undoStack.pop();
+  return DoCommand(action, redoStack);
+}
+
+int TextDocument::Redo()
+{
+  if (!CanRedo())
+    return -1;
+  EditAction action = redoStack.top();
+  redoStack.pop();
+  return DoCommand(action, undoStack);
+}
+
 
 constexpr size_t GetUtf8CharSize(const unsigned char ch) noexcept
 {

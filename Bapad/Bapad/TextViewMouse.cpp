@@ -14,6 +14,57 @@ LONG TextView::OnMouseActivate(HWND hwndTop, UINT nHitTest, UINT nMessage)
   return MA_ACTIVATE;
 }
 
+HMENU TextView::CreateContextMenu()
+{
+  HMENU hMenu = CreatePopupMenu();
+  const unsigned int fSelection = (selectionStart == selectionEnd) ?
+    MF_DISABLED | MF_GRAYED : MF_ENABLED;
+
+  // is there text on the clipboard?
+  const unsigned int fClipboard = (IsClipboardFormatAvailable(CF_TEXT) || IsClipboardFormatAvailable(CF_UNICODETEXT)) ?
+    MF_ENABLED : MF_GRAYED | MF_DISABLED;
+
+  const unsigned int fCanUndo = pTextDoc->CanUndo() ? MF_ENABLED : MF_GRAYED | MF_DISABLED;
+  const unsigned int fCanRedo = pTextDoc->CanRedo() ? MF_ENABLED : MF_GRAYED | MF_DISABLED;
+
+  AppendMenuW(hMenu, MF_STRING | fCanUndo, WM_UNDO, L"&Undo");
+  AppendMenuW(hMenu, MF_STRING | fCanRedo, TXM_REDO, L"&Redo");
+  AppendMenuW(hMenu, MF_SEPARATOR, 0, nullptr);
+  AppendMenuW(hMenu, MF_STRING | fSelection, WM_CUT, L"Cu&t");
+  AppendMenuW(hMenu, MF_STRING | fSelection, WM_COPY, L"&Copy");
+  AppendMenuW(hMenu, MF_STRING | fClipboard, WM_PASTE, L"&Paste");
+  AppendMenuW(hMenu, MF_STRING | fSelection, WM_CLEAR, L"&Delete");
+  //AppendMenuW(hMenu, MF_SEPARATOR, 0, nullptr);
+  //AppendMenuW(hMenu, MF_STRING | MF_ENABLED, TXM_SETSELALL, L"&Select All");
+
+  return hMenu;
+}
+
+LONG TextView::OnContextMenu(HWND hwndParam, int x, int y)
+{
+  if (hUserMenu == nullptr)
+  {
+    HMENU hMenu = CreateContextMenu();
+    const UINT uCmd = TrackPopupMenu(hMenu, TPM_RETURNCMD, x, y, 0, hWnd, nullptr);
+
+    if (uCmd != 0)
+      PostMessageW(hWnd, uCmd, 0, 0);
+
+    return 0;
+  }
+  else
+  {
+    const UINT uCmd = TrackPopupMenu(hUserMenu, TPM_RETURNCMD, x, y, 0, hWnd, nullptr);
+
+    if (uCmd != 0)
+      PostMessageW(GetParent(hWnd), WM_COMMAND, MAKEWPARAM(uCmd, 0), reinterpret_cast<LPARAM>(GetParent(hWnd)));
+
+    return 0;
+  }
+
+  return DefWindowProcW(hWnd, WM_CONTEXTMENU, reinterpret_cast<WPARAM>(hwndParam), MAKELONG(x, y));
+}
+
 //
 //	WM_LBUTTONDOWN
 //

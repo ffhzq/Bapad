@@ -18,5 +18,5 @@
 #include <string>
 #include <vector>
 #include <windows.h>
-
+#include <Richedit.h>
 #endif //PCH_H
