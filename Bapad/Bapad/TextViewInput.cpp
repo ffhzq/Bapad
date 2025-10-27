@@ -42,6 +42,50 @@ ULONG TextView::EnterText(WCHAR* inputText, ULONG inputTextLength)
   return inputTextLength;
 }
 
+int TextView::ForwardDelete()
+{
+  const size_t start = (std::min)(selectionStart, selectionEnd);
+  const size_t end = (std::max)(selectionStart, selectionEnd);
+  if (start != end)
+  {
+    pTextDoc->EraseText(start, end - start);
+    cursorOffset = start;
+  }
+  else
+  {
+    const size_t oldOffset = cursorOffset;
+    MoveCharNext();
+    pTextDoc->EraseText(oldOffset, cursorOffset - oldOffset);
+    cursorOffset = oldOffset;
+  }
+  selectionStart = selectionEnd = cursorOffset;
+  RefreshWindow();
+  SyncMetrics(FALSE);
+  return TRUE;
+}
+
+int TextView::BackwardDelete()
+{
+  const size_t start = (std::min)(selectionStart, selectionEnd);
+  const size_t end = (std::max)(selectionStart, selectionEnd);
+  if (start != end)
+  {
+    pTextDoc->EraseText(start, end - start);
+    cursorOffset = start;
+  }
+  else if(cursorOffset > 0)
+  {
+    const size_t oldOffset = cursorOffset;
+    MoveCharPrev();
+    pTextDoc->EraseText(cursorOffset, oldOffset - cursorOffset);
+    //cursorOffset = oldOffset;
+  }
+  selectionStart = selectionEnd = cursorOffset;
+  //RefreshWindow();
+  SyncMetrics(FALSE);
+  return TRUE;
+}
+
 LRESULT TextView::NotifyParent(UINT nNotifyCode, NMHDR* optional)
 {
   UINT  nCtrlId = GetWindowLongW(hWnd, GWL_ID);
@@ -86,12 +130,12 @@ void TextView::UpdateCaretOffset(BOOL fAdvancing)
 
   if (!buf.empty() && linestartCharOffset < cursorOffset)
   {
-    size_t offsetChars = cursorOffset - linestartCharOffset;
+    const size_t offsetChars = cursorOffset - linestartCharOffset;
     //if (fAdvancing && offsetChars > 0)
     //{
     //  ++offsetChars;
     //}
-    std::span<wchar_t> bufSpan(buf.begin(), offsetChars);
+    const std::span<wchar_t> bufSpan(buf.begin(), offsetChars);
     xpos += BaTextWidth(hdc, bufSpan, -xpos);
   }
 

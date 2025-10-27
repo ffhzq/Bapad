@@ -201,7 +201,7 @@ LRESULT WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
       MoveLineDown(1);
       break;
     case VK_LEFT:
-      MoveCharPre();
+      MoveCharPrev();
       break;
     case VK_RIGHT:
       MoveCharNext();
@@ -218,7 +218,13 @@ LRESULT WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
     case VK_END:
       MoveLineEnd(currentLine);
       break;
-
+    case VK_DELETE:
+      ForwardDelete();
+      break;
+    case VK_BACK:
+      BackwardDelete();
+      break;
+    
     default:break;
     }
     break;

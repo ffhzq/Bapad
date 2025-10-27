@@ -34,7 +34,7 @@ void TextView::MoveCharNext()
   SyncMetrics(TRUE);
 }
 
-void TextView::MoveCharPre() 
+void TextView::MoveCharPrev() 
 {
   size_t  lineNumber = 0;
   size_t  linestartCharOffset = 0;

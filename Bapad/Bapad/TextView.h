@@ -136,6 +136,9 @@ private:
 
   LONG OnChar(UINT nChar, UINT nFlags);
   ULONG EnterText(WCHAR* inputText, ULONG inputTextLength);
+  int ForwardDelete();
+  int BackwardDelete();
+
   LRESULT NotifyParent(UINT nNotifyCode, NMHDR* optional = 0);
   void  SyncMetrics(BOOL fAdvancing);
   void  UpdateCaretXY(int xpos, ULONG lineno) noexcept;
@@ -143,7 +146,7 @@ private:
 
   // Cursor move
   void MoveCharNext();
-  void MoveCharPre();
+  void MoveCharPrev();
   void MoveLineUp(int numOfLines);
   void MoveLineDown(int numOfLines);
   void MoveLineStart(int lineNumber);

@@ -104,7 +104,7 @@ bool PieceTree::InsertText(size_t offset, const std::vector<wchar_t>& input)
 
 bool PieceTree::EraseText(size_t offset, size_t eraseLength)
 {
-  if (rootNode->right == nullptr || offset + eraseLength > length) return false;
+  if (rootNode->right == nullptr || offset + eraseLength > length || eraseLength == 0) return false;
   const size_t original_offset = offset, original_erase_length = eraseLength;
 
   const NodePosition startNodePosition = GetNodePosition(offset);
