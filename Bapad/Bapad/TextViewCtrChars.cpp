@@ -1,7 +1,7 @@
 #include "../TextDocument/FormatConversion.h"
 #include "TextView.h"
 
-static const size_t CTRLCHARSNUM = 32;
+constexpr size_t CTRLCHARSNUM = 32;
 
 static const wchar_t* CtrlStr(DWORD ch)
 {

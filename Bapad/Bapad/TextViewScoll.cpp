@@ -1,8 +1,5 @@
 #include "TextView.h"
 
-//
-//	Set scrollbar positions and range
-//
 VOID TextView::SetupScrollbars()
 {
     SCROLLINFO si = { sizeof(si) };
@@ -22,10 +19,12 @@ VOID TextView::SetupScrollbars()
     //
     //	Horizontal scrollbar
     //
-    si.nPos = static_cast<int>(hScrollPos);		// scrollbar thumb position
-    si.nPage = windowColumns;	// number of lines in a page
+    longestLine = GetLongestLine();
+
+    si.nPos = gsl::narrow_cast<int>(hScrollPos);
+    si.nPage = windowColumns;
     si.nMin = 0;
-    si.nMax = longestLine - 1;	// total number of lines in file
+    si.nMax = longestLine - 1;
 
     SetScrollInfo(hWnd, SB_HORZ, &si, TRUE);
 
@@ -63,8 +62,8 @@ bool TextView::PinToBottomCorner()
 //
 LONG TextView::OnSize(UINT nFlags, int width, int height)
 {
-    windowLines = min((unsigned)height / lineHeight, lineCount);
-    windowColumns = min(width / fontWidth, longestLine);
+  windowLines = height / lineHeight;//min((unsigned)height / lineHeight, lineCount);
+  windowColumns = width / fontWidth;//min(width / fontWidth, longestLine);
 
     if (PinToBottomCorner())
     {
@@ -166,15 +165,8 @@ HRGN TextView::ScrollRgn(LONG64 dx, LONG64 dy, bool fReturnUpdateRgn)
     return NULL;
 }
 
-
-//
-//	Scroll viewport in specified direction
-//
 VOID TextView::Scroll(LONG64 dx, LONG64 dy)
 {
-
-    // do a "normal" scroll - don't worry about invalid regions,
-    // just scroll the whole window 
     ScrollRgn(dx, dy, false);
 }
 
@@ -185,9 +177,6 @@ LONG GetTrackPos32(HWND hwnd, int nBar)
     return si.nTrackPos;
 }
 
-//
-//	Vertical scrollbar support
-//
 LONG TextView::OnVScroll(UINT nSBCode, UINT nPos)
 {
     auto oldpos = vScrollPos;
@@ -217,7 +206,7 @@ LONG TextView::OnVScroll(UINT nSBCode, UINT nPos)
         break;
 
     case SB_PAGEUP:
-        Scroll(0, -1 * static_cast<LONG64>(windowLines));
+        Scroll(0, -1 * (windowLines));
         break;
 
     case SB_THUMBPOSITION:
@@ -239,9 +228,6 @@ LONG TextView::OnVScroll(UINT nSBCode, UINT nPos)
     return 0;
 }
 
-//
-//	Horizontal scrollbar support
-//
 LONG TextView::OnHScroll(UINT nSBCode, UINT nPos)
 {
     auto oldpos = hScrollPos;
@@ -307,4 +293,47 @@ LONG TextView::OnMouseWheel(int nDelta)
     Scroll(0, (-nDelta / 120) * nScrollLines);
     RepositionCaret();
     return 0;
+}
+
+VOID TextView::ScrollToPosition(int xpos, size_t lineno)
+{
+  bool fRefresh = false;
+  RECT rect;
+  int  marginWidth = 0;
+
+  GetClientRect(hWnd, &rect);
+
+  xpos -= hScrollPos * fontWidth;
+  xpos += marginWidth;
+
+  if (xpos < marginWidth)
+  {
+    hScrollPos -= (marginWidth - xpos) / fontWidth;
+    fRefresh = true;
+  }
+
+  if (xpos >= rect.right)
+  {
+    hScrollPos += (xpos - rect.right) / fontWidth + 1;
+    fRefresh = true;
+  }
+
+  if (lineno < vScrollPos)
+  {
+    vScrollPos = lineno;
+    fRefresh = true;
+  }
+  else if (lineno > vScrollPos + windowLines - 1)
+  {
+    vScrollPos = lineno - windowLines + 1;
+    fRefresh = true;
+  }
+
+
+  if (fRefresh)
+  {
+    SetupScrollbars();
+    RefreshWindow();
+    RepositionCaret();
+  }
 }

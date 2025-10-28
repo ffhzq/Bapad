@@ -9,10 +9,14 @@
 
 // add headers that you want to pre-compile here
 #include "framework.h"
+#include <cassert>
+#include <fstream>
+#include <gsl/gsl>
+#include <iostream>
 #include <memory>
+#include <stack>
 #include <string>
 #include <vector>
 #include <windows.h>
-#include <fstream>
-
+#include <Richedit.h>
 #endif //PCH_H

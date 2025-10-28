@@ -65,6 +65,9 @@
     <ClCompile Include="TextViewScoll.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="TextViewKeyNav.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="Bapad.rc">

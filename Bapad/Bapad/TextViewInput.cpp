@@ -3,103 +3,147 @@
 
 LONG TextView::OnChar(UINT nChar, UINT nFlags)
 {
-    WCHAR ch = (WCHAR)nChar;
-
-    if (nChar < 32 && nChar != '\t' && nChar != '\r' && nChar != '\n')
-        return 0;
-    // change CR into a CR/LF sequence
-    if (nChar == '\r')
-        PostMessageW(hWnd, WM_CHAR, '\n', 1);
-    if (EnterText(&ch, 1))
-    {
-        NotifyParent(TVN_CHANGED);//用于通知文件被修改了
-    }
+  WCHAR ch[2]{ nChar , 0 };
+  int inputLength = 1;
+  if (nChar < 32 && nChar != '\t' && nChar != '\r' && nChar != '\n')
     return 0;
+  // change CR into a CR/LF sequence
+  if (nChar == '\r')
+  {
+    ch[1] = '\n';
+    inputLength += 1;
+  }
+  if (EnterText(&ch[0], inputLength))
+    NotifyParent(TVN_CHANGED);//用于通知文件被修改了
+  return 0;
 }
 
 ULONG TextView::EnterText(WCHAR* inputText, ULONG inputTextLength)
 {
-    bool existSelectedText = selectionStart != selectionEnd;
+  const bool existSelectedText = selectionStart != selectionEnd;
 
-    //INSERT MODE, TWO STEPS    ;  TODO:READONLY,OVERWRITE
-    //
-    if (existSelectedText)
-    {
-        size_t start = min(selectionStart, selectionEnd);
-        size_t end = max(selectionStart, selectionEnd);
-        size_t eraseLen = end - start;
-        pTextDoc->EraseText(start, eraseLen);
-        cursorOffset = start;
-    }
-    if (pTextDoc->InsertText(cursorOffset, inputText, inputTextLength) == 0)
-    {
-        return 0;
-    }
-    cursorOffset += inputTextLength;
-    selectionStart = selectionEnd = cursorOffset;
-    RefreshWindow();
-    Smeg(TRUE);
-    return inputTextLength;
+
+  if (existSelectedText)
+  {
+    const size_t start = (std::min)(selectionStart, selectionEnd);
+    const size_t end = (std::max)(selectionStart, selectionEnd);
+    const size_t eraseLen = end - start;
+    pTextDoc->ReplaceText(start, inputText, inputTextLength, eraseLen);
+    cursorOffset = start;
+  }
+  else if (pTextDoc->InsertText(cursorOffset, inputText, inputTextLength) == 0)
+  {
+    return 0;
+  }
+  cursorOffset += inputTextLength;
+  selectionStart = selectionEnd = cursorOffset;
+  RefreshWindow();
+  SyncMetrics(TRUE);
+  return inputTextLength;
+}
+
+int TextView::ForwardDelete()
+{
+  const size_t start = (std::min)(selectionStart, selectionEnd);
+  const size_t end = (std::max)(selectionStart, selectionEnd);
+  if (start != end)
+  {
+    pTextDoc->EraseText(start, end - start);
+    cursorOffset = start;
+  }
+  else
+  {
+    const size_t oldOffset = cursorOffset;
+    MoveCharNext();
+    pTextDoc->EraseText(oldOffset, cursorOffset - oldOffset);
+    cursorOffset = oldOffset;
+  }
+  selectionStart = selectionEnd = cursorOffset;
+  RefreshWindow();
+  SyncMetrics(FALSE);
+  return TRUE;
+}
+
+int TextView::BackwardDelete()
+{
+  const size_t start = (std::min)(selectionStart, selectionEnd);
+  const size_t end = (std::max)(selectionStart, selectionEnd);
+  if (start != end)
+  {
+    pTextDoc->EraseText(start, end - start);
+    cursorOffset = start;
+  }
+  else if(cursorOffset > 0)
+  {
+    const size_t oldOffset = cursorOffset;
+    MoveCharPrev();
+    pTextDoc->EraseText(cursorOffset, oldOffset - cursorOffset);
+    //cursorOffset = oldOffset;
+  }
+  selectionStart = selectionEnd = cursorOffset;
+  //RefreshWindow();
+  SyncMetrics(FALSE);
+  return TRUE;
 }
 
 LRESULT TextView::NotifyParent(UINT nNotifyCode, NMHDR* optional)
 {
-    UINT  nCtrlId = GetWindowLongW(hWnd, GWL_ID);
-    NMHDR nmhdr = { hWnd, nCtrlId, nNotifyCode };
-    NMHDR* nmptr = &nmhdr;
+  UINT  nCtrlId = GetWindowLongW(hWnd, GWL_ID);
+  NMHDR nmhdr = { hWnd, nCtrlId, nNotifyCode };
+  NMHDR* nmptr = &nmhdr;
 
-    if (optional)
-    {
-        nmptr = optional;
-        *nmptr = nmhdr;
-    }
+  if (optional)
+  {
+    nmptr = optional;
+    *nmptr = nmhdr;
+  }
 
-    return SendMessageW(GetParent(hWnd), WM_NOTIFY, (WPARAM)nCtrlId, (LPARAM)nmptr);
+  return SendMessageW(GetParent(hWnd), WM_NOTIFY, (WPARAM)nCtrlId, (LPARAM)nmptr);
 }
 
-void TextView::Smeg(BOOL fAdvancing)
+void TextView::SyncMetrics(BOOL fAdvancing)
 {
-    pTextDoc->ReCalculateLineBuffer();
-    lineCount = pTextDoc->GetLineCount();
-    UpdateMetrics();
-    SetupScrollbars();
-    //UpdateCaretOffset(cursorOffset, fAdvancing, caretPosX, currentLine);
+  lineCount = pTextDoc->GetLineCount();
+  UpdateMetrics();
+  SetupScrollbars();
 
-    anchorPosX = caretPosX;
-    //ScrollToPosition(caretPosX, currentLine);
-    //RepositionCaret();
+  UpdateCaretOffset(fAdvancing);
+
+  ScrollToPosition(caretPosX, currentLine);
+  RepositionCaret();
 }
 
-/*
-VOID TextView::UpdateCaretOffset(ULONG offset, BOOL fTrailing, int* outx = 0, ULONG* outlineno = 0)
+void TextView::UpdateCaretOffset(BOOL fAdvancing)
 {
-    size_t lineno = 0;
-    int xpos = 0;
-    size_t off_chars;
-    USPDATA* uspData;
+  size_t  lineno = 0;
+  size_t  linestartCharOffset = 0;
+  TextIterator itor = pTextDoc->IterateLineByCharOffset(cursorOffset, &lineno, &linestartCharOffset);
+  //if (!itor)
+    //return;
 
-    // get line information from cursor-offset
-    if (pTextDoc->LineInfoFromOffset(offset, &lineno, &off_chars, 0, 0, 0))
-    {
-        // locate the USPDATA for this line
-        if ((uspData = GetUspData(NULL, lineno)) != 0)
-        {
-            // convert character-offset to x-coordinate
-            off_chars = cursorOffset - off_chars;
+  HDC hdc = GetDC(hWnd);
+  SelectObject(hdc, gsl::at(fontAttr, 0).hFont);
+  // find the x-coordinate on the specified line
+  auto buf = itor.GetLine();
+  const size_t len = buf.size();
+  LONGLONG  xpos = 0;
 
-            if (fTrailing && off_chars > 0)
-                ScriptCPtoX(off_chars - 1, TRUE, off_chars, uspData, &xpos);
-            //UspOffsetToX(uspData, off_chars - 1, TRUE, &xpos);
-            else
-                ScriptCPtoX(off_chars, FALSE, off_chars, uspData, &xpos);
-            //UspOffsetToX(uspData, off_chars, FALSE, &xpos);
+  if (!buf.empty() && linestartCharOffset < cursorOffset)
+  {
+    const size_t offsetChars = cursorOffset - linestartCharOffset;
+    //if (fAdvancing && offsetChars > 0)
+    //{
+    //  ++offsetChars;
+    //}
+    const std::span<wchar_t> bufSpan(buf.begin(), offsetChars);
+    xpos += BaTextWidth(hdc, bufSpan, -xpos);
+  }
 
-        // update caret position
-            UpdateCaretXY(xpos, lineno);
-        }
-    }
+  ReleaseDC(hWnd, hdc);
 
-    if (outx)	  *outx = xpos;
-    if (outlineno) *outlineno = lineno;
+  caretPosX = xpos;
+  currentLine = lineno;
+  UpdateCaretXY(xpos, lineno);
+
+
 }
-*/

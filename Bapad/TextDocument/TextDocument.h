@@ -1,131 +1,100 @@
 #pragma once
 #include "pch.h"
+#include "FormatConversionV2.h"
+#include "PieceTree.h"
+
+constexpr size_t GetUtf8CharSize(const unsigned char ch) noexcept;
 
 class TextIterator;
+enum class ActionType {
+  ActionInvalid,
+  ActionInsert,
+  ActionErase,
+  ActionReplace
+};
+struct EditAction {
+  std::vector<wchar_t> insertedText;
+  std::vector<wchar_t> erasedText;
+  size_t actionOffsetBytes; // OffsetBytes in piece.
+  ActionType actionType;
+};
 
-class TextDocument
-{
-    friend class TextIterator;
+class TextDocument {
+  friend class TextIterator;
 public:
-    TextDocument() noexcept;
-    ~TextDocument() noexcept;
+  TextDocument() noexcept;
 
-    bool Initialize(wchar_t* filename);
-    
-    bool Clear() noexcept;
-    bool ReCalculateLineBuffer();
-    size_t LineNumFromOffset(size_t offset);
+  bool Initialize(const wchar_t* filename);
 
-    bool LineInfoFromOffset(size_t offset_chars, size_t* lineNo, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);//定位对应offset所在的行并返回行号、字符偏移量、行字符数、字节偏移量、行字节数这些信息
-    bool LineInfoFromLineNumber(size_t lineno, size_t* lineoffChars, size_t* linelenChars, size_t* lineoffBytes, size_t* linelenBytes);
+  bool Clear();
+  size_t LineNumFromCharOffset(size_t offset);
 
-    TextIterator IterateLineByLineNumber(size_t lineno, size_t* linestart = 0, size_t* linelen = 0);
-    TextIterator IterateLineByOffset(size_t offset_chars, size_t* lineno, size_t* linestart = 0);
+  TextIterator IterateLineByLineNumber(size_t lineno, size_t* linestartCharOffset, size_t* lineLengthCharOffset);
+  TextIterator IterateLineByCharOffset(size_t charOffset, size_t* lineno, size_t* linestartCharOffset);
 
-    size_t	InsertText(size_t offsetChars, wchar_t* text, size_t length);
-    size_t	ReplaceText(size_t offsetChars, wchar_t * text, size_t length, size_t eraseLen);
-    size_t	EraseText(size_t offsetChars, size_t length);
+  size_t  InsertText(size_t offsetChars, wchar_t* text, size_t length);
+  size_t  ReplaceText(size_t offsetChars, wchar_t* text, size_t length, size_t eraseLen);
+  size_t  EraseText(size_t offsetChars, size_t length);
 
-    const int GetFileFormat() const;
-    const size_t GetLineCount() const;
-    const size_t GetLongestLine(int tabwidth) const;
-    const size_t GetDocLength() const;
+  bool CanUndo() const noexcept;
+  bool CanRedo() const noexcept;
+  int Undo();
+  int Redo();
+
+  CP_TYPE GetFileFormat() const noexcept;
+  const size_t GetLineCount() const noexcept;
+  const size_t GetLongestLine(int tabwidth) const noexcept;
+  const size_t GetDocLength() const noexcept;
 
 private:
-    bool InitLineBuffer();
-    bool ReleaseLineBuffer();
 
-    size_t GetUTF32Char(size_t offset, size_t lenBytes, char32_t& pch32);
+  size_t CharOffsetToIndexOffsetAt(const size_t startOffset, const size_t charCount) noexcept;
+  size_t IndexOffsetToCharOffset(size_t offset) noexcept;
 
-    // GetText: read 'lenBytes'or'bufLen'(use the smaller one) bytes wchar from the position (docBuffer+offset) to 'buf'
-    size_t  GetText(size_t offset, size_t lenBytes, wchar_t* buf, size_t& bufLen);
+  size_t CountByteAnsi(const size_t startByteOffset, const size_t charCount) noexcept;
+  size_t CountByteUtf8(const size_t startByteOffset, const size_t charCount) noexcept;
+  size_t CountByte(const size_t startByteOffset, const size_t charCount) noexcept; // charCount to byteCount
+  size_t CountCharAnsi(const size_t byteLength) noexcept;
+  size_t CountCharUtf8(const size_t byteLength) noexcept;
+  size_t CountChar(const size_t byteLength) noexcept; // byteCount to charCount;
+  
+  int DoCommand(EditAction action, std::stack<EditAction> & record);
 
-    size_t  RawDataToUTF16(unsigned char * rawdata, size_t rawlen, wchar_t * utf16str, size_t& utf16len);
-    size_t  UTF16ToRawData(wchar_t * utf16Str, size_t utf16Len, unsigned char * rawData, size_t& rawLen);
-
-    size_t	InsertTextRaw(size_t offsetBytes, wchar_t * text, size_t textLength);
-    size_t	ReplaceTextRaw(size_t offsetBytes, wchar_t  * text, size_t textLength, size_t eraseLen);
-    size_t	EraseTextRaw(size_t offsetBytes, size_t textLength);
-
-    size_t CharOffsetToByteOffsetAt(size_t offsetBytes, size_t charCount);
-    size_t CharOffsetToByteOffset(size_t offsetChars);
-    std::vector<unsigned char> docBuffer;// raw txt data
-    size_t  docLengthByChars;//
-    size_t  docLengthByBytes;// size of txt data
-
-    int fileFormat;
-    int  headerSize;
-
-    size_t* byteOffsetLineBuffer;
-    size_t* charOffsetLineBuffer;
-
-    size_t  lineCount;
-
-
+  PieceTree docBuffer;// raw txt data
+  std::stack<EditAction> undoStack;
+  std::stack<EditAction> redoStack;
+  CP_TYPE fileFormat;
+  int  headerSize;
 
 };
 
 
-class TextIterator
-{
+class TextIterator {
 private:
-    TextDocument* textDoc;
-    size_t  offsetBytes;
-    size_t  lengthBytes;//bytes remaining
+  std::vector<wchar_t> lineContent;
+  TextDocument* textDoc;
 public:
-    TextIterator() noexcept
-        : textDoc(nullptr), offsetBytes(0), lengthBytes(0)
+  TextIterator() noexcept :lineContent(), textDoc(nullptr)
+  {}
+  TextIterator(const std::vector<wchar_t>& lineContent, TextDocument* textDoc)
+    : lineContent(lineContent), textDoc(textDoc)
+  {}
+  ~TextIterator() noexcept = default;
+  TextIterator(const TextIterator&) = default;
+  TextIterator& operator=(const TextIterator&) = default;
+  TextIterator(TextIterator&&) = default;
+  TextIterator& operator=(TextIterator&&) = default;
+
+  std::vector<wchar_t> GetLine()
+  {
+    if (textDoc)
     {
+      return lineContent;
     }
-
-    TextIterator(size_t off, size_t len, TextDocument* td) noexcept
-        : textDoc(td), offsetBytes(off), lengthBytes(len)
-    {
-
-    }
-
-    TextIterator(const TextIterator& ti) noexcept
-        : textDoc(ti.textDoc), offsetBytes(ti.offsetBytes), lengthBytes(ti.lengthBytes)
-    {
-    }
-
-    TextIterator& operator= (TextIterator ti)
-    {
-        if (ti == *this)
-        {
-            return *this;
-        }
-
-        textDoc = ti.textDoc;
-        offsetBytes = ti.offsetBytes;
-        lengthBytes = ti.lengthBytes;
-        return *this;
-    }
-
-    size_t GetText(wchar_t* buf, size_t bufLen)
-    {
-        if (textDoc)
-        {
-            memset(buf, 0, bufLen * sizeof(wchar_t));
-            // get text from the TextDocument at the specified byte-offset
-            size_t len = textDoc->GetText(offsetBytes, lengthBytes, buf, bufLen);
-
-            // adjust the iterator's internal position
-            offsetBytes += len;
-            lengthBytes -= len;
-
-            return bufLen;
-        }
-        else
-        {
-            return 0;
-        }
-    }
-
-    operator bool()
-    {
-        return textDoc != nullptr ? true : false;
-    }
+    return std::vector<wchar_t>();
+  }
+  operator bool() noexcept
+  {
+    return textDoc != nullptr ? true : false;
+  }
 };
-
-

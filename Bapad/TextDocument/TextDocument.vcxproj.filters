@@ -30,6 +30,12 @@
     <ClInclude Include="MyException.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PieceTree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="FormatConversionV2.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
@@ -39,6 +45,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="FormatConversion.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PieceTree.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="FormatConversionV2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

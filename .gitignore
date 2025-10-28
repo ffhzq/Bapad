@@ -36,3 +36,4 @@
 
 #Google Test dependencies
 packages/
+/Bapad/vcpkg_installed
