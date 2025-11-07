@@ -4,7 +4,7 @@
 //
 //	Wrapper for GetTextExtentPoint32.
 //
-int TextView::BaTextWidth(HDC hdc, std::span<wchar_t> bufSpan, int nTabOrigin)
+int TextView::BaTextWidth(HDC hdc, std::span<char16_t> bufSpan, int nTabOrigin)
 {
   SIZE  sz;
   int width = 0;
@@ -16,7 +16,7 @@ int TextView::BaTextWidth(HDC hdc, std::span<wchar_t> bufSpan, int nTabOrigin)
     if (i == len || gsl::at(bufSpan,i) == '\t' || gsl::at(bufSpan, i) < 32)
     {
       if (lasti == i) continue;
-      GetTextExtentPoint32W(hdc, &gsl::at(bufSpan, lasti), i - lasti, &sz);
+      GetTextExtentPoint32W(hdc, reinterpret_cast<LPCWSTR>(&gsl::at(bufSpan, lasti)), i - lasti, &sz);
       width += sz.cx;
 
       if (i < len && gsl::at(bufSpan, i) == '\t')
@@ -27,7 +27,7 @@ int TextView::BaTextWidth(HDC hdc, std::span<wchar_t> bufSpan, int nTabOrigin)
       else if (i < len && gsl::at(bufSpan, i) < 32)
       {
         // width += GetCtrlCharWidth(hdc, gsl::at(bufSpan, i), &gsl::at(fontAttr, 0));
-        GetTextExtentPoint32W(hdc, &gsl::at(bufSpan, i), 1, &sz);
+        GetTextExtentPoint32W(hdc, reinterpret_cast<LPCWSTR>(& gsl::at(bufSpan, i)), 1, &sz);
         width += sz.cx;
         lasti = i + 1;
       }

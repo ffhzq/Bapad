@@ -17,7 +17,7 @@ bool TextDocument::Initialize(const wchar_t* filename)
     return false;
   }
   const size_t docLengthByBytes = ifs.tellg();
-  std::vector<unsigned char> read_buffer;
+  std::vector<char> read_buffer;
 
   ifs.seekg(0, std::ios::beg);
   if (docLengthByBytes <= 0)
@@ -107,39 +107,37 @@ TextIterator TextDocument::IterateLineByCharOffset(size_t charOffset, size_t* li
   return TextIterator(lineContent, this);
 }
 
-size_t TextDocument::InsertText(size_t offsetChars, wchar_t* text, size_t length)
+size_t TextDocument::InsertText(size_t offsetChars, std::vector<char16_t> text)
 {
   const size_t indexOffset = CharOffsetToIndexOffsetAt(0, offsetChars);
-  const gsl::span<wchar_t> textSpan(text, length);
-  std::vector<wchar_t> textVec(textSpan.begin(), textSpan.end());
-  if (length && docBuffer.InsertText(indexOffset, textVec))
+  size_t length = text.size();
+  if (length && docBuffer.InsertText(indexOffset, text))
   {
     EditAction action;
     action.actionOffsetBytes = indexOffset;
     action.actionType = ActionType::ActionInsert;
-    action.insertedText = (textVec);//std::move
+    action.insertedText = text;//std::move
     undoStack.push(action);
-    return textVec.size();
+    return text.size();
   }
   return 0;
 }
 
-size_t TextDocument::ReplaceText(size_t offsetChars, wchar_t* text, size_t length, size_t eraseLen)
+size_t TextDocument::ReplaceText(size_t offsetChars, std::vector<char16_t> text, size_t eraseLen)
 {
   const size_t indexOffset = CharOffsetToIndexOffsetAt(0, offsetChars);
   const size_t eraseBytes = CharOffsetToIndexOffsetAt(indexOffset, eraseLen);
-  const gsl::span<wchar_t> textSpan(text, length);
-  std::vector<wchar_t> textVec(textSpan.begin(), textSpan.end());
+  size_t length = text.size();
   auto erasedText = docBuffer.GetText(indexOffset, eraseBytes);
-  if (length && docBuffer.ReplaceText(indexOffset, textVec, eraseBytes))
+  if (length && docBuffer.ReplaceText(indexOffset, text, eraseBytes))
   {
     EditAction action;
     action.actionOffsetBytes = indexOffset;
     action.actionType = ActionType::ActionReplace;
-    action.insertedText = (textVec);
+    action.insertedText = text;
     action.erasedText = (erasedText);
     undoStack.push(action);
-    return textVec.size();
+    return text.size();
   }
   return 0;
 }
@@ -193,7 +191,7 @@ size_t TextDocument::CountByteUtf8(const size_t startByteOffset, const size_t ch
   size_t byteOffset = 0;
   while (currentCharCount < charCount)
   {
-    const size_t charSize = GetUtf8CharSize(textSpan[byteOffset]);
+      const size_t charSize = GetUtf8CharSize(textSpan[byteOffset]);
     byteOffset += charSize;
     ++currentCharCount;
   }
@@ -237,7 +235,7 @@ size_t TextDocument::CountCharUtf8(const size_t byteLength) noexcept
   size_t byteOffset = 0;
   while (byteOffset < byteLength)
   {
-    const size_t charSize = GetUtf8CharSize(textSpan[byteOffset]);
+      const size_t charSize = GetUtf8CharSize(textSpan[byteOffset]);
     byteOffset += charSize;
     ++charCount;
   }
@@ -292,7 +290,7 @@ bool TextDocument::Clear()
   docBuffer.length = 0;
   docBuffer.lineCount = 1;
   docBuffer.buffers.clear();
-  auto input = std::vector<wchar_t>();
+  auto input = std::vector<char16_t>();
   docBuffer.Init(input);
   std::stack<EditAction>().swap(undoStack);
   std::stack<EditAction>().swap(redoStack);
@@ -337,7 +335,7 @@ int TextDocument::Redo()
 }
 
 
-constexpr size_t GetUtf8CharSize(const unsigned char ch) noexcept
+constexpr size_t GetUtf8CharSize(const char ch) noexcept
 {
   const uint8_t byte = ch;
   if ((byte & 0x80) == 0) return 1;       // 0xxxxxxx

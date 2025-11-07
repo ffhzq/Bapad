@@ -30,8 +30,8 @@ private:
   void    PaintLine(HDC hdc, ULONG64 nLineNo);
   void    PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect);
 
-  size_t  ApplyTextAttributes(size_t nLineNo, size_t offset, std::vector<wchar_t>& szText, std::vector<ATTR>& attr);
-  int     BaTextOut(HDC hdc, int xpos, int ypos, gsl::span<wchar_t> szText, int nTabOrigin, const ATTR& attr);
+  size_t  ApplyTextAttributes(size_t nLineNo, size_t offset, std::vector<char16_t>& szText, std::vector<ATTR>& attr);
+  int     BaTextOut(HDC hdc, int xpos, int ypos, gsl::span<char16_t> szText, int nTabOrigin, const ATTR& attr);
 
   int     PaintCtrlChar(HDC hdc, int xpos, int ypos, ULONG64 chValue, FONT* fa);
   void    InitCtrlCharFontAttr(HDC hdc, FONT* fa);
@@ -40,7 +40,7 @@ private:
   LONG    InvalidateRange(size_t nStart, size_t nFinish);
 
   int     GetCtrlCharWidth(HDC hdc, ULONG64 chValue, FONT* fa);
-  int     BaTextWidth(HDC hdc, std::span<wchar_t> bufSpan, int nTabOrigin);
+  int     BaTextWidth(HDC hdc, std::span<char16_t> bufSpan, int nTabOrigin);
   int     TabWidth() const;
   int     GetLongestLine();
 

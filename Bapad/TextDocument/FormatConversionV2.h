@@ -19,7 +19,7 @@ struct _BOM_LOOKUP {
   CP_TYPE codePageType;
 };
 
-CP_TYPE DetectFileFormat(std::vector<unsigned char> docBuffer, int& headerSize) noexcept;
+CP_TYPE DetectFileFormat(std::vector<char> docBuffer, int& headerSize) noexcept;
 
 template<typename T>
 inline auto SwapWord16(T& ch16) noexcept
@@ -31,7 +31,7 @@ inline auto SwapWord16(T& ch16) noexcept
 }
 
 
-bool IsUTF8(std::vector<unsigned char> buffer) noexcept;
+bool IsUTF8(std::vector<char> buffer) noexcept;
 
-std::vector<wchar_t> RawToUtf16(std::vector<unsigned char>& rawData, const CP_TYPE rawDataCodpage);
-std::vector<unsigned char> Utf16toRaw(std::vector<wchar_t>& utf16Data, const CP_TYPE rawDataCodpage);
+std::vector<char16_t> RawToUtf16(std::vector<char>& rawData, const CP_TYPE rawDataCodpage);
+std::vector<char> Utf16toRaw(std::vector<char16_t>& utf16Data, const CP_TYPE rawDataCodpage);
