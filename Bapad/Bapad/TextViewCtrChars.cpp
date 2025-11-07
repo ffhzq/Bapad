@@ -1,4 +1,3 @@
-#include "../TextDocument/FormatConversion.h"
 #include "TextView.h"
 
 constexpr size_t CTRLCHARSNUM = 32;
