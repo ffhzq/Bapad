@@ -51,13 +51,6 @@ private:
   size_t CharOffsetToIndexOffsetAt(const size_t startOffset, const size_t charCount) noexcept;
   size_t IndexOffsetToCharOffset(size_t offset) noexcept;
 
-  size_t CountByteAnsi(const size_t startByteOffset, const size_t charCount) noexcept;
-  size_t CountByteUtf8(const size_t startByteOffset, const size_t charCount) noexcept;
-  size_t CountByte(const size_t startByteOffset, const size_t charCount) noexcept; // charCount to byteCount
-  size_t CountCharAnsi(const size_t byteLength) noexcept;
-  size_t CountCharUtf8(const size_t byteLength) noexcept;
-  size_t CountChar(const size_t byteLength) noexcept; // byteCount to charCount;
-  
   int DoCommand(EditAction action, std::stack<EditAction> & record);
 
   PieceTree docBuffer;// raw txt data

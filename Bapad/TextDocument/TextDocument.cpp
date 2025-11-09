@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "TextDocument.h"
 
-constexpr size_t LEN = 0x100;
-
 TextDocument::TextDocument() noexcept
   :
   docBuffer(),
@@ -164,99 +162,13 @@ size_t TextDocument::CharOffsetToIndexOffsetAt(const size_t startOffset, const s
   // todo: utf16 char maybe 1 or 2 wchar_t long.
   return charCount;
 }
+
 size_t TextDocument::IndexOffsetToCharOffset(size_t offset) noexcept
 {
   // todo: utf16 char maybe 1 or 2 wchar_t long.
   return offset;
 }
-size_t TextDocument::CountByteAnsi(const size_t startByteOffset, const size_t charCount) noexcept
-{
-  std::vector<unsigned char> rawText; //docBuffer.GetText(startByteOffset, docBuffer.length - startByteOffset); // todo: iterate text piece by piece
-  const gsl::span<unsigned char> textSpan(rawText);
-  size_t currentCharCount = 0;
-  size_t byteOffset = 0;
-  while (currentCharCount < charCount)
-  {
-    const size_t charSize = IsDBCSLeadByte(textSpan[byteOffset]) ? 2 : 1;
-    byteOffset += charSize;
-    ++currentCharCount;
-  }
-  return byteOffset;
-}
-size_t TextDocument::CountByteUtf8(const size_t startByteOffset, const size_t charCount) noexcept
-{
-  std::vector<unsigned char> rawText;// = docBuffer.GetText(startByteOffset, docBuffer.length - startByteOffset); // todo: iterate text piece by piece
-  const gsl::span<unsigned char> textSpan(rawText);
-  size_t currentCharCount = 0;
-  size_t byteOffset = 0;
-  while (currentCharCount < charCount)
-  {
-      const size_t charSize = GetUtf8CharSize(textSpan[byteOffset]);
-    byteOffset += charSize;
-    ++currentCharCount;
-  }
-  return byteOffset;
-}
-size_t TextDocument::CountByte(const size_t startByteOffset, const size_t charCount) noexcept
-{
-  size_t byteCount = 0;
-  switch (fileFormat)
-  {
-  case CP_TYPE::ANSI:
-    byteCount = CountByteAnsi(startByteOffset, charCount);
-    break;
-  case CP_TYPE::UTF8:
-    byteCount = CountByteUtf8(startByteOffset, charCount);
-    break;
-  default:
-    break;
-  }
-  return byteCount;
-}
-size_t TextDocument::CountCharAnsi(const size_t byteLength) noexcept
-{
-  std::vector<unsigned char> rawText;// = docBuffer.GetText(0, byteLength);
-  const gsl::span<unsigned char> textSpan(rawText);
-  size_t charCount = 0;
-  size_t byteOffset = 0;
-  while (byteOffset < byteLength)
-  {
-    const size_t charSize = IsDBCSLeadByte(textSpan[byteOffset]) ? 2 : 1;
-    byteOffset += charSize;
-    ++charCount;
-  }
-  return charCount;
-}
-size_t TextDocument::CountCharUtf8(const size_t byteLength) noexcept
-{
-  std::vector<unsigned char> rawText;// = docBuffer.GetText(0, byteLength);
-  const gsl::span<unsigned char> textSpan(rawText);
-  size_t charCount = 0;
-  size_t byteOffset = 0;
-  while (byteOffset < byteLength)
-  {
-      const size_t charSize = GetUtf8CharSize(textSpan[byteOffset]);
-    byteOffset += charSize;
-    ++charCount;
-  }
-  return charCount;
-}
-size_t TextDocument::CountChar(const size_t byteLength) noexcept
-{
-  size_t charCount = 0;
-  switch (fileFormat)
-  {
-  case CP_TYPE::ANSI:
-    charCount = CountCharAnsi(byteLength);
-    break;
-  case CP_TYPE::UTF8:
-    charCount = CountCharUtf8(byteLength);
-    break;
-  default:
-    break;
-  }
-  return charCount;
-}
+
 int TextDocument::DoCommand(EditAction action, std::stack<EditAction>& record)
 {
   int newCursorOffset = -1;
