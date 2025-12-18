@@ -21,17 +21,17 @@ LONG TextView::OnChar(UINT nChar, UINT nFlags)
 ULONG TextView::EnterText(WCHAR* inputText, ULONG inputTextLength)
 {
   const bool existSelectedText = selectionStart != selectionEnd;
-
-
+  std::vector<char16_t> inputVec(inputText, inputText + inputTextLength);
   if (existSelectedText)
   {
     const size_t start = (std::min)(selectionStart, selectionEnd);
     const size_t end = (std::max)(selectionStart, selectionEnd);
     const size_t eraseLen = end - start;
-    pTextDoc->ReplaceText(start, inputText, inputTextLength, eraseLen);
+
+    pTextDoc->ReplaceText(start, inputVec, eraseLen);
     cursorOffset = start;
   }
-  else if (pTextDoc->InsertText(cursorOffset, inputText, inputTextLength) == 0)
+  else if (pTextDoc->InsertText(cursorOffset, inputVec) == 0)
   {
     return 0;
   }
@@ -135,7 +135,7 @@ void TextView::UpdateCaretOffset(BOOL fAdvancing)
     //{
     //  ++offsetChars;
     //}
-    const std::span<wchar_t> bufSpan(buf.begin(), offsetChars);
+    const std::span<char16_t> bufSpan(buf.begin(), offsetChars);
     xpos += BaTextWidth(hdc, bufSpan, -xpos);
   }
 

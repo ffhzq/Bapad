@@ -297,7 +297,7 @@ BOOL TextView::MouseCoordToFilePos( LONGLONG mx, // [in]  mouse x-coord
       while (low < high - 1)
       {
         const LONGLONG newLen = (high - low) / 2;
-        std::span<wchar_t> bufSpan(buf);
+        std::span<char16_t> bufSpan(buf);
         bufSpan = bufSpan.subspan(low,newLen);
         assert(newLen == bufSpan.size());
         width = BaTextWidth(hdc, bufSpan, -lowx - curx);

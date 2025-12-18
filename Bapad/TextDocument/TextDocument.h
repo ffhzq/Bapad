@@ -3,7 +3,7 @@
 #include "FormatConversionV2.h"
 #include "PieceTree.h"
 
-constexpr size_t GetUtf8CharSize(const unsigned char ch) noexcept;
+constexpr size_t GetUtf8CharSize(const char ch) noexcept;
 
 class TextIterator;
 enum class ActionType {
@@ -13,8 +13,8 @@ enum class ActionType {
   ActionReplace
 };
 struct EditAction {
-  std::vector<wchar_t> insertedText;
-  std::vector<wchar_t> erasedText;
+  std::vector<char16_t> insertedText;
+  std::vector<char16_t> erasedText;
   size_t actionOffsetBytes; // OffsetBytes in piece.
   ActionType actionType;
 };
@@ -32,8 +32,8 @@ public:
   TextIterator IterateLineByLineNumber(size_t lineno, size_t* linestartCharOffset, size_t* lineLengthCharOffset);
   TextIterator IterateLineByCharOffset(size_t charOffset, size_t* lineno, size_t* linestartCharOffset);
 
-  size_t  InsertText(size_t offsetChars, wchar_t* text, size_t length);
-  size_t  ReplaceText(size_t offsetChars, wchar_t* text, size_t length, size_t eraseLen);
+  size_t  InsertText(size_t offsetChars, std::vector<char16_t> text);
+  size_t  ReplaceText(size_t offsetChars, std::vector<char16_t> text, size_t eraseLen);
   size_t  EraseText(size_t offsetChars, size_t length);
 
   bool CanUndo() const noexcept;
@@ -51,13 +51,6 @@ private:
   size_t CharOffsetToIndexOffsetAt(const size_t startOffset, const size_t charCount) noexcept;
   size_t IndexOffsetToCharOffset(size_t offset) noexcept;
 
-  size_t CountByteAnsi(const size_t startByteOffset, const size_t charCount) noexcept;
-  size_t CountByteUtf8(const size_t startByteOffset, const size_t charCount) noexcept;
-  size_t CountByte(const size_t startByteOffset, const size_t charCount) noexcept; // charCount to byteCount
-  size_t CountCharAnsi(const size_t byteLength) noexcept;
-  size_t CountCharUtf8(const size_t byteLength) noexcept;
-  size_t CountChar(const size_t byteLength) noexcept; // byteCount to charCount;
-  
   int DoCommand(EditAction action, std::stack<EditAction> & record);
 
   PieceTree docBuffer;// raw txt data
@@ -71,12 +64,12 @@ private:
 
 class TextIterator {
 private:
-  std::vector<wchar_t> lineContent;
+  std::vector<char16_t> lineContent;
   TextDocument* textDoc;
 public:
   TextIterator() noexcept :lineContent(), textDoc(nullptr)
   {}
-  TextIterator(const std::vector<wchar_t>& lineContent, TextDocument* textDoc)
+  TextIterator(const std::vector<char16_t>& lineContent, TextDocument* textDoc)
     : lineContent(lineContent), textDoc(textDoc)
   {}
   ~TextIterator() noexcept = default;
@@ -85,13 +78,13 @@ public:
   TextIterator(TextIterator&&) = default;
   TextIterator& operator=(TextIterator&&) = default;
 
-  std::vector<wchar_t> GetLine()
+  std::vector<char16_t> GetLine()
   {
     if (textDoc)
     {
       return lineContent;
     }
-    return std::vector<wchar_t>();
+    return std::vector<char16_t>();
   }
   operator bool() noexcept
   {

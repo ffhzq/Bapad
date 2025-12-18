@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "TextDocument.h"
 
-constexpr size_t LEN = 0x100;
-
 TextDocument::TextDocument() noexcept
   :
   docBuffer(),
@@ -17,7 +15,7 @@ bool TextDocument::Initialize(const wchar_t* filename)
     return false;
   }
   const size_t docLengthByBytes = ifs.tellg();
-  std::vector<unsigned char> read_buffer;
+  std::vector<char> read_buffer;
 
   ifs.seekg(0, std::ios::beg);
   if (docLengthByBytes <= 0)
@@ -107,39 +105,37 @@ TextIterator TextDocument::IterateLineByCharOffset(size_t charOffset, size_t* li
   return TextIterator(lineContent, this);
 }
 
-size_t TextDocument::InsertText(size_t offsetChars, wchar_t* text, size_t length)
+size_t TextDocument::InsertText(size_t offsetChars, std::vector<char16_t> text)
 {
   const size_t indexOffset = CharOffsetToIndexOffsetAt(0, offsetChars);
-  const gsl::span<wchar_t> textSpan(text, length);
-  std::vector<wchar_t> textVec(textSpan.begin(), textSpan.end());
-  if (length && docBuffer.InsertText(indexOffset, textVec))
+  size_t length = text.size();
+  if (length && docBuffer.InsertText(indexOffset, text))
   {
     EditAction action;
     action.actionOffsetBytes = indexOffset;
     action.actionType = ActionType::ActionInsert;
-    action.insertedText = (textVec);//std::move
+    action.insertedText = text;//std::move
     undoStack.push(action);
-    return textVec.size();
+    return text.size();
   }
   return 0;
 }
 
-size_t TextDocument::ReplaceText(size_t offsetChars, wchar_t* text, size_t length, size_t eraseLen)
+size_t TextDocument::ReplaceText(size_t offsetChars, std::vector<char16_t> text, size_t eraseLen)
 {
   const size_t indexOffset = CharOffsetToIndexOffsetAt(0, offsetChars);
   const size_t eraseBytes = CharOffsetToIndexOffsetAt(indexOffset, eraseLen);
-  const gsl::span<wchar_t> textSpan(text, length);
-  std::vector<wchar_t> textVec(textSpan.begin(), textSpan.end());
+  size_t length = text.size();
   auto erasedText = docBuffer.GetText(indexOffset, eraseBytes);
-  if (length && docBuffer.ReplaceText(indexOffset, textVec, eraseBytes))
+  if (length && docBuffer.ReplaceText(indexOffset, text, eraseBytes))
   {
     EditAction action;
     action.actionOffsetBytes = indexOffset;
     action.actionType = ActionType::ActionReplace;
-    action.insertedText = (textVec);
+    action.insertedText = text;
     action.erasedText = (erasedText);
     undoStack.push(action);
-    return textVec.size();
+    return text.size();
   }
   return 0;
 }
@@ -166,99 +162,13 @@ size_t TextDocument::CharOffsetToIndexOffsetAt(const size_t startOffset, const s
   // todo: utf16 char maybe 1 or 2 wchar_t long.
   return charCount;
 }
+
 size_t TextDocument::IndexOffsetToCharOffset(size_t offset) noexcept
 {
   // todo: utf16 char maybe 1 or 2 wchar_t long.
   return offset;
 }
-size_t TextDocument::CountByteAnsi(const size_t startByteOffset, const size_t charCount) noexcept
-{
-  std::vector<unsigned char> rawText; //docBuffer.GetText(startByteOffset, docBuffer.length - startByteOffset); // todo: iterate text piece by piece
-  const gsl::span<unsigned char> textSpan(rawText);
-  size_t currentCharCount = 0;
-  size_t byteOffset = 0;
-  while (currentCharCount < charCount)
-  {
-    const size_t charSize = IsDBCSLeadByte(textSpan[byteOffset]) ? 2 : 1;
-    byteOffset += charSize;
-    ++currentCharCount;
-  }
-  return byteOffset;
-}
-size_t TextDocument::CountByteUtf8(const size_t startByteOffset, const size_t charCount) noexcept
-{
-  std::vector<unsigned char> rawText;// = docBuffer.GetText(startByteOffset, docBuffer.length - startByteOffset); // todo: iterate text piece by piece
-  const gsl::span<unsigned char> textSpan(rawText);
-  size_t currentCharCount = 0;
-  size_t byteOffset = 0;
-  while (currentCharCount < charCount)
-  {
-    const size_t charSize = GetUtf8CharSize(textSpan[byteOffset]);
-    byteOffset += charSize;
-    ++currentCharCount;
-  }
-  return byteOffset;
-}
-size_t TextDocument::CountByte(const size_t startByteOffset, const size_t charCount) noexcept
-{
-  size_t byteCount = 0;
-  switch (fileFormat)
-  {
-  case CP_TYPE::ANSI:
-    byteCount = CountByteAnsi(startByteOffset, charCount);
-    break;
-  case CP_TYPE::UTF8:
-    byteCount = CountByteUtf8(startByteOffset, charCount);
-    break;
-  default:
-    break;
-  }
-  return byteCount;
-}
-size_t TextDocument::CountCharAnsi(const size_t byteLength) noexcept
-{
-  std::vector<unsigned char> rawText;// = docBuffer.GetText(0, byteLength);
-  const gsl::span<unsigned char> textSpan(rawText);
-  size_t charCount = 0;
-  size_t byteOffset = 0;
-  while (byteOffset < byteLength)
-  {
-    const size_t charSize = IsDBCSLeadByte(textSpan[byteOffset]) ? 2 : 1;
-    byteOffset += charSize;
-    ++charCount;
-  }
-  return charCount;
-}
-size_t TextDocument::CountCharUtf8(const size_t byteLength) noexcept
-{
-  std::vector<unsigned char> rawText;// = docBuffer.GetText(0, byteLength);
-  const gsl::span<unsigned char> textSpan(rawText);
-  size_t charCount = 0;
-  size_t byteOffset = 0;
-  while (byteOffset < byteLength)
-  {
-    const size_t charSize = GetUtf8CharSize(textSpan[byteOffset]);
-    byteOffset += charSize;
-    ++charCount;
-  }
-  return charCount;
-}
-size_t TextDocument::CountChar(const size_t byteLength) noexcept
-{
-  size_t charCount = 0;
-  switch (fileFormat)
-  {
-  case CP_TYPE::ANSI:
-    charCount = CountCharAnsi(byteLength);
-    break;
-  case CP_TYPE::UTF8:
-    charCount = CountCharUtf8(byteLength);
-    break;
-  default:
-    break;
-  }
-  return charCount;
-}
+
 int TextDocument::DoCommand(EditAction action, std::stack<EditAction>& record)
 {
   int newCursorOffset = -1;
@@ -292,7 +202,7 @@ bool TextDocument::Clear()
   docBuffer.length = 0;
   docBuffer.lineCount = 1;
   docBuffer.buffers.clear();
-  auto input = std::vector<wchar_t>();
+  auto input = std::vector<char16_t>();
   docBuffer.Init(input);
   std::stack<EditAction>().swap(undoStack);
   std::stack<EditAction>().swap(redoStack);
@@ -337,7 +247,7 @@ int TextDocument::Redo()
 }
 
 
-constexpr size_t GetUtf8CharSize(const unsigned char ch) noexcept
+constexpr size_t GetUtf8CharSize(const char ch) noexcept
 {
   const uint8_t byte = ch;
   if ((byte & 0x80) == 0) return 1;       // 0xxxxxxx

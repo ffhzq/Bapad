@@ -1,26 +1,40 @@
 #include "pch.h"
 #include "../TextDocument/PieceTree.h"
 
+namespace testing {
+  namespace internal {
+    std::string U16VectorToPrintableString(const std::vector<char16_t>& vec) {
+      std::string result = std::to_string(reinterpret_cast<wchar_t>(&vec[0]));
+      return result;
+    }
+    template <>
+    void UniversalPrinter<std::vector<char16_t>>::Print(
+      const std::vector<char16_t>& vec, std::ostream* os) {
+      *os << U16VectorToPrintableString(vec);
+    }
 
-std::vector<wchar_t> toWCharVector(const std::string& s)
+  } // namespace internal
+} // namespace testing
+
+static std::vector<char16_t> toWCharVector(const std::string& s)
 {
   int len = MultiByteToWideChar(CP_ACP, 0, s.data(), s.size(), nullptr, 0);
-  std::vector<wchar_t> wchar_vector;
+  std::vector<char16_t> wchar_vector;
   wchar_vector.resize(len);
-  MultiByteToWideChar(CP_ACP, 0, s.data(), s.size(), wchar_vector.data(), len);
+  MultiByteToWideChar(CP_ACP, 0, s.data(), s.size(), reinterpret_cast<LPWSTR>(wchar_vector.data()), len);
   return wchar_vector;
 }
 // Test fixture for createLineStarts
 TEST(CreateLineStartsTest, EmptyString)
 {
-  std::vector<wchar_t> empty_str;
+  std::vector<char16_t> empty_str;
   std::vector<size_t> expected = { 0 }; // For empty string, no lines.
   EXPECT_EQ(createLineStarts(empty_str), expected);
 }
 
 TEST(CreateLineStartsTest, NoNewlineCharacters)
 {
-  std::vector<wchar_t> str= toWCharVector("Hello World");
+  std::vector<char16_t> str = toWCharVector("Hello World");
   std::vector<size_t> expected = {0}; // Single line, starts at 0
   EXPECT_EQ(createLineStarts(str), expected);
 }
@@ -108,7 +122,8 @@ protected:
 
   // Any teardown that needs to happen after each test
   void TearDown() override
-  {}
+  {
+  }
 protected:
   // Helper to create a PieceTree from a string
   std::unique_ptr<PieceTree> CreatePieceTree(const std::string& s)
@@ -119,7 +134,7 @@ protected:
 
 TEST_F(PieceTreeTest, EmptyInputStringConstructor)
 {
-  std::vector<wchar_t> empty_input;
+  std::vector<char16_t> empty_input;
   PieceTree pt(empty_input);
 
   //rootNode

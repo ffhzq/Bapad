@@ -4,7 +4,7 @@
 
 extern "C" COLORREF MixRGB(COLORREF, COLORREF);
 
-size_t TextView::ApplyTextAttributes(size_t nLineNo, size_t nOffset, std::vector<wchar_t>& szText, std::vector<ATTR>& attr)
+size_t TextView::ApplyTextAttributes(size_t nLineNo, size_t nOffset, std::vector<char16_t>& szText, std::vector<ATTR>& attr)
 {
   size_t font = nLineNo % fontAttr.size();
   const COLORREF fg = RGB(rand() % 200, rand() % 200, rand() % 200);
@@ -69,7 +69,7 @@ VOID TextView::RefreshWindow()
 //  it might contain ascii-control characters which must be output separately.
 //  because of this we'll just handle the tabs at the same time.
 //	
-int TextView::BaTextOut(HDC hdc, int xpos, int ypos, gsl::span<wchar_t> szText, int nTabOrigin, const ATTR& attr)
+int TextView::BaTextOut(HDC hdc, int xpos, int ypos, gsl::span<char16_t> szText, int nTabOrigin, const ATTR& attr)
 {
   const size_t nLen = szText.size();
   const int xold = xpos;
@@ -96,14 +96,13 @@ int TextView::BaTextOut(HDC hdc, int xpos, int ypos, gsl::span<wchar_t> szText, 
     if (i == nLen || szText[i] == '\t' || szText[i] < 32)
     {
       RECT rect;
-
       // get size of text
       if (i - lasti == 0)continue;
-      GetTextExtentPoint32W(hdc, &szText[lasti], i - lasti, &sz);
+      GetTextExtentPoint32W(hdc, reinterpret_cast<LPCWSTR>(&szText[lasti]), i - lasti, &sz);
       SetRect(&rect, xpos, ypos, xpos + sz.cx, ypos + lineHeight);
 
       // draw the text and erase it's background at the same time
-      ExtTextOutW(hdc, xpos, ypos + yoff, flag, &rect, &szText[lasti], i - lasti, nullptr);
+      ExtTextOutW(hdc, xpos, ypos + yoff, flag, &rect, reinterpret_cast<LPCWSTR>(&szText[lasti]), i - lasti, nullptr);
 
       xpos += sz.cx;
     }
