@@ -1,14 +1,13 @@
+#include "pch.h"
 #include "TextView.h"
+#include <string>
 
-
-//
-//	
-//
 LONG TextView::OpenFile(WCHAR* szFileName)
 {
     ClearFile();
-
-    if (pTextDoc->Initialize(szFileName))
+    std::wstring ws;
+    std::vector<char16_t> filePath(ws.begin(), ws.end());
+    if (pTextDoc->Initialize(filePath))
     {
         lineCount = pTextDoc->GetLineCount();
         longestLine = GetLongestLine();
@@ -19,9 +18,6 @@ LONG TextView::OpenFile(WCHAR* szFileName)
     return FALSE;
 }
 
-//
-//
-//
 LONG TextView::ClearFile()
 {
     if (pTextDoc)

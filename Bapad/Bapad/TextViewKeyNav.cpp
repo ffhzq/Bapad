@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "TextView.h"
 
 bool IsKeyPressed(UINT nVirtKey) noexcept

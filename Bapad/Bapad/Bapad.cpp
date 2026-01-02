@@ -1,6 +1,6 @@
 // Bapad.cpp : Defines the entry point for the application.
 //
-
+#include "pch.h"
 #include "Bapad.h"
 #include "framework.h"
 
