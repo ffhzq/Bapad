@@ -1,5 +1,8 @@
-#pragma once
-#include "pch.h"
+#ifndef TEXTDOCUMENT_PIECETREE_H_
+#define TEXTDOCUMENT_PIECETREE_H_
+
+#include <vector>
+#include <memory>
 
 struct Buffer {
   std::vector<char16_t> value;
@@ -123,3 +126,4 @@ public:
 std::vector<size_t> createLineStarts(const std::vector<char16_t>& str);
 size_t GetLineIndexFromNodePosistion(const std::vector<size_t>& lineStarts, NodePosition nodePos);
 
+#endif

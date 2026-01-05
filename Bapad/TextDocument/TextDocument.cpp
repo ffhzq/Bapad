@@ -1,4 +1,8 @@
-#include "pch.h"
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include "gsl/gsl"
+#include <stack>
 #include "TextDocument.h"
 
 TextDocument::TextDocument() noexcept

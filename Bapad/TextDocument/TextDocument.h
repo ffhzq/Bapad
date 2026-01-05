@@ -1,5 +1,6 @@
-#pragma once
-#include "pch.h"
+#ifndef TEXTDOCUMENT_TEXTDOCUMENT_H_
+#define TEXTDOCUMENT_TEXTDOCUMENT_H_
+
 #include "FormatConversionV2.h"
 #include "PieceTree.h"
 
@@ -91,3 +92,5 @@ public:
     return textDoc != nullptr ? true : false;
   }
 };
+
+#endif

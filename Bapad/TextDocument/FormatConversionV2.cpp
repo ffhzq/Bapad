@@ -1,4 +1,7 @@
-#include "pch.h"
+#include <vector>
+#include <cassert>
+#include "Windows.h"
+#include "gsl/gsl"
 #include "FormatConversionV2.h"
 
 std::vector<char16_t> RawToUtf16(std::vector<char>& rawData, const CP_TYPE rawDataCodpage)

@@ -1,6 +1,7 @@
-#include "pch.h"
+#include "gsl/gsl"
 #include "PieceTree.h"
-
+#include <cassert>
+#include <vector>
 enum class CharCode {
   /**
    * The `\n` character.   */
