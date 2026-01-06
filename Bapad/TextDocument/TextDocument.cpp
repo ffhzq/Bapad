@@ -7,52 +7,12 @@
 
 TextDocument::TextDocument() noexcept
   :
-  docBuffer(),
-  fileFormat(CP_TYPE::ANSI),
-  headerSize(0)
+  docBuffer()
 {}
-bool TextDocument::Initialize(const wchar_t* filename)
+bool TextDocument::Initialize(const std::vector<char16_t> utf16Content)
 {
-  std::ifstream ifs(filename, std::ios::binary | std::ios::ate);
-  if (!ifs.is_open())
-  {
-    return false;
-  }
-  const size_t docLengthByBytes = ifs.tellg();
-  std::vector<char> read_buffer;
-
-  ifs.seekg(0, std::ios::beg);
-  if (docLengthByBytes <= 0)
-  {
-    return false;
-  }
-  try
-  {
-    read_buffer.resize(docLengthByBytes);
-  }
-  catch (const std::bad_alloc& e)
-  {
-    throw e;
-  }
-  ifs.read(reinterpret_cast<char*>(&gsl::at(read_buffer, 0)), docLengthByBytes);
-  if (!ifs)
-  {
-    return false;
-  }
-
-  // Detect file format
-  fileFormat = DetectFileFormat(read_buffer, headerSize);
-  read_buffer.erase(read_buffer.begin(), read_buffer.begin() + headerSize);
-  auto utf16Text = RawToUtf16(read_buffer, fileFormat);
-  docBuffer = std::move(PieceTree(utf16Text));
-
-  ifs.close();
+  
   return true;
-}
-
-CP_TYPE TextDocument::GetFileFormat() const noexcept
-{
-  return fileFormat;
 }
 
 const size_t TextDocument::GetLineCount() const noexcept

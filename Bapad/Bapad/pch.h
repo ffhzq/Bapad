@@ -19,5 +19,6 @@
 #include <vector>
 #include <windows.h>
 #include <Richedit.h>
+#include <filesystem>
 #undef ReplaceText
 #endif //PCH_H

@@ -266,7 +266,7 @@ LRESULT WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
     return pTextDoc->CanRedo();
 
   case TXM_GETFORMAT:
-    return static_cast<int>(pTextDoc->GetFileFormat());
+    return static_cast<int>(file_format_);
 
   case TXM_SETCONTEXTMENU:
     hUserMenu = reinterpret_cast<HMENU>(wParam);

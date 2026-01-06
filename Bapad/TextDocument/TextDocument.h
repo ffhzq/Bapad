@@ -25,7 +25,7 @@ class TextDocument {
 public:
   TextDocument() noexcept;
 
-  bool Initialize(const wchar_t* filename);
+  bool Initialize(const std::vector<char16_t> utf16Content);
 
   bool Clear();
   size_t LineNumFromCharOffset(size_t offset);
@@ -42,7 +42,6 @@ public:
   int Undo();
   int Redo();
 
-  CP_TYPE GetFileFormat() const noexcept;
   const size_t GetLineCount() const noexcept;
   const size_t GetLongestLine(int tabwidth) const noexcept;
   const size_t GetDocLength() const noexcept;
@@ -57,8 +56,6 @@ private:
   PieceTree docBuffer;// raw txt data
   std::stack<EditAction> undoStack;
   std::stack<EditAction> redoStack;
-  CP_TYPE fileFormat;
-  int  headerSize;
 
 };
 

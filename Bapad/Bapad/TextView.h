@@ -25,6 +25,8 @@ public:
   HMENU CreateContextMenu();
   LONG OnContextMenu(HWND hwndParam, int x, int y);
 
+  std::vector<char16_t> ReadFileToUTF16(wchar_t* file_path);
+
 private:
 
   void    PaintLine(HDC hdc, ULONG64 nLineNo);
@@ -96,7 +98,8 @@ private:
 
   // File-related data
   size_t    lineCount;
-
+  CP_TYPE file_format_;
+  int header_size_;
 
   // Runtime related data
   bool mouseDown;
