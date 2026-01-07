@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "../TextDocument/PieceTree.h"
+#include "../TextDocument/FormatConversionV2.h"
 
 namespace testing {
   namespace internal {
@@ -18,11 +19,9 @@ namespace testing {
 
 static std::vector<char16_t> toWCharVector(const std::string& s)
 {
-  int len = MultiByteToWideChar(CP_ACP, 0, s.data(), s.size(), nullptr, 0);
-  std::vector<char16_t> wchar_vector;
-  wchar_vector.resize(len);
-  MultiByteToWideChar(CP_ACP, 0, s.data(), s.size(), reinterpret_cast<LPWSTR>(wchar_vector.data()), len);
-  return wchar_vector;
+  std::vector<char> str(s.begin(), s.end());
+  std::vector<char16_t> utf16_contnet = RawToUtf16(str, CP_TYPE::UTF8);
+  return utf16_contnet;
 }
 // Test fixture for createLineStarts
 TEST(CreateLineStartsTest, EmptyString)

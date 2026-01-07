@@ -1,5 +1,6 @@
 {
   "dependencies": [
-    "ms-gsl"
+    "ms-gsl",
+    "icu"
   ]
 }

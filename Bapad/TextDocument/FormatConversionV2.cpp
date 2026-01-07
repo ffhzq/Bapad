@@ -3,83 +3,70 @@
 #include "Windows.h"
 #include "gsl/gsl"
 #include "FormatConversionV2.h"
+#include <string>
+#include <iostream>
+#include <unicode/ucnv.h>
+#include <unicode/unistr.h>
 
 std::vector<char16_t> RawToUtf16(std::vector<char>& rawData, const CP_TYPE rawDataCodpage)
 {
-  std::vector<char16_t> utf16Data;
-  size_t targetLength = 0;
-  const size_t srcLen = rawData.size();
-  switch (rawDataCodpage)
-  {
+  UErrorCode errorCode = U_ZERO_ERROR;
+  UConverter* converter = nullptr;
+  std::vector<char16_t> utf16Str;
+  std::string codepageName;
+
+  switch (rawDataCodpage) {
   case CP_TYPE::ANSI:
-    assert(srcLen < static_cast<size_t>(INT_MAX));
-    targetLength = MultiByteToWideChar(CP_ACP, 0, rawData.data(), gsl::narrow_cast<int>(rawData.size()), nullptr, 0);
-    utf16Data.resize(targetLength);
-    assert(targetLength < static_cast<size_t>((std::numeric_limits<int>::max)()));
-    MultiByteToWideChar(CP_ACP, 0, rawData.data(), gsl::narrow_cast<int>(rawData.size()), reinterpret_cast<LPWCH>(utf16Data.data()), gsl::narrow_cast<int>(targetLength));
+    codepageName = std::string();
     break;
   case CP_TYPE::UTF8:
-    targetLength = MultiByteToWideChar(CP_UTF8, 0, rawData.data(), gsl::narrow_cast<int>(rawData.size()), nullptr, 0);
-    utf16Data.resize(targetLength);
-    assert(targetLength < static_cast<size_t>((std::numeric_limits<int>::max)()));
-    MultiByteToWideChar(CP_UTF8, 0, rawData.data(), gsl::narrow_cast<int>(rawData.size()), reinterpret_cast<LPWCH>(utf16Data.data()), gsl::narrow_cast<int>(targetLength));
+    codepageName = std::string("UTF8");
     break;
   case CP_TYPE::UTF16:
-    targetLength = srcLen / 2;
-    utf16Data.resize(targetLength);
-    std::memcpy(utf16Data.data(), rawData.data(), srcLen);
+    codepageName = std::string("UTF16LE");
     break;
   case CP_TYPE::UTF16BE:
-    targetLength = srcLen / 2;
-    utf16Data.resize(targetLength);
-    for (auto i{0U}; i < targetLength; ++i)
-    {
-      auto p = reinterpret_cast<char16_t*>(&gsl::at(rawData, i * 2));
-      gsl::at(utf16Data, i) = SwapWord16(*p);
-    }
+    codepageName = std::string("UTF16BE");
     break;
   default:
-    throw;
+    throw std::runtime_error("Unsupported code page type.");
   }
-  return utf16Data;
+  converter = ucnv_open(codepageName.c_str(), &errorCode);
+  if (U_FAILURE(errorCode)) {
+    std::cerr << "Error opening converter: " << u_errorName(errorCode)
+      << std::endl;
+    return std::vector<char16_t>();
+  }
+
+  const int32_t targetLength = ucnv_toUChars(
+    converter, nullptr, 0, rawData.data(),
+    gsl::narrow_cast<int32_t>(rawData.size()), &errorCode);
+
+  if (errorCode == U_BUFFER_OVERFLOW_ERROR) {
+    errorCode = U_ZERO_ERROR;
+
+    std::vector<UChar> ucharBuffer(targetLength);
+
+    ucnv_toUChars(converter, ucharBuffer.data(), targetLength,
+      rawData.data(),
+      gsl::narrow_cast<int32_t>(rawData.size()), &errorCode);
+
+    if (U_SUCCESS(errorCode)) {
+      utf16Str = std::move(ucharBuffer);
+      // std::cout << "ICU Converted (as UTF-8): " << uString << std::endl;
+    }
+    else {
+      std::cerr << "Conversion error: " << u_errorName(errorCode) << std::endl;
+    }
+  }
+  ucnv_close(converter);
+  return utf16Str;
 }
 
 std::vector<char> Utf16toRaw(std::vector<char16_t>& utf16Data, const CP_TYPE rawDataCodpage)
 {
   std::vector<char> rawData;
-  size_t targetLength = 0;
-  const size_t srcLen = utf16Data.size();
-  switch (rawDataCodpage)
-  {
-  case CP_TYPE::ANSI:
-    assert(srcLen < static_cast<size_t>(INT_MAX));
-    targetLength = WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<LPCWCH>(utf16Data.data()), gsl::narrow_cast<int>(srcLen), nullptr, 0, nullptr, nullptr);
-    rawData.resize(targetLength);
-    WideCharToMultiByte(CP_ACP, 0, reinterpret_cast<LPCWCH>(utf16Data.data()), gsl::narrow_cast<int>(srcLen), rawData.data(), gsl::narrow_cast<int>(targetLength), nullptr, nullptr);
-    break;
-  case CP_TYPE::UTF8:
-    assert(srcLen < static_cast<size_t>(INT_MAX));
-    targetLength = WideCharToMultiByte(CP_UTF8, 0, reinterpret_cast<LPCWCH>(utf16Data.data()), gsl::narrow_cast<int>(srcLen), nullptr, 0, nullptr, nullptr);
-    rawData.resize(targetLength);
-    WideCharToMultiByte(CP_UTF8, 0, reinterpret_cast<LPCWCH>(utf16Data.data()), gsl::narrow_cast<int>(srcLen), rawData.data(), gsl::narrow_cast<int>(targetLength), nullptr, nullptr);
-    break;
-  case CP_TYPE::UTF16:
-    targetLength = srcLen * 2;
-    rawData.resize(targetLength);
-    std::memcpy(rawData.data(), utf16Data.data(), targetLength);
-    break;
-  case CP_TYPE::UTF16BE:
-    targetLength = srcLen * 2;
-    rawData.resize(targetLength);
-    for (auto i{0U}; i < srcLen; ++i)
-    {
-      auto p = reinterpret_cast<char16_t*>(&gsl::at(rawData, i * 2));
-      *p = SwapWord16(gsl::at(utf16Data, i));
-    }
-    break;
-  default:
-    throw;
-  }
+  throw; // todo:
   return rawData;
 }
 
