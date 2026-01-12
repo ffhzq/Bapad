@@ -175,7 +175,7 @@ size_t TextDocument::LineNumFromCharOffset(size_t offset) {
       gsl::at(docBuffer.buffers, nodePos.node->piece.bufferIndex).lineStarts,
       nodePos);
   const auto lineNumber =
-      nodePos.node->lf_left + (nodePos.node->piece.start.line - lineIndex);
+      nodePos.node->lf_left + (lineIndex - nodePos.node->piece.start.line);
   return lineNumber;
 }
 
