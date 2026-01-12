@@ -2,9 +2,7 @@
 #define TEXTDOCUMENT_TEXTDOCUMENT_H_
 
 #include <stack>
-#include <vector>
 
-#include "FormatConversionV2.h"
 #include "PieceTree.h"
 
 constexpr size_t GetUtf8CharSize(const char ch) noexcept;
@@ -30,8 +28,8 @@ class TextDocument {
   TextDocument() noexcept;
 
   bool Initialize(const std::vector<char16_t> utf16Content);
-
   bool Clear();
+
   size_t LineNumFromCharOffset(size_t offset);
 
   TextIterator IterateLineByLineNumber(size_t lineno,
@@ -39,6 +37,8 @@ class TextDocument {
                                        size_t* lineLengthCharOffset);
   TextIterator IterateLineByCharOffset(size_t charOffset, size_t* lineno,
                                        size_t* linestartCharOffset);
+
+  std::vector<char16_t> GetText(size_t offset, size_t len);
 
   size_t InsertText(size_t offsetChars, std::vector<char16_t> text);
   size_t ReplaceText(size_t offsetChars, std::vector<char16_t> text,

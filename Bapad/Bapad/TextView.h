@@ -1,5 +1,6 @@
 #pragma once
 #include "..\TextDocument\TextDocument.h"
+#include "..\TextDocument\FormatConversionV2.h"
 #include "FontStruct.h"
 #include "TextViewWin32.h"
 

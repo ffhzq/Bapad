@@ -1,8 +1,6 @@
 #include "TextDocument.h"
 
-#include <fstream>
-#include <iostream>
-
+#include "FormatConversionV2.h"
 #include "gsl/gsl"
 
 TextDocument::TextDocument() noexcept : docBuffer() {}
@@ -126,6 +124,10 @@ size_t TextDocument::CharOffsetToIndexOffsetAt(
 size_t TextDocument::IndexOffsetToCharOffset(size_t offset) noexcept {
   // todo: utf16 char maybe 1 or 2 wchar_t long.
   return offset;
+}
+
+std::vector<char16_t> TextDocument::GetText(size_t offset, size_t len) {
+  return docBuffer.GetText(offset, len);
 }
 
 int TextDocument::DoCommand(EditAction action, std::stack<EditAction>& record) {
