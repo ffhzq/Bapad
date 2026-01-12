@@ -3,36 +3,33 @@
 
 
 TextView::TextView(HWND hwnd)
-  :
-  hWnd(hwnd),
-  // Font-related data
-  fontAttr(1),
-  heightAbove(0),
-  heightBelow(0),
-  // Scrollbar related data
-  vScrollPos(0),
-  hScrollPos(0),
-  vScrollMax(0),
-  hScrollMax(0),
-  // File-related data
-  lineCount(0),
-  longestLine(0),
-  // Display-related data
-  tabWidthChars(4),
-  // Runtime data
-  mouseDown(false),
-  scrollTimer(0),
-  scrollCounter(0),
-  selectionStart(0),
-  selectionEnd(0),
-  cursorOffset(0),
-  currentLine(0),
-  caretPosX(0),
-  hUserMenu(nullptr),
-  //
-  pTextDoc(std::make_unique<TextDocument>())
-{
-
+    : hWnd(hwnd),
+      // Font-related data
+      fontAttr(1),
+      heightAbove(0),
+      heightBelow(0),
+      // Scrollbar related data
+      vScrollPos(0),
+      hScrollPos(0),
+      vScrollMax(0),
+      hScrollMax(0),
+      // File-related data
+      lineCount(0),
+      longestLine(0),
+      // Display-related data
+      tabWidthChars(4),
+      // Runtime data
+      mouseDown(false),
+      scrollTimer(0),
+      scrollCounter(0),
+      selectionStart(0),
+      selectionEnd(0),
+      cursorOffset(0),
+      currentLine(0),
+      caretPosX(0),
+      hUserMenu(nullptr),
+      //
+      pTextDoc(std::make_unique<TextDocument>()) {
   // Default display colours
   rgbColourList[TXC_FOREGROUND] = SYSCOL(COLOR_WINDOWTEXT);
   rgbColourList[TXC_BACKGROUND] = SYSCOL(COLOR_WINDOW);
@@ -41,37 +38,30 @@ TextView::TextView(HWND hwnd)
   rgbColourList[TXC_HIGHLIGHTTEXT2] = SYSCOL(COLOR_INACTIVECAPTIONTEXT);
   rgbColourList[TXC_HIGHLIGHT2] = SYSCOL(COLOR_INACTIVECAPTION);
 
-
   // Set the default font
-  LOGFONTW lf = { 0 };
-  //lf.lfHeight = -12;
+  LOGFONTW lf = {0};
+  // lf.lfHeight = -12;
   lf.lfWeight = FW_NORMAL;
   lf.lfCharSet = GB2312_CHARSET;
   lf.lfPitchAndFamily = FIXED_PITCH | FF_MODERN;
   wcscpy_s(&lf.lfFaceName[0], LF_FACESIZE, L"Sarasa Fixed SC");
 
-  auto hFont = CreateFontIndirectW(&lf); // release in ~TextView()
-  if (hFont == nullptr)
-    hFont = static_cast<HFONT>(GetStockObject(SYSTEM_FONT));
+  auto hFont = CreateFontIndirectW(&lf);  // release in ~TextView()
+  if (hFont == nullptr) hFont = static_cast<HFONT>(GetStockObject(SYSTEM_FONT));
   OnSetFont(hFont);
 
   UpdateMetrics();
-
-
 }
 
-TextView::~TextView()
-{
+TextView::~TextView() {
   this->pTextDoc.reset(nullptr);
-  for (auto& i : fontAttr)
-  {
+  for (auto& i : fontAttr) {
     DeleteDC(reinterpret_cast<HDC>(i.hFont));
   }
   DestroyMenu(hUserMenu);
 }
 
-VOID TextView::UpdateMetrics()
-{
+VOID TextView::UpdateMetrics() {
   RECT rect;
   GetClientRect(hWnd, &rect);
 
@@ -81,8 +71,7 @@ VOID TextView::UpdateMetrics()
   RepositionCaret();
 }
 
-LONG TextView::OnSetFocus(HWND hwndOld)
-{
+LONG TextView::OnSetFocus(HWND hwndOld) {
   CreateCaret(hWnd, nullptr, 2, lineHeight);
   RepositionCaret();
 
@@ -91,210 +80,204 @@ LONG TextView::OnSetFocus(HWND hwndOld)
   return 0;
 }
 
-LONG TextView::OnKillFocus(HWND hwndNew)
-{
+LONG TextView::OnKillFocus(HWND hwndNew) {
   HideCaret(hWnd);
   DestroyCaret();
   RefreshWindow();
   return 0;
 }
 
-
-
-
-
-//WIN32
-LRESULT CALLBACK TextViewWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
+// WIN32
+LRESULT CALLBACK TextViewWndProc(HWND hWnd, UINT message, WPARAM wParam,
+                                 LPARAM lParam) {
   auto ptv = reinterpret_cast<TextView*>(GetWindowLongPtrW(hWnd, 0));
 
-  switch (message)
-  {
-    // First message received by any window - make a new TextView object
-    // and store pointer to it in our extra-window-bytes
-  case WM_NCCREATE:
-    ptv = new TextView(hWnd);
-    if (ptv == nullptr)
-      return FALSE;
-    SetWindowLongPtrW(hWnd, 0, reinterpret_cast<LONG_PTR>(ptv));
-    return TRUE;
-    // Last message received by any window - delete the TextView object
-  case WM_NCDESTROY:
-    delete ptv;
-    SetWindowLongPtrW(hWnd, 0, 0);
-    break;
+  switch (message) {
+      // First message received by any window - make a new TextView object
+      // and store pointer to it in our extra-window-bytes
+    case WM_NCCREATE:
+      ptv = new TextView(hWnd);
+      if (ptv == nullptr) return FALSE;
+      SetWindowLongPtrW(hWnd, 0, reinterpret_cast<LONG_PTR>(ptv));
+      return TRUE;
+      // Last message received by any window - delete the TextView object
+    case WM_NCDESTROY:
+      delete ptv;
+      SetWindowLongPtrW(hWnd, 0, 0);
+      break;
 
-
-  default:
-    if (ptv)
-      return ptv->WndProc(message, wParam, lParam);
-    else
-      return 0;
+    default:
+      if (ptv)
+        return ptv->WndProc(message, wParam, lParam);
+      else
+        return 0;
   }
 
   return 0;
 }
 
-LRESULT WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam)
-{
+LRESULT WINAPI TextView::WndProc(UINT msg, WPARAM wParam, LPARAM lParam) {
   int newCursorPos = -1;
-  switch (msg)
-  {
-    // Draw contents of TextView whenever window needs updating
-  case WM_PAINT:
-    return OnPaint();
-    // Set a new font 
-  case WM_SETFONT:
-    return OnSetFont(reinterpret_cast<HFONT>(wParam));
+  switch (msg) {
+      // Draw contents of TextView whenever window needs updating
+    case WM_PAINT:
+      return OnPaint();
+      // Set a new font
+    case WM_SETFONT:
+      return OnSetFont(reinterpret_cast<HFONT>(wParam));
 
-  case WM_SIZE:
-    return OnSize(static_cast<UINT>(wParam), LOWORD(lParam), HIWORD(lParam));
+    case WM_SIZE:
+      return OnSize(static_cast<UINT>(wParam), LOWORD(lParam), HIWORD(lParam));
 
-  case WM_VSCROLL:
-    return OnVScroll(LOWORD(wParam), HIWORD(wParam));
+    case WM_VSCROLL:
+      return OnVScroll(LOWORD(wParam), HIWORD(wParam));
 
-  case WM_HSCROLL:
-    return OnHScroll(LOWORD(wParam), HIWORD(wParam));
+    case WM_HSCROLL:
+      return OnHScroll(LOWORD(wParam), HIWORD(wParam));
 
-  case WM_MOUSEACTIVATE:
-    return OnMouseActivate(reinterpret_cast<HWND>(wParam), LOWORD(lParam), HIWORD(lParam));
+    case WM_MOUSEACTIVATE:
+      return OnMouseActivate(reinterpret_cast<HWND>(wParam), LOWORD(lParam),
+                             HIWORD(lParam));
 
-  case WM_CONTEXTMENU:
-    return OnContextMenu(reinterpret_cast<HWND>(wParam), static_cast<short>(LOWORD(lParam)), static_cast<short>(HIWORD(lParam)));
+    case WM_CONTEXTMENU:
+      return OnContextMenu(reinterpret_cast<HWND>(wParam),
+                           static_cast<short>(LOWORD(lParam)),
+                           static_cast<short>(HIWORD(lParam)));
 
-  case WM_MOUSEWHEEL:
-    return OnMouseWheel(static_cast<short>(HIWORD(wParam)));
+    case WM_MOUSEWHEEL:
+      return OnMouseWheel(static_cast<short>(HIWORD(wParam)));
 
-  case WM_SETFOCUS:
-    return OnSetFocus(reinterpret_cast<HWND>(wParam));
+    case WM_SETFOCUS:
+      return OnSetFocus(reinterpret_cast<HWND>(wParam));
 
-  case WM_KILLFOCUS:
-    return OnKillFocus(reinterpret_cast<HWND>(wParam));
+    case WM_KILLFOCUS:
+      return OnKillFocus(reinterpret_cast<HWND>(wParam));
 
-  case WM_LBUTTONDOWN:
-    return OnLButtonDown(wParam, static_cast<short>(LOWORD(lParam)), static_cast<short>(HIWORD(lParam)));
+    case WM_LBUTTONDOWN:
+      return OnLButtonDown(wParam, static_cast<short>(LOWORD(lParam)),
+                           static_cast<short>(HIWORD(lParam)));
 
-  case WM_LBUTTONUP:
-    return OnLButtonUp(wParam, static_cast<short>(LOWORD(lParam)), static_cast<short>(HIWORD(lParam)));
+    case WM_LBUTTONUP:
+      return OnLButtonUp(wParam, static_cast<short>(LOWORD(lParam)),
+                         static_cast<short>(HIWORD(lParam)));
 
-  case WM_MOUSEMOVE:
-    return OnMouseMove(wParam, static_cast<short>(LOWORD(lParam)), static_cast<short>(HIWORD(lParam)));
+    case WM_MOUSEMOVE:
+      return OnMouseMove(wParam, static_cast<short>(LOWORD(lParam)),
+                         static_cast<short>(HIWORD(lParam)));
 
-  case WM_TIMER:
-    return OnTimer(wParam);
+    case WM_TIMER:
+      return OnTimer(wParam);
 
-  case TXM_OPENFILE:
-    return OpenFile(reinterpret_cast<wchar_t*>(lParam));
+    case TXM_OPENFILE:
+      return OpenFile(reinterpret_cast<wchar_t*>(lParam));
 
-  case TXM_CLEAR:
-    return ClearFile();
+    case TXM_CLEAR:
+      return ClearFile();
 
-  case WM_CHAR:
-    return OnChar(wParam, lParam);
+    case WM_CHAR:
+      return OnChar(wParam, lParam);
 
-  case WM_KEYDOWN:
+    case WM_KEYDOWN:
 
-    switch (wParam) {
-    case VK_UP:
-      MoveLineUp(1);
+      switch (wParam) {
+        case VK_UP:
+          MoveLineUp(1);
+          break;
+        case VK_DOWN:
+          MoveLineDown(1);
+          break;
+        case VK_LEFT:
+          MoveCharPrev();
+          break;
+        case VK_RIGHT:
+          MoveCharNext();
+          break;
+        case VK_PRIOR:
+          MoveLineUp(windowLines);
+          break;
+        case VK_NEXT:
+          MoveLineDown(windowLines);
+          break;
+        case VK_HOME:
+          MoveLineStart(currentLine);
+          break;
+        case VK_END:
+          MoveLineEnd(currentLine);
+          break;
+        case VK_DELETE:
+          ForwardDelete();
+          break;
+        case VK_BACK:
+          BackwardDelete();
+          break;
+
+        default:
+          break;
+      }
       break;
-    case VK_DOWN:
-      MoveLineDown(1);
-      break;
-    case VK_LEFT:
-      MoveCharPrev();
-      break;
-    case VK_RIGHT:
-      MoveCharNext();
-      break;
-    case VK_PRIOR:
-      MoveLineUp(windowLines);
-      break;
-    case VK_NEXT:
-      MoveLineDown(windowLines);
-      break;
-    case VK_HOME:
-      MoveLineStart(currentLine);
-      break;
-    case VK_END:
-      MoveLineEnd(currentLine);
-      break;
-    case VK_DELETE:
-      ForwardDelete();
-      break;
-    case VK_BACK:
-      BackwardDelete();
-      break;
-    
-    default:break;
-    }
-    break;
-  case TXM_SETLINESPACING:
-    return SetLineSpacing(wParam, lParam);
+    case TXM_SETLINESPACING:
+      return SetLineSpacing(wParam, lParam);
 
-  case TXM_ADDFONT:
-    return AddFont(reinterpret_cast<HFONT>(wParam));
+    case TXM_ADDFONT:
+      return AddFont(reinterpret_cast<HFONT>(wParam));
 
-  case TXM_SETCOLOR:
-    return SetColour(wParam, lParam);
+    case TXM_SETCOLOR:
+      return SetColour(wParam, lParam);
 
-  case WM_UNDO: case TXM_UNDO: case EM_UNDO:
-    newCursorPos = pTextDoc->Undo();
-    if (newCursorPos == -1)
-      return FALSE;
-    else
-    {
-      cursorOffset = newCursorPos;
-      SyncMetrics(TRUE);
-      return TRUE;
-    }
-  case TXM_REDO: case EM_REDO:
-    newCursorPos = pTextDoc->Redo();
-    if (newCursorPos == -1)
-      return FALSE;
-    else
-    {
-      cursorOffset = newCursorPos;
-      SyncMetrics(TRUE);
-      return TRUE;
-    }
+    case WM_UNDO:
+    case TXM_UNDO:
+    case EM_UNDO:
+      newCursorPos = pTextDoc->Undo();
+      if (newCursorPos == -1)
+        return FALSE;
+      else {
+        cursorOffset = newCursorPos;
+        SyncMetrics(TRUE);
+        return TRUE;
+      }
+    case TXM_REDO:
+    case EM_REDO:
+      newCursorPos = pTextDoc->Redo();
+      if (newCursorPos == -1)
+        return FALSE;
+      else {
+        cursorOffset = newCursorPos;
+        SyncMetrics(TRUE);
+        return TRUE;
+      }
 
-  case TXM_CANUNDO: case EM_CANUNDO:
-    return pTextDoc->CanUndo();
+    case TXM_CANUNDO:
+    case EM_CANUNDO:
+      return pTextDoc->CanUndo();
 
-  case TXM_CANREDO: case EM_CANREDO:
-    return pTextDoc->CanRedo();
+    case TXM_CANREDO:
+    case EM_CANREDO:
+      return pTextDoc->CanRedo();
 
-  case TXM_GETFORMAT:
-    return static_cast<int>(file_format_);
+    case TXM_GETFORMAT:
+      return static_cast<int>(file_format_);
 
-  case TXM_SETCONTEXTMENU:
-    hUserMenu = reinterpret_cast<HMENU>(wParam);
-    return 0;
-  default:
-    break;
+    case TXM_SETCONTEXTMENU:
+      hUserMenu = reinterpret_cast<HMENU>(wParam);
+      return 0;
+    default:
+      break;
   }
   return DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
-HWND CreateTextView(HWND hwndParent) noexcept
-{
-  return CreateWindowExW(WS_EX_CLIENTEDGE,
-    TEXTVIEW_CLASS, L"",
-    WS_VSCROLL | WS_HSCROLL | WS_CHILD | WS_VISIBLE,
-    0, 0, 0, 0,
-    hwndParent,
-    nullptr,
-    GetModuleHandleW(nullptr),
-    nullptr);
+HWND CreateTextView(HWND hwndParent) noexcept {
+  return CreateWindowExW(WS_EX_CLIENTEDGE, TEXTVIEW_CLASS, L"",
+                         WS_VSCROLL | WS_HSCROLL | WS_CHILD | WS_VISIBLE, 0, 0,
+                         0, 0, hwndParent, nullptr, GetModuleHandleW(nullptr),
+                         nullptr);
 }
 
-BOOL RegisterTextView() noexcept
-{
+BOOL RegisterTextView() noexcept {
   WNDCLASSEXW wcex{0};
 
   wcex.cbSize = sizeof(WNDCLASSEX);
-  wcex.style = CS_DBLCLKS;// 0;
+  wcex.style = CS_DBLCLKS;  // 0;
   wcex.lpfnWndProc = TextViewWndProc;
   wcex.cbClsExtra = 0;
   wcex.cbWndExtra = sizeof(TextView*);
@@ -309,39 +292,31 @@ BOOL RegisterTextView() noexcept
   return RegisterClassExW(&wcex) ? TRUE : FALSE;
 }
 
-VOID TextView::UpdateCaretXY(int xpos, ULONG lineno) noexcept
-{
+VOID TextView::UpdateCaretXY(int xpos, ULONG lineno) noexcept {
   bool visible = false;
 
   // convert x-coord to window-relative
   xpos -= hScrollPos * fontWidth;
 
-
   // only show caret if it is visible within viewport
-  if (lineno >= vScrollPos && lineno <= vScrollPos + windowLines)
-  {
-    if (xpos >= 0)
-      visible = true;
+  if (lineno >= vScrollPos && lineno <= vScrollPos + windowLines) {
+    if (xpos >= 0) visible = true;
   }
 
   // hide caret if it was previously visible
-  if (visible == false && hideCaret == false)
-  {
+  if (visible == false && hideCaret == false) {
     hideCaret = true;
     HideCaret(hWnd);
   }
   // show caret if it was previously hidden
-  else if (visible == true && hideCaret == true)
-  {
+  else if (visible == true && hideCaret == true) {
     hideCaret = false;
     ShowCaret(hWnd);
   }
 
   // set caret position if within window viewport
-  if (hideCaret == false)
-  {
+  if (hideCaret == false) {
     const int ypos = (lineno - vScrollPos) * lineHeight;
     SetCaretPos(xpos, ypos);
   }
-
 }
