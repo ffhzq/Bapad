@@ -70,6 +70,28 @@ std::vector<char> Utf16toRaw(std::vector<char16_t>& utf16Data, const CP_TYPE raw
   return rawData;
 }
 
+std::vector<char16_t> NormalizeLineEndings(const std::vector<char16_t>& utf16Data)
+{
+  std::vector<char16_t> result;
+  result.reserve(utf16Data.size());
+  for (auto it = utf16Data.begin(); it != utf16Data.end(); ++it) {
+    if (*it == u'\r') {
+      auto next_it = std::next(it);
+      if (next_it != utf16Data.end() && *next_it == u'\n') {
+        result.push_back(u'\n');
+        it = next_it;
+      }
+      else {
+        result.push_back(u'\n');
+      }
+    }
+    else {
+      result.push_back(*it);
+    }
+  }
+  return result;
+}
+
 struct _BOM_LOOKUP BOMLOOK[] =
 {
   // define longest headers first

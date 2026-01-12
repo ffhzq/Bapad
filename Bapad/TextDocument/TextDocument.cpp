@@ -11,7 +11,7 @@ TextDocument::TextDocument() noexcept
 {}
 bool TextDocument::Initialize(const std::vector<char16_t> utf16Content)
 {
-  
+  docBuffer = std::move(PieceTree(NormalizeLineEndings(utf16Content)));
   return true;
 }
 
@@ -72,15 +72,16 @@ TextIterator TextDocument::IterateLineByCharOffset(size_t charOffset, size_t* li
 size_t TextDocument::InsertText(size_t offsetChars, std::vector<char16_t> text)
 {
   const size_t indexOffset = CharOffsetToIndexOffsetAt(0, offsetChars);
-  size_t length = text.size();
-  if (length && docBuffer.InsertText(indexOffset, text))
+  auto normalizedText = NormalizeLineEndings(text);
+  const size_t length = normalizedText.size();
+  if (length && docBuffer.InsertText(indexOffset, normalizedText))
   {
     EditAction action;
     action.actionOffsetBytes = indexOffset;
     action.actionType = ActionType::ActionInsert;
-    action.insertedText = text;//std::move
+    action.insertedText = std::move(normalizedText);//std::move?
     undoStack.push(action);
-    return text.size();
+    return length;
   }
   return 0;
 }
@@ -89,17 +90,18 @@ size_t TextDocument::ReplaceText(size_t offsetChars, std::vector<char16_t> text,
 {
   const size_t indexOffset = CharOffsetToIndexOffsetAt(0, offsetChars);
   const size_t eraseBytes = CharOffsetToIndexOffsetAt(indexOffset, eraseLen);
-  size_t length = text.size();
+  auto normalizedText = NormalizeLineEndings(text);
+  const size_t length = normalizedText.size();
   auto erasedText = docBuffer.GetText(indexOffset, eraseBytes);
-  if (length && docBuffer.ReplaceText(indexOffset, text, eraseBytes))
+  if (length && docBuffer.ReplaceText(indexOffset, normalizedText, eraseBytes))
   {
     EditAction action;
     action.actionOffsetBytes = indexOffset;
     action.actionType = ActionType::ActionReplace;
-    action.insertedText = text;
-    action.erasedText = (erasedText);
+    action.insertedText = normalizedText;
+    action.erasedText = std::move(normalizedText);
     undoStack.push(action);
-    return text.size();
+    return length;
   }
   return 0;
 }
@@ -114,7 +116,7 @@ size_t TextDocument::EraseText(size_t offsetChars, size_t length)
     EditAction action;
     action.actionOffsetBytes = offset;
     action.actionType = ActionType::ActionErase;
-    action.erasedText = (erasedText);
+    action.erasedText = std::move(erasedText);
     undoStack.push(action);
     return length;
   }

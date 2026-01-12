@@ -8,11 +8,10 @@ LONG TextView::OnChar(UINT nChar, UINT nFlags)
   int inputLength = 1;
   if (nChar < 32 && nChar != '\t' && nChar != '\r' && nChar != '\n')
     return 0;
-  // change CR into a CR/LF sequence
+  // change CR to LF
   if (nChar == '\r')
   {
-    ch[1] = '\n';
-    inputLength += 1;
+    ch[0] = '\n';
   }
   if (EnterText(&ch[0], inputLength))
     NotifyParent(TVN_CHANGED);//用于通知文件被修改了
