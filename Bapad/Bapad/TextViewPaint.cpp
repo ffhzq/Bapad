@@ -1,50 +1,42 @@
+#include "pch.h"
 #include "TextView.h"
 
 
 
 extern "C" COLORREF MixRGB(COLORREF, COLORREF);
 
-size_t TextView::ApplyTextAttributes(size_t nLineNo, size_t nOffset, std::vector<char16_t>& szText, std::vector<ATTR>& attr)
-{
+size_t TextView::ApplyTextAttributes(size_t nLineNo, size_t nOffset,
+                                     std::vector<char16_t>& szText,
+                                     std::vector<ATTR>& attr) {
   size_t font = nLineNo % fontAttr.size();
   const COLORREF fg = RGB(rand() % 200, rand() % 200, rand() % 200);
   const size_t nTextLen = szText.size();
   assert(nTextLen == attr.size());
-  if (attr.empty() || szText.empty())
-  {
+  if (attr.empty() || szText.empty()) {
     return 0;
   }
 
   const size_t selstart = (std::min)(selectionStart, selectionEnd);
   const size_t selend = (std::max)(selectionStart, selectionEnd);
 
-
-
-  for (size_t i = 0; i < nTextLen; i++)
-  {
-    // apply highlight colours 
-    if (nOffset + i >= selstart && nOffset + i < selend)
-    {
-      if (GetFocus() == hWnd)
-      {
+  for (size_t i = 0; i < nTextLen; i++) {
+    // apply highlight colours
+    if (nOffset + i >= selstart && nOffset + i < selend) {
+      if (GetFocus() == hWnd) {
         gsl::at(attr, i).fg = GetColour(TXC_HIGHLIGHTTEXT);
         gsl::at(attr, i).bg = GetColour(TXC_HIGHLIGHT);
-      }
-      else
-      {
+      } else {
         gsl::at(attr, i).fg = GetColour(TXC_HIGHLIGHTTEXT2);
         gsl::at(attr, i).bg = GetColour(TXC_HIGHLIGHT2);
       }
     }
     // normal text colours
-    else
-    {
+    else {
       gsl::at(attr, i).fg = GetColour(TXC_FOREGROUND);
       gsl::at(attr, i).bg = GetColour(TXC_BACKGROUND);
     }
 
-    if (gsl::at(szText, i) == ' ')
-      font = (font + 1) % fontAttr.size();
+    if (gsl::at(szText, i) == ' ') font = (font + 1) % fontAttr.size();
 
     gsl::at(attr, i).style = font;
   }
@@ -55,22 +47,19 @@ size_t TextView::ApplyTextAttributes(size_t nLineNo, size_t nOffset, std::vector
 //
 //	Perform a full redraw of the entire window
 //
-VOID TextView::RefreshWindow()
-{
-  InvalidateRect(hWnd, nullptr, FALSE);
-}
-
-
+VOID TextView::RefreshWindow() { InvalidateRect(hWnd, nullptr, FALSE); }
 
 //
-//	Draw tabbed text using specified colours and font, return width of output text
+//	Draw tabbed text using specified colours and font, return width of
+//output text
 //
-//	We could just use TabbedTextOut - however, we need to parse the text because
+//	We could just use TabbedTextOut - however, we need to parse the text
+//because
 //  it might contain ascii-control characters which must be output separately.
 //  because of this we'll just handle the tabs at the same time.
-//	
-int TextView::BaTextOut(HDC hdc, int xpos, int ypos, gsl::span<char16_t> szText, int nTabOrigin, const ATTR& attr)
-{
+//
+int TextView::BaTextOut(HDC hdc, int xpos, int ypos, gsl::span<char16_t> szText,
+                        int nTabOrigin, const ATTR& attr) {
   const size_t nLen = szText.size();
   const int xold = xpos;
   SIZE sz;
@@ -88,44 +77,43 @@ int TextView::BaTextOut(HDC hdc, int xpos, int ypos, gsl::span<char16_t> szText,
   constexpr DWORD flag = ETO_CLIPPED | ETO_OPAQUE;
 
   // loop over each character
-  for (size_t i = 0, lasti = 0; i <= nLen; i++)
-  {
+  for (size_t i = 0, lasti = 0; i <= nLen; i++) {
     const int yoff = maxAscent + heightAbove - font.tm.tmAscent;
 
     // output any "deferred" text before handling tab/control chars
-    if (i == nLen || szText[i] == '\t' || szText[i] < 32)
-    {
+    if (i == nLen || szText[i] == '\t' || szText[i] < 32) {
       RECT rect;
       // get size of text
-      if (i - lasti == 0)continue;
-      GetTextExtentPoint32W(hdc, reinterpret_cast<LPCWSTR>(&szText[lasti]), i - lasti, &sz);
+      if (i - lasti == 0) continue;
+      GetTextExtentPoint32W(hdc, reinterpret_cast<LPCWSTR>(&szText[lasti]),
+                            i - lasti, &sz);
       SetRect(&rect, xpos, ypos, xpos + sz.cx, ypos + lineHeight);
 
       // draw the text and erase it's background at the same time
-      ExtTextOutW(hdc, xpos, ypos + yoff, flag, &rect, reinterpret_cast<LPCWSTR>(&szText[lasti]), i - lasti, nullptr);
+      ExtTextOutW(hdc, xpos, ypos + yoff, flag, &rect,
+                  reinterpret_cast<LPCWSTR>(&szText[lasti]), i - lasti,
+                  nullptr);
 
       xpos += sz.cx;
     }
 
     // special case for TAB and Control characters
-    if (i < nLen)
-    {
+    if (i < nLen) {
       // TAB characters
-      if (szText[i] == '\t')
-      {
+      if (szText[i] == '\t') {
         // calculate distance in pixels to the next tab-stop
-        const int width = TABWIDTHPIXELS - ((xpos - nTabOrigin) % TABWIDTHPIXELS);
+        const int width =
+            TABWIDTHPIXELS - ((xpos - nTabOrigin) % TABWIDTHPIXELS);
 
-        // draw a blank space 
+        // draw a blank space
         PaintRect(hdc, xpos, ypos, width, lineHeight, attr.bg);
 
         xpos += width;
         lasti = i + 1;
       }
       // ASCII-CONTROL characters
-      else if (szText[i] < 32)
-      {
-        xpos += 0;//PaintCtrlChar(hdc, xpos, ypos, szText[i], &font);
+      else if (szText[i] < 32) {
+        xpos += 0;  // PaintCtrlChar(hdc, xpos, ypos, szText[i], &font);
         lasti = i + 1;
       }
     }
@@ -135,13 +123,10 @@ int TextView::BaTextOut(HDC hdc, int xpos, int ypos, gsl::span<char16_t> szText,
   return xpos - xold;
 }
 
-
-
 //
 //	Painting procedure for TextView objects
 //
-LONG TextView::OnPaint()
-{
+LONG TextView::OnPaint() {
   PAINTSTRUCT ps;
 
   ULONG i, first, last;
@@ -149,7 +134,7 @@ LONG TextView::OnPaint()
   BeginPaint(hWnd, &ps);
 
   // select which font we will be using
-  //SelectObject(ps.hdc, font);
+  // SelectObject(ps.hdc, font);
 
   // figure out which lines to redraw
   first = vScrollPos + ps.rcPaint.top / lineHeight;
@@ -159,8 +144,7 @@ LONG TextView::OnPaint()
   if (last < first) last = -1;
 
   // draw the display line-by-line
-  for (i = first; i <= last; i++)
-  {
+  for (i = first; i <= last; i++) {
     PaintLine(ps.hdc, i);
   }
 
@@ -172,9 +156,8 @@ LONG TextView::OnPaint()
 //
 //	Draw the specified line (including margins etc)
 //
-void TextView::PaintLine(HDC hdc, ULONG64 nLineNo)
-{
-  RECT  rect;
+void TextView::PaintLine(HDC hdc, ULONG64 nLineNo) {
+  RECT rect;
 
   // Get the area we want to update
   GetClientRect(hWnd, &rect);
@@ -186,8 +169,7 @@ void TextView::PaintLine(HDC hdc, ULONG64 nLineNo)
   rect.bottom = (rect.top + lineHeight);
 
   //	check we have data to draw on this line
-  if (nLineNo >= lineCount)
-  {
+  if (nLineNo >= lineCount) {
     SetBkColor(hdc, GetColour(TXC_BACKGROUND));
     ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rect, nullptr, 0, nullptr);
     return;
@@ -200,19 +182,17 @@ void TextView::PaintLine(HDC hdc, ULONG64 nLineNo)
 //
 //	Draw a line of text into the TextView window
 //
-void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect)
-{
-  size_t  charoff = 0;
+void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect) {
+  size_t charoff = 0;
 
-  size_t  colNo = 0;
+  size_t colNo = 0;
 
   int xpos = rect->left;
   const int ypos = rect->top;
   const int xtab = rect->left;
 
-
-  TextIterator itor = pTextDoc->IterateLineByLineNumber(nLineNo, &charoff, nullptr);
-
+  TextIterator itor =
+      pTextDoc->IterateLineByLineNumber(nLineNo, &charoff, nullptr);
 
   auto buff = itor.GetLine();
   size_t len = buff.size();
@@ -220,30 +200,25 @@ void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect)
   attr.resize(len);
   len = ApplyTextAttributes(nLineNo, charoff, buff, attr);
 
-  if (len == 0)
-    Sleep(0);
+  if (len == 0) Sleep(0);
 
   //
   //	Display the text by breaking it into spans of colour/style
   //
-  for (int i = 0, lasti = 0; i <= len; i++)
-  {
-    // if the colour or font changes, then need to output 
-    if (i == len ||
-      gsl::at(attr, i).fg != gsl::at(attr, lasti).fg ||
-      gsl::at(attr, i).bg != gsl::at(attr, lasti).bg ||
-      gsl::at(attr, i).style != gsl::at(attr, lasti).style)
-    {
-      if (i - lasti != 0)
-      {
+  for (int i = 0, lasti = 0; i <= len; i++) {
+    // if the colour or font changes, then need to output
+    if (i == len || gsl::at(attr, i).fg != gsl::at(attr, lasti).fg ||
+        gsl::at(attr, i).bg != gsl::at(attr, lasti).bg ||
+        gsl::at(attr, i).style != gsl::at(attr, lasti).style) {
+      if (i - lasti != 0) {
         const auto buffSpan = gsl::make_span(buff).subspan(lasti, i - lasti);
-        xpos += BaTextOut(hdc, xpos, ypos, buffSpan, xtab, gsl::at(attr, lasti));
+        xpos +=
+            BaTextOut(hdc, xpos, ypos, buffSpan, xtab, gsl::at(attr, lasti));
       }
       lasti = i;
     }
   }
   charoff += len;
-
 
   //
   // Erase to the end of the line
@@ -253,16 +228,13 @@ void TextView::PaintText(HDC hdc, ULONG64 nLineNo, RECT* rect)
   ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, rect, nullptr, 0, nullptr);
 }
 
-void PaintRect(HDC hdc, int x, int y, int width, int height, COLORREF fill)
-{
+void PaintRect(HDC hdc, int x, int y, int width, int height, COLORREF fill) {
   const RECT rect = {x, y, x + width, y + height};
 
   fill = SetBkColor(hdc, fill);
   ExtTextOutW(hdc, 0, 0, ETO_OPAQUE, &rect, nullptr, 0, nullptr);
   SetBkColor(hdc, fill);
 }
-
-
 
 //
 //	Return an RGB value corresponding to the specified HVC_xxx index
@@ -272,21 +244,16 @@ void PaintRect(HDC hdc, int x, int y, int width, int height, COLORREF fill)
 //  of the GetSysColor COLOR_xxx indices. This allows us to use
 //	system colours without worrying about colour-scheme changes etc.
 //
-COLORREF TextView::GetColour(UINT idx)
-{
-  if (idx >= TXC_MAX_COLOURS)
-    return 0;
+COLORREF TextView::GetColour(UINT idx) {
+  if (idx >= TXC_MAX_COLOURS) return 0;
 
   return REALIZE_SYSCOL(rgbColourList[idx]);
-
 }
 
-COLORREF TextView::SetColour(UINT idx, COLORREF rgbColour)
-{
+COLORREF TextView::SetColour(UINT idx, COLORREF rgbColour) {
   COLORREF rgbOld;
 
-  if (idx >= TXC_MAX_COLOURS)
-    return 0;
+  if (idx >= TXC_MAX_COLOURS) return 0;
 
   rgbOld = rgbColourList[idx];
   rgbColourList[idx] = rgbColour;
@@ -298,15 +265,12 @@ COLORREF TextView::SetColour(UINT idx, COLORREF rgbColour)
 //	Paint a checkered rectangle, with each alternate
 //	pixel being assigned a different colour
 //
-void DrawCheckedRect(HDC hdc, RECT* rect, COLORREF fg, COLORREF bg)
-{
-  static WORD wCheckPat[8] =
-  {
-      0xaaaa, 0x5555, 0xaaaa, 0x5555, 0xaaaa, 0x5555, 0xaaaa, 0x5555
-  };
+void DrawCheckedRect(HDC hdc, RECT* rect, COLORREF fg, COLORREF bg) {
+  static WORD wCheckPat[8] = {0xaaaa, 0x5555, 0xaaaa, 0x5555,
+                              0xaaaa, 0x5555, 0xaaaa, 0x5555};
 
   HBITMAP hbmp;
-  HBRUSH  hbr, hbrold;
+  HBRUSH hbr, hbrold;
   COLORREF fgold, bgold;
 
   hbmp = CreateBitmap(8, 8, 1, 1, wCheckPat);
@@ -317,10 +281,8 @@ void DrawCheckedRect(HDC hdc, RECT* rect, COLORREF fg, COLORREF bg)
   fgold = SetTextColor(hdc, fg);
   bgold = SetBkColor(hdc, bg);
 
-  PatBlt(hdc, rect->left, rect->top,
-    rect->right - rect->left,
-    rect->bottom - rect->top,
-    PATCOPY);
+  PatBlt(hdc, rect->left, rect->top, rect->right - rect->left,
+         rect->bottom - rect->top, PATCOPY);
 
   SetBkColor(hdc, bgold);
   SetTextColor(hdc, fgold);
@@ -330,21 +292,16 @@ void DrawCheckedRect(HDC hdc, RECT* rect, COLORREF fg, COLORREF bg)
   DeleteObject(hbmp);
 }
 
-COLORREF MixRGB(COLORREF rgbCol1, COLORREF rgbCol2)
-{
-  return RGB(
-    (GetRValue(rgbCol1) + GetRValue(rgbCol2)) / 2,
-    (GetGValue(rgbCol1) + GetGValue(rgbCol2)) / 2,
-    (GetBValue(rgbCol1) + GetBValue(rgbCol2)) / 2
-  );
+COLORREF MixRGB(COLORREF rgbCol1, COLORREF rgbCol2) {
+  return RGB((GetRValue(rgbCol1) + GetRValue(rgbCol2)) / 2,
+             (GetGValue(rgbCol1) + GetGValue(rgbCol2)) / 2,
+             (GetBValue(rgbCol1) + GetBValue(rgbCol2)) / 2);
 }
 
-COLORREF RealizeColour(COLORREF col)
-{
+COLORREF RealizeColour(COLORREF col) {
   COLORREF result = col;
 
-  if (col & 0x80000000)
-    result = GetSysColor(col & 0xff);
+  if (col & 0x80000000) result = GetSysColor(col & 0xff);
 
   if (col & 0x40000000)
     result = MixRGB(GetSysColor((col & 0xff00) >> 8), result);
