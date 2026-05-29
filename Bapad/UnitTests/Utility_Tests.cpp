@@ -1,27 +1,6 @@
 #include "pch.h"
-
-#include "../TextDocument/FormatConversionV2.h"
+#include "TestHelpers.h"
 #include "../TextDocument/PieceTree.h"
-
-namespace testing {
-namespace internal {
-std::string U16VectorToPrintableString(const std::vector<char16_t>& vec) {
-  std::string result = std::to_string(reinterpret_cast<wchar_t>(&vec[0]));
-  return result;
-}
-template <>
-void UniversalPrinter<std::vector<char16_t>>::Print(
-    const std::vector<char16_t>& vec, std::ostream* os) {
-  *os << U16VectorToPrintableString(vec);
-}
-}  // namespace internal
-}  // namespace testing
-
-static std::vector<char16_t> toWCharVector(const std::string& s) {
-  std::vector<char> str(s.begin(), s.end());
-  std::vector<char16_t> utf16_content = RawToUtf16(str, CP_TYPE::UTF8);
-  return utf16_content;
-}
 
 // ===========================================================================
 // Tests: NormalizeLineEndings
