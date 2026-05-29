@@ -251,16 +251,6 @@ TEST_F(GetLineIndexTest, AtNewlineBoundary) {
   EXPECT_EQ(idx, 0);  // \n is considered part of the first line
 }
 
-TEST_F(GetLineIndexTest, EmptyStringThrows) {
-  // createLineStarts("") returns {0} — empty string has a single line start at 0
-  // But with empty input, PieceTree has no right child node,
-  // so GetNodePosition returns root... we need a different approach.
-  // This test verifies the edge case by testing with a non-empty tree
-  // and looking at a position that would be at a lineStarts boundary.
-  GTEST_SKIP() << "Empty lineStarts is an exceptional case that throws; "
-                  "covered by PieceTree internal guards.";
-}
-
 // ===========================================================================
 // Tests: createLineStarts (additional edge cases beyond PieceTree_Tests)
 // ===========================================================================

@@ -469,7 +469,7 @@ TEST_F(TextDocumentTest, IterateLineByLineNumberEmptyDoc) {
 TEST_F(TextDocumentTest, IterateLineByLineNumberOutOfRange) {
   auto doc = CreateDoc("OnlyOne");
   size_t start = 0, len = 0;
-  auto itor = doc.IterateLineByLineNumber(99, &start, &len);
+  auto itor = doc->IterateLineByLineNumber(99, &start, &len);
   EXPECT_FALSE((bool)itor);
 }
 
