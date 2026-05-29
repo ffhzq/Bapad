@@ -74,6 +74,7 @@ size_t TextDocument::InsertText(size_t offsetChars,
     action.actionOffsetBytes = indexOffset;
     action.actionType = ActionType::ActionInsert;
     action.insertedText = std::move(normalizedText);  // std::move?
+    std::stack<EditAction>().swap(redoStack);
     undoStack.push(action);
     return length;
   }
@@ -93,7 +94,8 @@ size_t TextDocument::ReplaceText(size_t offsetChars, std::vector<char16_t> text,
     action.actionOffsetBytes = indexOffset;
     action.actionType = ActionType::ActionReplace;
     action.insertedText = normalizedText;
-    action.erasedText = std::move(normalizedText);
+    action.erasedText = std::move(erasedText);
+    std::stack<EditAction>().swap(redoStack);
     undoStack.push(action);
     return length;
   }
@@ -109,6 +111,7 @@ size_t TextDocument::EraseText(size_t offsetChars, size_t length) {
     action.actionOffsetBytes = offset;
     action.actionType = ActionType::ActionErase;
     action.erasedText = std::move(erasedText);
+    std::stack<EditAction>().swap(redoStack);
     undoStack.push(action);
     return length;
   }

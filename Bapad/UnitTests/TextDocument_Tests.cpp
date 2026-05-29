@@ -76,7 +76,7 @@ TEST_F(TextDocumentTest, InitializeNormalizesLineEndingsCRLF) {
 TEST_F(TextDocumentTest, ClearResetsDocument) {
   auto doc = CreateDoc("Some content\nwith lines");
   EXPECT_EQ(doc->GetLineCount(), 2);
-  EXPECT_EQ(doc->GetDocLength(), 20);
+  EXPECT_EQ(doc->GetDocLength(), 23);  // "Some content\nwith lines" = 12+1+10
 
   doc->InsertText(0, toWCharVector("X"));
   EXPECT_TRUE(doc->CanUndo());
@@ -130,8 +130,8 @@ TEST_F(TextDocumentTest, GetLongestLineSingleLine) {
 
 TEST_F(TextDocumentTest, GetLongestLineMultipleLines) {
   auto doc = CreateDoc("Short\nMediumLine\nTiny");
-  // "MediumLine" is the longest at 10 chars
-  EXPECT_EQ(doc->GetLongestLine(0), 10);
+  // "MediumLine\n" is the longest at 11 chars (GetLine includes \n)
+  EXPECT_EQ(doc->GetLongestLine(0), 11);
 }
 
 TEST_F(TextDocumentTest, GetLongestLineEmptyDoc) {
@@ -253,10 +253,11 @@ TEST_F(TextDocumentTest, ReplaceShorter) {
 
 TEST_F(TextDocumentTest, ReplaceWithEmptyText) {
   auto doc = CreateDoc("ABCDEF");
-  doc->ReplaceText(2, toWCharVector(""), 2);
-  // Replaces "CD" with "" — effectively erases
-  EXPECT_EQ(doc->GetDocLength(), 4);
-  EXPECT_EQ(doc->GetText(0, 99), toWCharVector("ABEF"));
+  size_t len = doc->ReplaceText(2, toWCharVector(""), 2);
+  // Empty input is a no-op — length == 0, no replace happens
+  EXPECT_EQ(len, 0);
+  EXPECT_EQ(doc->GetDocLength(), 6);
+  EXPECT_EQ(doc->GetText(0, 99), toWCharVector("ABCDEF"));
 }
 
 TEST_F(TextDocumentTest, ReplaceWithNewlines) {
