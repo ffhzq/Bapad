@@ -11,10 +11,15 @@ namespace testing {
 namespace internal {
 
 // Printable for std::vector<char16_t> — needed by EXPECT_EQ across tests
+// Assumes test data is ASCII-range (all existing tests use ASCII chars only)
 template <>
 inline void UniversalPrinter<std::vector<char16_t>>::Print(
     const std::vector<char16_t>& vec, std::ostream* os) {
-  std::string result(vec.begin(), vec.end());
+  std::string result;
+  result.reserve(vec.size());
+  for (char16_t c : vec) {
+    result.push_back(static_cast<char>(c));
+  }
   *os << result;
 }
 
