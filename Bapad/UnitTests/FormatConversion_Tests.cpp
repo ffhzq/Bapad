@@ -77,8 +77,8 @@ TEST(DetectFileFormatTest, NoBOMValidUTF8) {
 }
 
 TEST(DetectFileFormatTest, NoBOMInvalidUTF8) {
-  // 0xFF is not valid UTF-8 start byte
-  std::vector<char> buf = {static_cast<char>(0xFF), static_cast<char>(0xFE)};
+  // 0xF8 is not a BOM prefix and not valid UTF-8
+  std::vector<char> buf = {static_cast<char>(0xF8), static_cast<char>(0x00)};
   int headerSize = 0;
   auto type = DetectFileFormat(buf, headerSize);
   EXPECT_EQ(type, CP_TYPE::ANSI);
