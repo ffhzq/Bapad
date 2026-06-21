@@ -5,6 +5,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -67,7 +68,7 @@ std::vector<char16_t> RawToUtf16(std::vector<char>& rawData,
 std::vector<char> Utf16toRaw(std::vector<char16_t>& utf16Data,
                              const CP_TYPE rawDataCodpage) {
   std::vector<char> rawData;
-  throw;  // todo:
+  throw std::runtime_error("todo: Utf16toRaw not implemented");
   return rawData;
 }
 
