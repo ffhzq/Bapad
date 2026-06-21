@@ -71,7 +71,7 @@ bool PieceTree::InsertText(size_t offset, const std::vector<char16_t>& input) {
       _lastChangeBufferPos = newEnd;
       length += input.size();
       lineCount += lineStarts.size() - 1;
-      UpdateMetadata();
+      UpdateMetadata(node);
       return true;
     }
   }
@@ -96,7 +96,7 @@ bool PieceTree::InsertText(size_t offset, const std::vector<char16_t>& input) {
 
   length += newPiece.length;
   lineCount += newPiece.lineFeedCnt;
-  UpdateMetadata();
+  UpdateMetadata(node);
   return true;
 }
 
@@ -142,7 +142,7 @@ bool PieceTree::EraseText(size_t offset, size_t eraseLength) {
   } else {
     return false;
   }
-  UpdateMetadata();
+  UpdateMetadata(parrentNode);
   return true;
 }
 
@@ -209,7 +209,7 @@ TreeNode* PieceTree::SplitPiece(TreeNode* currNode,
   Node2->right = std::move(currNode->right);
   if (Node2->right != nullptr) Node2->right->left = Node2.get();
   currNode->right = std::move(Node2);
-  this->UpdateMetadata();
+  UpdateMetadata(currNode);
   return currNode;
 }
 
@@ -361,17 +361,18 @@ void PieceTree::ShrinkPiece(TreeNode* current_node, size_t shrink_to_right,
 }
 
 void PieceTree::UpdateMetadata() const noexcept {
-  size_t size_delta = 0;
-  size_t lf_delta = 0;
-  TreeNode* n = rootNode->right.get();
+  UpdateMetadata(rootNode.get());
+}
+
+void PieceTree::UpdateMetadata(const TreeNode* from) const noexcept {
+  size_t size_delta = from->size_left + from->piece.length;
+  size_t lf_delta = from->lf_left + from->piece.lineFeedCnt;
+  TreeNode* n = from->right.get();
   while (n) {
-    n->lf_left = lf_delta;
     n->size_left = size_delta;
-
-    const Piece& piece = n->piece;
-    lf_delta += piece.lineFeedCnt;
-    size_delta += piece.length;
-
+    n->lf_left = lf_delta;
+    size_delta += n->piece.length;
+    lf_delta += n->piece.lineFeedCnt;
     n = n->right.get();
   }
 }

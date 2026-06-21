@@ -119,6 +119,8 @@ class PieceTree {
                    size_t shrink_to_left);
 
   void UpdateMetadata() const noexcept;
+  // Update metadata from `from->right` to end; `from` itself must be correct.
+  void UpdateMetadata(const TreeNode* from) const noexcept;
 
   size_t getAccumulatedValue(const TreeNode* node, size_t index) const;
 
