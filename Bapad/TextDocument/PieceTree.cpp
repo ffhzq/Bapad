@@ -27,6 +27,7 @@ PieceTree::PieceTree(std::vector<char16_t> input)
 }
 
 bool PieceTree::InsertText(size_t offset, const std::vector<char16_t>& input) {
+  _cacheValid = false;
   if (offset > this->length) {
     return false;
   }
@@ -101,6 +102,7 @@ bool PieceTree::InsertText(size_t offset, const std::vector<char16_t>& input) {
 }
 
 bool PieceTree::EraseText(size_t offset, size_t eraseLength) {
+  _cacheValid = false;
   if (rootNode->right == nullptr || offset + eraseLength > length ||
       eraseLength == 0)
     return false;
@@ -171,7 +173,20 @@ NodePosition PieceTree::GetNodePositionAt(TreeNode* node,
 }
 
 NodePosition PieceTree::GetNodePosition(size_t offset) noexcept {
-  return GetNodePositionAt(rootNode.get(), offset);
+  // Try cache: check if offset falls inside the cached node
+  if (_cacheValid && _searchCache.node) {
+    const size_t nodeStart = _searchCache.node->size_left;
+    if (nodeStart <= offset &&
+        offset < nodeStart + _searchCache.node->piece.length) {
+      _searchCache.in_piece_offset = offset - nodeStart;
+      return _searchCache;
+    }
+  }
+  // Cache miss — full scan from root
+  auto pos = GetNodePositionAt(rootNode.get(), offset);
+  _searchCache = pos;
+  _cacheValid = true;
+  return pos;
 }
 
 size_t PieceTree::offsetInBuffer(size_t bufferIndex, BufferPosition pos) const {
@@ -181,6 +196,7 @@ size_t PieceTree::offsetInBuffer(size_t bufferIndex, BufferPosition pos) const {
 
 TreeNode* PieceTree::SplitPiece(TreeNode* currNode,
                                 const size_t inPieceOffset) {
+  _cacheValid = false;
   const Buffer& currBuffer = gsl::at(buffers, currNode->piece.bufferIndex);
   const Piece original_piece = currNode->piece;
   Piece& current_piece = currNode->piece;
@@ -330,6 +346,7 @@ std::vector<char16_t> PieceTree::GetLine(size_t lineNumber,
 // |->to right   <-to left|
 void PieceTree::ShrinkPiece(TreeNode* current_node, size_t shrink_to_right,
                             size_t shrink_to_left) {
+  _cacheValid = false;
   Piece& piece = current_node->piece;
   const Piece original_piece = piece;
   auto& lineStarts = gsl::at(buffers, piece.bufferIndex).lineStarts;

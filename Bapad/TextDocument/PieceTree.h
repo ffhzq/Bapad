@@ -125,6 +125,11 @@ class PieceTree {
   size_t getAccumulatedValue(const TreeNode* node, size_t index) const;
 
   size_t getLongestLine() const;
+
+ private:
+  // Search cache: remembers the last node found by GetNodePosition.
+  mutable NodePosition _searchCache;
+  mutable bool _cacheValid = false;
 };
 
 std::vector<size_t> createLineStarts(const std::vector<char16_t>& str);
