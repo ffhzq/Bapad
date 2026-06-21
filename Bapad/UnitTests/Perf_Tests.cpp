@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "TestHelpers.h"
+#include "../TextDocument/TextDocument.h"
 
 #include <chrono>
 #include <iostream>
